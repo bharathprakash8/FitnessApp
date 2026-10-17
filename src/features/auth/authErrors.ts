@@ -21,10 +21,15 @@ export function friendlyAuthError(error: unknown): string {
       case 'email_address_invalid':
         return 'Please enter a valid email address.';
     }
-    if (error.status === 0 || error.name === 'AuthRetryableFetchError') {
-      return 'No internet connection. Please check your network and try again.';
+    // The same error type covers "no network" (status 0) and server hiccups (502/503/504).
+    const detail = ` (${error.status ?? 0}: ${error.message || error.name})`;
+    if (!error.status) {
+      return `Couldn't reach the login server. Check your internet and try again.${detail}`;
+    }
+    if (error.status >= 500) {
+      return `The login server had a problem – please try again in a minute.${detail}`;
     }
     return error.message;
   }
-  return 'Something went wrong. Please try again.';
+  return `Something went wrong. Please try again.${error instanceof Error ? ` (${error.message})` : ''}`;
 }
