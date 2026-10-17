@@ -408,7 +408,7 @@ Update after each milestone: date, what was built, anything deferred, open issue
 
 | Milestone | Status | Date | Notes |
 |---|---|---|---|
-| 0 Foundation + Admin | Not started | | |
+| 0 Foundation + Admin | Built – owner phone test pending | 17 Oct 2026 | Dev: Supabase `fitcoach-dev` (updctclaxbawgtrhtdor, Mumbai), Vercel `samhithe/fitcoach` → https://fitcoach-ten-nu.vercel.app. Admin: nidhi@samhithe.in (see docs/admin-bootstrap.md). Login codes sent via Gmail SMTP from nidhi@samhithe.in. RLS checks `npm run db:test`; function checks `scripts/test-admin-users.ps1`. Open: Vercel ↔ GitHub auto-deploy not connected yet (deploys via `npx vercel --prod`); Android APK link in login instructions comes in M4. Clients can also read their own trainer's profile (for name/chat). |
 | 1 Onboarding, targets | Not started | | |
 | 2 Workouts | Not started | | |
 | 3 Food + AI | Not started | | |
