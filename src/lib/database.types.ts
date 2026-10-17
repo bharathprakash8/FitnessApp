@@ -265,6 +265,38 @@ export type Database = {
           },
         ]
       }
+      notification_log: {
+        Row: {
+          id: string
+          kind: string
+          ref_date: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          kind: string
+          ref_date: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          kind?: string
+          ref_date?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_assignments: {
         Row: {
           assigned_by: string | null
@@ -465,6 +497,94 @@ export type Database = {
           timezone?: string
         }
         Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reminder_settings: {
+        Row: {
+          breakfast_on: boolean
+          breakfast_time: string
+          client_id: string
+          dinner_on: boolean
+          dinner_time: string
+          enabled: boolean
+          lunch_on: boolean
+          lunch_time: string
+          snack_on: boolean
+          snack_time: string
+          updated_at: string
+          workout_reminder_time: string | null
+        }
+        Insert: {
+          breakfast_on?: boolean
+          breakfast_time?: string
+          client_id: string
+          dinner_on?: boolean
+          dinner_time?: string
+          enabled?: boolean
+          lunch_on?: boolean
+          lunch_time?: string
+          snack_on?: boolean
+          snack_time?: string
+          updated_at?: string
+          workout_reminder_time?: string | null
+        }
+        Update: {
+          breakfast_on?: boolean
+          breakfast_time?: string
+          client_id?: string
+          dinner_on?: boolean
+          dinner_time?: string
+          enabled?: boolean
+          lunch_on?: boolean
+          lunch_time?: string
+          snack_on?: boolean
+          snack_time?: string
+          updated_at?: string
+          workout_reminder_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_settings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       targets: {
         Row: {
@@ -669,6 +789,7 @@ export type Database = {
       call_cron_function: { Args: { body?: Json; fn: string }; Returns: number }
       can_edit_plan: { Args: { plan: string }; Returns: boolean }
       can_read_plan: { Args: { plan: string }; Returns: boolean }
+      claim_push_token: { Args: { p: string; t: string }; Returns: undefined }
       exercise_used_by_me: { Args: { ex: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_trainer_of: { Args: { client: string }; Returns: boolean }

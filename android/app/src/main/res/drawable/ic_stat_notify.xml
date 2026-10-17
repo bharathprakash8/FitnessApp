@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Small white dumbbell for the Android status bar (notification icons must be one colour). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M110,196h40v120h-40z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M158,166h44v180h-44z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M310,166h44v180h-44z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M362,196h40v120h-40z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M202,236h108v40h-108z" />
+</vector>

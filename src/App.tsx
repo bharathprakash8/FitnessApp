@@ -15,6 +15,8 @@ import type { Role } from './features/auth/roles';
 import { EditMealPage } from './features/food/EditMealPage';
 import { FoodPage } from './features/food/FoodPage';
 import { LogMealPage } from './features/food/LogMealPage';
+import { NotificationsPage } from './features/notifications/NotificationsPage';
+import { PushAutoRegister } from './features/notifications/PushAutoRegister';
 import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { MePage } from './features/profile/MePage';
 import { MyDetailsPage } from './features/profile/MyDetailsPage';
@@ -51,6 +53,7 @@ const KNOWN_PATHS = [
   '/me',
   '/me/details',
   '/me/health',
+  '/me/notifications',
 ];
 
 /**
@@ -112,8 +115,10 @@ export function App() {
             <Route path="/me" element={guarded('client', <MePage />)} />
             <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
             <Route path="/me/health" element={guarded('client', <HealthSyncPage />)} />
+            <Route path="/me/notifications" element={guarded('client', <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
+          <PushAutoRegister />
         </IonReactRouter>
       </AuthProvider>
     </IonApp>

@@ -155,6 +155,9 @@ function ClientDetails({ profile }: { profile: Profile }) {
       <IonButton expand="block" fill="outline" routerLink="/me/health">
         Health sync (calories burnt, steps, sleep)
       </IonButton>
+      <IonButton expand="block" fill="outline" routerLink="/me/notifications">
+        Notifications and reminders
+      </IonButton>
       {profile.consent_at && (
         <IonText color="medium">
           <p style={{ fontSize: '0.85rem' }}>

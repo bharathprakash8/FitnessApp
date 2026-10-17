@@ -439,3 +439,10 @@ verify_jwt = false
 [functions.health-sync]
 verify_jwt = false
 
+
+[functions.send-push]
+verify_jwt = false
+
+[functions.cron-meal-reminders]
+verify_jwt = false
+

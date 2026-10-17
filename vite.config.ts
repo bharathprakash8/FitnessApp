@@ -7,6 +7,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Our own service worker (src/sw.ts): app-shell caching + push notifications.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      },
       // Icons are generated from public/icon.svg (see pwa-assets.config.ts).
       pwaAssets: { config: true, overrideManifestIcons: true },
       manifest: {
@@ -20,12 +28,6 @@ export default defineConfig({
         orientation: 'portrait',
         theme_color: '#0e9f6e',
         background_color: '#ffffff',
-      },
-      workbox: {
-        navigateFallback: '/index.html',
-        // Real pages that must not be replaced by the app shell.
-        navigateFallbackDenylist: [/^\/privacy\.html$/],
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
       },
     }),
   ],

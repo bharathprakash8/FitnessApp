@@ -537,6 +537,73 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 5: reminder_settings, push_tokens, notification_log
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.push_tokens (user_id, token, platform) values
+  ('00000000-0000-4000-a000-0000000000c2', 'token-of-client-two-0000000000', 'web');
+insert into public.notification_log (user_id, kind, ref_date)
+  values ('00000000-0000-4000-a000-0000000000c1', 'meal_lunch', current_date);
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+begin
+  insert into public.reminder_settings (client_id, lunch_time) values ('00000000-0000-4000-a000-0000000000c1', '13:00');
+  if (select count(*) from public.push_tokens) <> 0 then
+    raise exception 'FAIL: client can see another user''s push token';
+  end if;
+  if (select count(*) from public.notification_log) <> 0 then
+    raise exception 'FAIL: client can read notification_log';
+  end if;
+  -- claiming a token moves it to the caller
+  perform public.claim_push_token('token-of-client-one-1111111111', 'android');
+  if (select count(*) from public.push_tokens) <> 1 then
+    raise exception 'FAIL: client cannot see own push token after claiming';
+  end if;
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.reminder_settings (client_id) values ('00000000-0000-4000-a000-0000000000c2');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client created reminder settings for another client';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.push_tokens (user_id, token, platform)
+    values ('00000000-0000-4000-a000-0000000000c2', 'forged-token-for-client-two-xx', 'web');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client added a push token for another user';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.notification_log (user_id, kind, ref_date)
+    values ('00000000-0000-4000-a000-0000000000c1', 'x', current_date);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client wrote to notification_log';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.reminder_settings) + (select count(*) from public.push_tokens) <> 0 then
+    raise exception 'FAIL: trainer can see client reminder settings or push tokens';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);
