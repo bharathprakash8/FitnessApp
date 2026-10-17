@@ -8,8 +8,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // CI passes the build number and version name; local builds default to 1 / 1.0.
-        versionCode (System.getenv('ANDROID_VERSION_CODE') ?: '1').toInteger()
-        versionName System.getenv('ANDROID_VERSION_NAME') ?: '1.0'
+        // Assignment form: "versionCode (x).toInteger()" would be parsed as a method call.
+        versionCode = (System.getenv('ANDROID_VERSION_CODE') ?: '1') as Integer
+        versionName = System.getenv('ANDROID_VERSION_NAME') ?: '1.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
