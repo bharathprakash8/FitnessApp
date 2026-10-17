@@ -3,6 +3,9 @@ import { IonReactRouter } from '@ionic/react-router';
 import { Route } from 'react-router-dom';
 
 import { PlaceholderPage } from './components/PlaceholderPage';
+import { AdminHomePage } from './features/admin/AdminHomePage';
+import { CreateUserPage } from './features/admin/CreateUserPage';
+import { UserDetailPage } from './features/admin/UserDetailPage';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomeRedirect, RequireRole } from './features/auth/RequireRole';
@@ -18,7 +21,23 @@ export function App() {
               path="/admin"
               element={
                 <RequireRole role="admin">
-                  <PlaceholderPage title="Admin" message="The admin console comes in step 10." />
+                  <AdminHomePage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/admin/users/new"
+              element={
+                <RequireRole role="admin">
+                  <CreateUserPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/admin/users/:id"
+              element={
+                <RequireRole role="admin">
+                  <UserDetailPage />
                 </RequireRole>
               }
             />

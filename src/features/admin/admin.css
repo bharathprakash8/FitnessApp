@@ -1,0 +1,29 @@
+.admin-form {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.admin-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-note {
+  margin: 0;
+}
+
+.admin-share {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.95rem;
+  margin: 0;
+  user-select: text;
+}
+
+.admin-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

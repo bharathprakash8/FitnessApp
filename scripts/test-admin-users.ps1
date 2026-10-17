@@ -118,7 +118,7 @@ try {
 
   # --- delete ---
   $r = Call $adminToken @{ action = 'delete'; user_id = $trainerId }
-  Check 'delete trainer with clients -> 409 has_data' ($r.status -eq 409 -and $r.body.error.code -eq 'has_data')
+  Check 'delete trainer with clients -> 409 trainer_has_clients' ($r.status -eq 409 -and $r.body.error.code -eq 'trainer_has_clients')
 
   $r = Call $adminToken @{ action = 'delete'; user_id = $clientId }
   Check 'delete client' ($r.status -eq 200 -and $r.body.data.deleted -eq $true)

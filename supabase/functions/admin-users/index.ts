@@ -276,6 +276,13 @@ serveJson(async (req) => {
         uid: body.user_id,
       });
       if (rpcErr) throw rpcErr;
+      if (target.role === 'trainer' && (await trainerHasClients(db, body.user_id))) {
+        throw new HttpError(
+          409,
+          'This trainer still has clients. Move them to another trainer first, or deactivate the trainer.',
+          'trainer_has_clients',
+        );
+      }
       if (hasData) {
         throw new HttpError(409, 'This user has data, so they can only be deactivated', 'has_data');
       }
