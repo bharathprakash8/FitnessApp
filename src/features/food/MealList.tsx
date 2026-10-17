@@ -1,0 +1,77 @@
+import { IonItem, IonItemDivider, IonLabel, IonList, IonNote, IonText } from '@ionic/react';
+
+import { usePhotoUrls } from './api';
+import { MEAL_LABELS, MEAL_TYPES, itemsOf, timeIn, type MealLog } from './model';
+import './food.css';
+
+/** A day's meals grouped by meal type. `linkTo` makes rows tappable (client edit). */
+export function MealList({
+  meals,
+  timeZone,
+  linkTo,
+  emptyText,
+}: {
+  meals: MealLog[];
+  timeZone: string;
+  linkTo?: (meal: MealLog) => string;
+  emptyText: string;
+}) {
+  const photos = usePhotoUrls(meals.filter((m) => m.photo_path).map((m) => m.photo_path!));
+
+  if (meals.length === 0) {
+    return (
+      <IonText color="medium">
+        <p className="ion-text-center">{emptyText}</p>
+      </IonText>
+    );
+  }
+
+  return (
+    <IonList>
+      {MEAL_TYPES.filter((t) => meals.some((m) => m.meal_type === t)).map((type) => {
+        const list = meals.filter((m) => m.meal_type === type);
+        const kcal = list.reduce((s, m) => s + m.total_calories, 0);
+        return (
+          <div key={type}>
+            <IonItemDivider>
+              <IonLabel>{MEAL_LABELS[type]}</IonLabel>
+              <IonNote slot="end" style={{ paddingRight: 16 }}>
+                {kcal} kcal
+              </IonNote>
+            </IonItemDivider>
+            {list.map((m) => {
+              const url = m.photo_path ? photos.data?.[m.photo_path] : undefined;
+              const names =
+                itemsOf(m)
+                  .map((i) => i.name)
+                  .join(', ') ||
+                m.input_text ||
+                'Meal';
+              return (
+                <IonItem key={m.id} routerLink={linkTo?.(m)} detail={Boolean(linkTo)} lines="full">
+                  {url ? <img slot="start" src={url} alt="" className="food-meal-thumb" /> : null}
+                  <IonLabel>
+                    <h3>{names}</h3>
+                    <p>
+                      {timeIn(m.eaten_at, timeZone)} · {m.total_calories} kcal · P{' '}
+                      {Math.round(Number(m.protein_g))} · C {Math.round(Number(m.carbs_g))} · F{' '}
+                      {Math.round(Number(m.fat_g))}
+                    </p>
+                    <p className="food-muted">
+                      {m.source === 'manual'
+                        ? 'Entered manually'
+                        : m.edited
+                          ? 'Estimated, adjusted'
+                          : 'Estimated'}
+                      {m.photo_deleted ? ' · photo deleted after 7 days' : ''}
+                    </p>
+                  </IonLabel>
+                </IonItem>
+              );
+            })}
+          </div>
+        );
+      })}
+    </IonList>
+  );
+}

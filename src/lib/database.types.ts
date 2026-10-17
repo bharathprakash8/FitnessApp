@@ -39,6 +39,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          count: number
+          feature: string
+          id: string
+          used_on: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          feature: string
+          id?: string
+          used_on: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          feature?: string
+          id?: string
+          used_on?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           created_at: string
@@ -80,6 +112,71 @@ export type Database = {
           {
             foreignKeyName: "exercises_trainer_id_fkey"
             columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_logs: {
+        Row: {
+          carbs_g: number
+          client_id: string
+          created_at: string
+          eaten_at: string
+          eaten_on: string
+          edited: boolean
+          fat_g: number
+          id: string
+          input_text: string | null
+          items: Json
+          meal_type: string
+          photo_deleted: boolean
+          photo_path: string | null
+          protein_g: number
+          source: string
+          total_calories: number
+        }
+        Insert: {
+          carbs_g?: number
+          client_id: string
+          created_at?: string
+          eaten_at?: string
+          eaten_on?: string
+          edited?: boolean
+          fat_g?: number
+          id?: string
+          input_text?: string | null
+          items?: Json
+          meal_type: string
+          photo_deleted?: boolean
+          photo_path?: string | null
+          protein_g?: number
+          source: string
+          total_calories?: number
+        }
+        Update: {
+          carbs_g?: number
+          client_id?: string
+          created_at?: string
+          eaten_at?: string
+          eaten_on?: string
+          edited?: boolean
+          fat_g?: number
+          id?: string
+          input_text?: string | null
+          items?: Json
+          meal_type?: string
+          photo_deleted?: boolean
+          photo_path?: string | null
+          protein_g?: number
+          source?: string
+          total_calories?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_logs_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -524,6 +621,10 @@ export type Database = {
     }
     Functions: {
       app_role: { Args: never; Returns: string }
+      bump_ai_usage: {
+        Args: { day: string; feat: string; uid: string }
+        Returns: number
+      }
       can_edit_plan: { Args: { plan: string }; Returns: boolean }
       can_read_plan: { Args: { plan: string }; Returns: boolean }
       exercise_used_by_me: { Args: { ex: string }; Returns: boolean }
@@ -532,6 +633,7 @@ export type Database = {
       my_trainer: { Args: never; Returns: string }
       plan_of_day: { Args: { day: string }; Returns: string }
       plan_owner: { Args: { plan: string }; Returns: string }
+      try_uuid: { Args: { t: string }; Returns: string }
       user_has_data: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {

@@ -1,0 +1,169 @@
+.food-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.food-day-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.food-day-switch strong {
+  font-size: 1.05rem;
+}
+
+.food-add {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.food-add ion-button {
+  flex: 1;
+  margin: 0;
+  --padding-start: 4px;
+  --padding-end: 4px;
+}
+
+.food-meal-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: none;
+}
+
+.food-muted {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+
+.food-estimated {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(var(--ion-color-secondary-rgb), 0.18);
+  color: var(--ion-text-color);
+}
+
+.food-preview {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+.food-item {
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.food-item-head {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.food-item-head ion-input {
+  flex: 1;
+}
+
+.food-steps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.food-steps ion-chip {
+  margin: 0;
+}
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.food-grid ion-input {
+  --padding-start: 8px;
+  --padding-end: 4px;
+  font-size: 0.95rem;
+}
+
+.food-totals {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  padding: 8px 2px;
+}
+
+.food-followup {
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+}
+
+.food-followup p {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+/* Calories ring and macro bars */
+.ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ring-wrap svg {
+  flex: none;
+}
+
+.ring-center {
+  font-weight: 700;
+  fill: var(--ion-text-color);
+}
+
+.ring-sub {
+  fill: var(--ion-color-medium);
+  font-size: 11px;
+}
+
+.macro-bars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.macro-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.macro-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ion-color-light);
+  overflow: hidden;
+}
+
+.macro-bar > div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ion-color-primary);
+}
+
+.macro-bar > div.over {
+  background: var(--ion-color-warning);
+}

@@ -405,6 +405,95 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 3: meal logs, ai_usage, meal-photos storage
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.meal_logs (client_id, meal_type, source, total_calories) values
+  ('00000000-0000-4000-a000-0000000000c1', 'lunch', 'text', 600),
+  ('00000000-0000-4000-a000-0000000000c2', 'lunch', 'text', 500);
+insert into public.ai_usage (user_id, used_on, feature, count)
+  values ('00000000-0000-4000-a000-0000000000c1', current_date, 'analyze-meal', 3);
+insert into storage.objects (bucket_id, name, owner_id) values
+  ('meal-photos', '00000000-0000-4000-a000-0000000000c1/2026-10-17/a.jpg', '00000000-0000-4000-a000-0000000000c1'),
+  ('meal-photos', '00000000-0000-4000-a000-0000000000c2/2026-10-17/b.jpg', '00000000-0000-4000-a000-0000000000c2');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.meal_logs) <> 1 then
+    raise exception 'FAIL: client does not see exactly own meal logs';
+  end if;
+  if (select count(*) from public.ai_usage) <> 0 then
+    raise exception 'FAIL: client can read ai_usage';
+  end if;
+  if (select count(*) from storage.objects where bucket_id = 'meal-photos') <> 1 then
+    raise exception 'FAIL: client does not see exactly own meal photos';
+  end if;
+  insert into public.meal_logs (client_id, meal_type, source, total_calories)
+  values ('00000000-0000-4000-a000-0000000000c1', 'snack', 'manual', 150);
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.meal_logs (client_id, meal_type, source)
+    values ('00000000-0000-4000-a000-0000000000c2', 'snack', 'manual');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client logged a meal for another client';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.ai_usage (user_id, used_on, feature, count)
+    values ('00000000-0000-4000-a000-0000000000c1', current_date, 'analyze-meal', 0);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client wrote to ai_usage';
+end $$;
+
+do $$
+begin
+  begin
+    perform public.bump_ai_usage('00000000-0000-4000-a000-0000000000c1', current_date, 'analyze-meal');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client could call bump_ai_usage';
+end $$;
+
+do $$
+begin
+  begin
+    insert into storage.objects (bucket_id, name, owner_id)
+    values ('meal-photos', '00000000-0000-4000-a000-0000000000c2/2026-10-17/x.jpg', '00000000-0000-4000-a000-0000000000c1');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client uploaded into another client''s photo folder';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.meal_logs where client_id = '00000000-0000-4000-a000-0000000000c2') <> 0 then
+    raise exception 'FAIL: trainer sees meals of another trainer''s client';
+  end if;
+  if (select count(*) from public.meal_logs where client_id = '00000000-0000-4000-a000-0000000000c1') <> 2 then
+    raise exception 'FAIL: trainer cannot see own client''s meals';
+  end if;
+  if (select count(*) from storage.objects where bucket_id = 'meal-photos') <> 1 then
+    raise exception 'FAIL: trainer does not see exactly own client''s meal photos';
+  end if;
+  update public.meal_logs set total_calories = 1 where client_id = '00000000-0000-4000-a000-0000000000c1';
+  if found then raise exception 'FAIL: trainer edited a client''s meal'; end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

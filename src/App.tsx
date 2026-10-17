@@ -10,6 +10,9 @@ import { AuthProvider } from './features/auth/AuthProvider';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomeRedirect, RequireRole } from './features/auth/RequireRole';
 import type { Role } from './features/auth/roles';
+import { EditMealPage } from './features/food/EditMealPage';
+import { FoodPage } from './features/food/FoodPage';
+import { LogMealPage } from './features/food/LogMealPage';
 import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { MePage } from './features/profile/MePage';
 import { MyDetailsPage } from './features/profile/MyDetailsPage';
@@ -37,6 +40,9 @@ const KNOWN_PATHS = [
   '/trainer/me',
   '/onboarding',
   '/today',
+  '/food',
+  '/food/new/:mode',
+  '/food/meal/:id',
   '/workouts',
   '/workouts/day/:dayId',
   '/workouts/history',
@@ -93,6 +99,9 @@ export function App() {
             {/* Client */}
             <Route path="/onboarding" element={guarded('client', <OnboardingPage />, true)} />
             <Route path="/today" element={guarded('client', <TodayPage />)} />
+            <Route path="/food" element={guarded('client', <FoodPage />)} />
+            <Route path="/food/new/:mode" element={guarded('client', <LogMealPage />)} />
+            <Route path="/food/meal/:id" element={guarded('client', <EditMealPage />)} />
             <Route path="/workouts" element={guarded('client', <WorkoutsPage />)} />
             <Route path="/workouts/day/:dayId" element={guarded('client', <WorkoutDayPage />)} />
             <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />

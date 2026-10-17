@@ -427,3 +427,11 @@ enabled = true
 [functions.admin-users]
 verify_jwt = false
 
+
+[functions.analyze-meal]
+verify_jwt = false
+
+
+[functions.cron-photo-cleanup]
+verify_jwt = false
+

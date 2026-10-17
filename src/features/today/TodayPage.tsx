@@ -1,7 +1,13 @@
 import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonPage,
   IonRefresher,
   IonRefresherContent,
@@ -10,11 +16,15 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import { camera } from 'ionicons/icons';
 
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
-import { DEFAULT_TIMEZONE } from '../../lib/dates';
+import { DEFAULT_TIMEZONE, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
+import { useMealsOn } from '../food/api';
+import { DayProgress } from '../food/DayProgress';
+import { mealTotals } from '../food/model';
 import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
@@ -29,14 +39,16 @@ function greeting(timeZone = DEFAULT_TIMEZONE): string {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-/** Client home. Food, burn and workout cards arrive in later milestones. */
+/** Client home: food vs targets, today's workout. Calories burnt arrive in Milestone 4. */
 export function TodayPage() {
   const { profile } = useAuth();
+  const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const targets = useTargets(profile?.id);
+  const meals = useMealsOn(profile?.id, todayIn(tz));
   const trainer = useMyTrainer(profile?.id);
-  const tz = profile?.timezone;
   const firstName = (profile?.full_name || '').split(' ')[0];
   const trainerName = trainer.data?.full_name || 'Your trainer';
+  const target = currentTarget(targets.data, tz);
 
   return (
     <IonPage>
@@ -48,7 +60,11 @@ export function TodayPage() {
       <IonContent className="ion-padding">
         <IonRefresher
           slot="fixed"
-          onIonRefresh={(e) => void targets.refetch().finally(() => e.detail.complete())}
+          onIonRefresh={(e) =>
+            void Promise.all([targets.refetch(), meals.refetch()]).finally(() =>
+              e.detail.complete(),
+            )
+          }
         >
           <IonRefresherContent />
         </IonRefresher>
@@ -57,20 +73,36 @@ export function TodayPage() {
             {greeting(tz)}
             {firstName ? `, ${firstName}` : ''}!
           </h2>
-          {targets.isPending ? (
+          {targets.isPending || meals.isPending ? (
             <div className="ion-text-center">
               <IonSpinner name="crescent" />
             </div>
           ) : (
-            <TargetsCard
-              target={currentTarget(targets.data, tz)}
-              upcoming={upcomingTarget(targets.data, tz)}
-              emptyText={`${trainerName} hasn't set your targets yet.`}
-            />
+            <>
+              <IonCard style={{ marginInline: 0 }}>
+                <IonCardHeader>
+                  <IonCardSubtitle>Food today</IonCardSubtitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <DayProgress totals={mealTotals(meals.data ?? [])} target={target} />
+                  <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/food/new/photo">
+                    <IonIcon slot="start" icon={camera} />
+                    Log a meal
+                  </IonButton>
+                </IonCardContent>
+              </IonCard>
+              {!target && (
+                <TargetsCard
+                  target={null}
+                  upcoming={upcomingTarget(targets.data, tz)}
+                  emptyText={`${trainerName} hasn't set your targets yet.`}
+                />
+              )}
+            </>
           )}
           {profile && <TodayWorkoutCard profile={profile} />}
           <IonText color="medium">
-            <p style={{ fontSize: '0.9rem' }}>Food logging and calories burnt are coming soon.</p>
+            <p style={{ fontSize: '0.9rem' }}>Calories burnt are coming soon.</p>
           </IonText>
         </div>
       </IonContent>

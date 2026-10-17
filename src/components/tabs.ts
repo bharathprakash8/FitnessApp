@@ -1,4 +1,4 @@
-import { barbell, clipboard, people, person, today } from 'ionicons/icons';
+import { barbell, clipboard, people, person, restaurant, today } from 'ionicons/icons';
 
 export interface TabDef {
   tab: string;
@@ -9,6 +9,7 @@ export interface TabDef {
 
 export const CLIENT_TABS: TabDef[] = [
   { tab: 'today', path: '/today', label: 'Today', icon: today },
+  { tab: 'food', path: '/food', label: 'Food', icon: restaurant },
   { tab: 'workouts', path: '/workouts', label: 'Workouts', icon: barbell },
   { tab: 'me', path: '/me', label: 'Me', icon: person },
 ];
