@@ -25,7 +25,8 @@ if ($saJson.project_id -ne $gsJson.project_info.project_id) { Write-Host 'The tw
 Write-Host "Firebase project: $($saJson.project_id)"
 
 # 1. google-services.json -> GitHub secret
-[Convert]::ToBase64String([IO.File]::ReadAllBytes($gs.FullName)) | gh secret set GOOGLE_SERVICES_JSON_BASE64 --repo $repo
+# Pass as --body: piping from PowerShell 5 can garble the value.
+gh secret set GOOGLE_SERVICES_JSON_BASE64 --repo $repo --body ([Convert]::ToBase64String([IO.File]::ReadAllBytes($gs.FullName)))
 if ($LASTEXITCODE -ne 0) { Write-Host 'Could not save the GitHub secret' -ForegroundColor Red; exit 1 }
 
 # 2. service account -> Supabase secret (one line of JSON via a temp env file)
