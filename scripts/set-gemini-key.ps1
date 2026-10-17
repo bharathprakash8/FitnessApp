@@ -7,11 +7,13 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [En
 $secure = Read-Host -Prompt 'Paste your Gemini API key and press Enter (it will not be shown)' -AsSecureString
 $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
 try {
-  $key = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr).Trim()
+  # Drop spaces and quotes that sometimes come along with a paste.
+  $key = ([Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) -replace '[\s"'']', '')
 } finally {
   [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
 }
-if ($key.Length -lt 20) { Write-Host 'That does not look like a full key. Nothing was saved.' -ForegroundColor Red; exit 1 }
+if ($key.Length -lt 30) { Write-Host 'That does not look like a full key. Nothing was saved.' -ForegroundColor Red; exit 1 }
+Write-Host ("Key received: {0} characters, starts with {1}..." -f $key.Length, $key.Substring(0, 4))
 
 # Pass it through a temporary env file (not the command line), then delete the file.
 $tmp = Join-Path $env:TEMP ("gemini-" + [guid]::NewGuid().ToString() + '.env')

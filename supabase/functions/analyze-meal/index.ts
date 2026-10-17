@@ -154,7 +154,20 @@ serveJson(async (req) => {
   }
 
   // Count only successful estimates.
-  await db.rpc('bump_ai_usage', { uid: caller.id, day, feat: feature });
+  const { data: newCount } = await db.rpc('bump_ai_usage', { uid: caller.id, day, feat: feature });
+
+  // "Left today" always refers to the main allowance, also after a follow-up answer.
+  let mainUsed = Number(newCount ?? 0);
+  if (body.follow_up) {
+    const { data: main } = await db
+      .from('ai_usage')
+      .select('count')
+      .eq('user_id', caller.id)
+      .eq('used_on', day)
+      .eq('feature', 'analyze-meal')
+      .maybeSingle();
+    mainUsed = main?.count ?? 0;
+  }
 
   const items = result.data.items;
   const followUp = body.follow_up ? '' : result.data.follow_up_question.trim();
@@ -163,6 +176,6 @@ serveJson(async (req) => {
     total_calories: Math.round(items.reduce((s, i) => s + i.calories, 0)),
     follow_up_question: followUp || null,
     follow_up_options: followUp ? result.data.follow_up_options : [],
-    remaining_today: Math.max(0, cap - (usage?.count ?? 0) - 1),
+    remaining_today: Math.max(0, DAILY_CAP - mainUsed),
   };
 });

@@ -48,12 +48,27 @@ export async function generateJson(opts: {
     );
   }
   if (!res.ok) {
-    // Log status only – never the key or the request body.
-    console.error('Gemini error status', res.status);
+    // Google's error status/message never contain the key; the request body is not logged.
+    const err = await res.json().catch(() => null);
+    const googleStatus: string = err?.error?.status ?? 'UNKNOWN';
+    if (/api key/i.test(String(err?.error?.message ?? ''))) {
+      console.error('Gemini rejected the API key');
+      throw new HttpError(
+        503,
+        "The AI isn't set up correctly. Please enter the meal manually and tell the admin.",
+        'ai_bad_key',
+      );
+    }
+    console.error(
+      'Gemini error',
+      res.status,
+      googleStatus,
+      String(err?.error?.message ?? '').slice(0, 300),
+    );
     throw new HttpError(
       502,
       'The AI could not read this meal. Try again or enter it manually.',
-      'ai_error',
+      `ai_error_${res.status}_${googleStatus}: ${String(err?.error?.message ?? '').slice(0, 160)}`,
     );
   }
 

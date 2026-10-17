@@ -46,7 +46,7 @@ export function TrainerClientPage() {
           <IonTitle>{name}</IonTitle>
         </IonToolbar>
         <IonToolbar>
-          <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
+          <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="overview">
               <IonLabel>Overview</IonLabel>
             </IonSegmentButton>
