@@ -4,5 +4,6 @@ android
 node_modules
 package-lock.json
 supabase/.temp
+supabase/templates
 src/lib/database.types.ts
 CLAUDE.md

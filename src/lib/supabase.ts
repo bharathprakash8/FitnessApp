@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+import type { Database } from './database.types';
+
 const url = import.meta.env.VITE_SUPABASE_URL;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
@@ -10,6 +12,6 @@ if (!url || !publishableKey) {
 }
 
 // Browser client: publishable key only. The secret key lives in Edge Functions, never here.
-export const supabase = createClient(url, publishableKey, {
+export const supabase = createClient<Database>(url, publishableKey, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
