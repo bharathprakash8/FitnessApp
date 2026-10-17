@@ -39,15 +39,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      measurements: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          measured_on: string
+          notes: string | null
+          photo_paths: string[]
+          waist_cm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          measured_on?: string
+          notes?: string | null
+          photo_paths?: string[]
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          measured_on?: string
+          notes?: string | null
+          photo_paths?: string[]
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           consent_at: string | null
+          consent_version: string | null
           created_at: string
           date_of_birth: string | null
           diet_preference: string | null
           email: string
           full_name: string | null
           goal: string | null
+          goal_other: string | null
           health_sync_token_hash: string | null
           height_cm: number | null
           id: string
@@ -61,12 +104,14 @@ export type Database = {
         }
         Insert: {
           consent_at?: string | null
+          consent_version?: string | null
           created_at?: string
           date_of_birth?: string | null
           diet_preference?: string | null
           email: string
           full_name?: string | null
           goal?: string | null
+          goal_other?: string | null
           health_sync_token_hash?: string | null
           height_cm?: number | null
           id: string
@@ -80,12 +125,14 @@ export type Database = {
         }
         Update: {
           consent_at?: string | null
+          consent_version?: string | null
           created_at?: string
           date_of_birth?: string | null
           diet_preference?: string | null
           email?: string
           full_name?: string | null
           goal?: string | null
+          goal_other?: string | null
           health_sync_token_hash?: string | null
           height_cm?: number | null
           id?: string
@@ -98,6 +145,57 @@ export type Database = {
           timezone?: string
         }
         Relationships: []
+      }
+      targets: {
+        Row: {
+          calories: number
+          carbs_g: number
+          client_id: string
+          created_at: string
+          effective_from: string
+          fat_g: number
+          id: string
+          protein_g: number
+          set_by: string | null
+        }
+        Insert: {
+          calories: number
+          carbs_g: number
+          client_id: string
+          created_at?: string
+          effective_from?: string
+          fat_g: number
+          id?: string
+          protein_g: number
+          set_by?: string | null
+        }
+        Update: {
+          calories?: number
+          carbs_g?: number
+          client_id?: string
+          created_at?: string
+          effective_from?: string
+          fat_g?: number
+          id?: string
+          protein_g?: number
+          set_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "targets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "targets_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainer_clients: {
         Row: {
@@ -151,6 +249,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_trainer_of: { Args: { client: string }; Returns: boolean }
       my_trainer: { Args: never; Returns: string }
+      user_has_data: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

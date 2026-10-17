@@ -1,0 +1,28 @@
+.profile-page {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-row {
+  display: flex;
+  gap: 12px;
+}
+
+.profile-row > * {
+  flex: 1;
+}
+
+.profile-label {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.profile-note {
+  margin: 0;
+}

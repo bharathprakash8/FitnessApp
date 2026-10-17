@@ -35,7 +35,7 @@ export function LoginPage() {
   }, [resendIn]);
 
   if (status === 'ready' && profile) {
-    return <Navigate to={homePathFor(profile.role)} replace />;
+    return <Navigate to={homePathFor(profile)} replace />;
   }
 
   async function sendCode(e?: FormEvent) {

@@ -26,6 +26,14 @@ insert into public.trainer_clients (client_id, trainer_id) values
 
 update public.profiles set is_active = false where id = '00000000-0000-4000-a000-0000000000c3';
 
+-- Milestone 1 data: one target and one weight for each of C1 and C2
+insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g, set_by) values
+  ('00000000-0000-4000-a000-0000000000c1', 2000, 120, 220, 60, '00000000-0000-4000-a000-0000000000f1'),
+  ('00000000-0000-4000-a000-0000000000c2', 1800, 110, 200, 55, '00000000-0000-4000-a000-0000000000f2');
+insert into public.measurements (client_id, weight_kg) values
+  ('00000000-0000-4000-a000-0000000000c1', 72.5),
+  ('00000000-0000-4000-a000-0000000000c2', 64.0);
+
 -- Trigger checks (as postgres)
 do $$
 begin
@@ -147,6 +155,100 @@ begin
   end if;
   if (select count(*) from public.trainer_clients) <> 0 then
     raise exception 'FAIL: deactivated user can read trainer_clients';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Milestone 1: targets and measurements
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+
+do $$
+begin
+  if (select count(*) from public.targets) <> 1 then
+    raise exception 'FAIL: client does not see exactly own targets';
+  end if;
+  if (select count(*) from public.measurements) <> 1 then
+    raise exception 'FAIL: client does not see exactly own measurements';
+  end if;
+  insert into public.measurements (client_id, weight_kg) values ('00000000-0000-4000-a000-0000000000c1', 72.0);
+  begin
+    insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g)
+    values ('00000000-0000-4000-a000-0000000000c1', 3000, 200, 300, 100);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client set their own targets';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.measurements (client_id, weight_kg) values ('00000000-0000-4000-a000-0000000000c2', 50);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client added a measurement for another client';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+
+do $$
+begin
+  if (select count(*) from public.targets where client_id = '00000000-0000-4000-a000-0000000000c2') <> 0 then
+    raise exception 'FAIL: trainer sees targets of another trainer''s client';
+  end if;
+  if (select count(*) from public.measurements where client_id = '00000000-0000-4000-a000-0000000000c2') <> 0 then
+    raise exception 'FAIL: trainer sees measurements of another trainer''s client';
+  end if;
+  if (select count(*) from public.measurements where client_id = '00000000-0000-4000-a000-0000000000c1') <> 2 then
+    raise exception 'FAIL: trainer cannot see own client measurements';
+  end if;
+  insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g)
+  values ('00000000-0000-4000-a000-0000000000c1', 2100, 130, 230, 62);
+  if (select set_by from public.targets where calories = 2100) <> '00000000-0000-4000-a000-0000000000f1' then
+    raise exception 'FAIL: set_by was not filled with the trainer';
+  end if;
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g)
+    values ('00000000-0000-4000-a000-0000000000c2', 2000, 100, 200, 60);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer set targets for another trainer''s client';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g, set_by)
+    values ('00000000-0000-4000-a000-0000000000c1', 2000, 100, 200, 60, '00000000-0000-4000-a000-0000000000f2');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer saved a target with someone else as set_by';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.measurements (client_id, weight_kg) values ('00000000-0000-4000-a000-0000000000c1', 70);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer added a measurement for a client';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c3","role":"authenticated"}', true);
+
+do $$
+begin
+  if (select count(*) from public.targets) + (select count(*) from public.measurements) <> 0 then
+    raise exception 'FAIL: deactivated user can read targets or measurements';
   end if;
 end $$;
 

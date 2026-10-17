@@ -1,14 +1,53 @@
 import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { Route } from 'react-router-dom';
+import type { ReactElement } from 'react';
+import { Route, matchPath, useLocation } from 'react-router-dom';
 
-import { PlaceholderPage } from './components/PlaceholderPage';
 import { AdminHomePage } from './features/admin/AdminHomePage';
 import { CreateUserPage } from './features/admin/CreateUserPage';
 import { UserDetailPage } from './features/admin/UserDetailPage';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomeRedirect, RequireRole } from './features/auth/RequireRole';
+import type { Role } from './features/auth/roles';
+import { OnboardingPage } from './features/onboarding/OnboardingPage';
+import { MePage } from './features/profile/MePage';
+import { MyDetailsPage } from './features/profile/MyDetailsPage';
+import { TodayPage } from './features/today/TodayPage';
+import { TrainerClientPage } from './features/trainer/TrainerClientPage';
+import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
+
+const KNOWN_PATHS = [
+  '/login',
+  '/admin',
+  '/admin/users/new',
+  '/admin/users/:id',
+  '/trainer',
+  '/trainer/clients/:id',
+  '/trainer/me',
+  '/onboarding',
+  '/today',
+  '/me',
+  '/me/details',
+];
+
+/**
+ * Handles "/" and unknown addresses by sending the user to their home (or login).
+ * This lives outside IonRouterOutlet on purpose: a "/" or "*" route inside the outlet
+ * matches every path for Ionic, which then reuses that redirect view for later
+ * navigations, so taps on links bounce back.
+ */
+function RootRedirect() {
+  const { pathname } = useLocation();
+  const known = KNOWN_PATHS.some((p) => matchPath(p, pathname));
+  return known ? null : <HomeRedirect />;
+}
+
+const guarded = (role: Role, page: ReactElement, onboarding = false) => (
+  <RequireRole role={role} onboarding={onboarding}>
+    {page}
+  </RequireRole>
+);
 
 export function App() {
   return (
@@ -17,48 +56,27 @@ export function App() {
         <IonReactRouter>
           <IonRouterOutlet>
             <Route path="/login" element={<LoginPage />} />
+
+            {/* Admin */}
+            <Route path="/admin" element={guarded('admin', <AdminHomePage />)} />
+            <Route path="/admin/users/new" element={guarded('admin', <CreateUserPage />)} />
+            <Route path="/admin/users/:id" element={guarded('admin', <UserDetailPage />)} />
+
+            {/* Trainer */}
+            <Route path="/trainer" element={guarded('trainer', <TrainerClientsPage />)} />
             <Route
-              path="/admin"
-              element={
-                <RequireRole role="admin">
-                  <AdminHomePage />
-                </RequireRole>
-              }
+              path="/trainer/clients/:id"
+              element={guarded('trainer', <TrainerClientPage />)}
             />
-            <Route
-              path="/admin/users/new"
-              element={
-                <RequireRole role="admin">
-                  <CreateUserPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/users/:id"
-              element={
-                <RequireRole role="admin">
-                  <UserDetailPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/trainer"
-              element={
-                <RequireRole role="trainer">
-                  <PlaceholderPage title="Trainer" message="Your trainer home is coming soon." />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/today"
-              element={
-                <RequireRole role="client">
-                  <PlaceholderPage title="Today" message="Your daily view is coming soon." />
-                </RequireRole>
-              }
-            />
-            <Route path="*" element={<HomeRedirect />} />
+            <Route path="/trainer/me" element={guarded('trainer', <MePage />)} />
+
+            {/* Client */}
+            <Route path="/onboarding" element={guarded('client', <OnboardingPage />, true)} />
+            <Route path="/today" element={guarded('client', <TodayPage />)} />
+            <Route path="/me" element={guarded('client', <MePage />)} />
+            <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
           </IonRouterOutlet>
+          <RootRedirect />
         </IonReactRouter>
       </AuthProvider>
     </IonApp>

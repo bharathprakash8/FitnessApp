@@ -3,14 +3,19 @@ import type { Tables } from '../../lib/database.types';
 export type Profile = Tables<'profiles'>;
 export type Role = 'admin' | 'trainer' | 'client';
 
-/** Where each role lands after login. Client onboarding (/onboarding) arrives in Milestone 1. */
-export function homePathFor(role: string): string {
-  switch (role) {
+/** True for a client who hasn't finished onboarding yet. */
+export function needsOnboarding(profile: Pick<Profile, 'role' | 'onboarded_at'>): boolean {
+  return profile.role === 'client' && !profile.onboarded_at;
+}
+
+/** Where each user lands after login. */
+export function homePathFor(profile: Pick<Profile, 'role' | 'onboarded_at'>): string {
+  switch (profile.role) {
     case 'admin':
       return '/admin';
     case 'trainer':
       return '/trainer';
     default:
-      return '/today';
+      return needsOnboarding(profile) ? '/onboarding' : '/today';
   }
 }

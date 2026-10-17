@@ -1,0 +1,54 @@
+.targets-card {
+  margin-inline: 0;
+}
+
+.targets-kcal {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+}
+
+.targets-kcal span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ion-color-medium);
+}
+
+.targets-empty {
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.targets-macros {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.targets-macro {
+  flex: 1;
+  text-align: center;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: var(--ion-color-light);
+}
+
+.targets-macro strong {
+  display: block;
+  font-size: 1.15rem;
+  color: var(--ion-text-color);
+}
+
+.targets-macro span {
+  font-size: 0.8rem;
+}
+
+.targets-since {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+}
+
+.targets-warning {
+  margin: 0;
+  font-size: 0.9rem;
+}

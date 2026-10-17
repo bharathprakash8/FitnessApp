@@ -1,0 +1,47 @@
+.trainer-page {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.trainer-card {
+  margin-inline: 0;
+}
+
+.trainer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.trainer-row {
+  display: flex;
+  gap: 8px;
+}
+
+.trainer-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.trainer-estimate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.trainer-estimate ion-select {
+  width: 100%;
+}
+
+.trainer-note {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.trainer-flags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
