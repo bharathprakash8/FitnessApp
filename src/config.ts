@@ -6,7 +6,8 @@
 export const IPHONE_SHORTCUT_URL = '';
 
 /** Where Android users download the app (Firebase App Distribution invite link). */
-export const ANDROID_APP_URL = '';
+export const ANDROID_APP_URL =
+  'https://github.com/bharathprakash8/FitnessApp/releases/latest/download/FitCoach.apk';
 
 /** Play Store page for Health Connect (Android 13 and older need it installed). */
 export const HEALTH_CONNECT_PLAY_URL =

@@ -1,6 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { ANDROID_APP_URL } from '../../config';
 import { supabase } from '../../lib/supabase';
 import type { Role } from '../auth/roles';
 
@@ -112,6 +113,6 @@ export function loginInstructions(user: Pick<AdminUser, 'full_name' | 'email'>):
     `Log in with your email (${user.email}). We'll email you a 6-digit code – type it in and you're in.`,
     '',
     'iPhone: open the link in Safari, tap Share, then "Add to Home Screen".',
-    'Android: open the link in Chrome, tap ⋮, then "Add to Home screen". (The Android app download link is coming soon.)',
+    `Android: install the FitCoach app from ${ANDROID_APP_URL} (allow "install from this source" when asked).`,
   ].join('\n');
 }
