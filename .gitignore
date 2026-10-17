@@ -1,0 +1,39 @@
+# Dependencies and build output
+node_modules/
+dist/
+dev-dist/
+*.tsbuildinfo
+*.log
+
+# Secrets – never commit
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+keystore.properties
+*service-account*.json
+firebase-adminsdk*.json
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+
+# Android (Capacitor) build output
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+*.apk
+*.aab
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
