@@ -494,6 +494,49 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 4: activity_daily
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.activity_daily (client_id, activity_date, active_calories, source) values
+  ('00000000-0000-4000-a000-0000000000c1', current_date, 400, 'health_connect'),
+  ('00000000-0000-4000-a000-0000000000c2', current_date, 300, 'apple_shortcut');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.activity_daily) <> 1 then
+    raise exception 'FAIL: client does not see exactly own activity';
+  end if;
+  insert into public.activity_daily (client_id, activity_date, active_calories, source)
+  values ('00000000-0000-4000-a000-0000000000c1', current_date - 1, 250, 'manual');
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.activity_daily (client_id, activity_date, active_calories, source)
+    values ('00000000-0000-4000-a000-0000000000c2', current_date - 1, 999, 'manual');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client wrote activity for another client';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.activity_daily where client_id = '00000000-0000-4000-a000-0000000000c2') <> 0 then
+    raise exception 'FAIL: trainer sees activity of another trainer''s client';
+  end if;
+  if (select count(*) from public.activity_daily where client_id = '00000000-0000-4000-a000-0000000000c1') <> 2 then
+    raise exception 'FAIL: trainer cannot see own client''s activity';
+  end if;
+  update public.activity_daily set active_calories = 1 where client_id = '00000000-0000-4000-a000-0000000000c1';
+  if found then raise exception 'FAIL: trainer edited a client''s activity'; end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

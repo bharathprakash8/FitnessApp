@@ -11,7 +11,7 @@ export type PlanDayFull = Tables<'plan_days'> & { plan_exercises: PlanExerciseFu
 export type PlanFull = WorkoutPlan & { plan_days: PlanDayFull[] };
 
 export type LogWithExercise = WorkoutLog & {
-  exercises: Pick<Exercise, 'id' | 'name' | 'log_type'>;
+  exercises: Pick<Exercise, 'id' | 'name' | 'log_type' | 'muscle_group'>;
 };
 
 export const LOG_TYPE_LABELS: Record<LogType, string> = {

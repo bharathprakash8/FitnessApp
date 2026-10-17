@@ -3,6 +3,8 @@ import { IonReactRouter } from '@ionic/react-router';
 import type { ReactElement } from 'react';
 import { Route, matchPath, useLocation } from 'react-router-dom';
 
+import { HealthAutoSync } from './features/activity/HealthAutoSync';
+import { HealthSyncPage } from './features/activity/HealthSyncPage';
 import { AdminHomePage } from './features/admin/AdminHomePage';
 import { CreateUserPage } from './features/admin/CreateUserPage';
 import { UserDetailPage } from './features/admin/UserDetailPage';
@@ -48,6 +50,7 @@ const KNOWN_PATHS = [
   '/workouts/history',
   '/me',
   '/me/details',
+  '/me/health',
 ];
 
 /**
@@ -72,6 +75,7 @@ export function App() {
   return (
     <IonApp>
       <AuthProvider>
+        <HealthAutoSync />
         <IonReactRouter>
           <IonRouterOutlet>
             <Route path="/login" element={<LoginPage />} />
@@ -107,6 +111,7 @@ export function App() {
             <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />
             <Route path="/me" element={guarded('client', <MePage />)} />
             <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
+            <Route path="/me/health" element={guarded('client', <HealthSyncPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
         </IonReactRouter>

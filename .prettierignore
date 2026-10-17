@@ -7,3 +7,5 @@ supabase/.temp
 supabase/templates
 src/lib/database.types.ts
 CLAUDE.md
+assets
+android/app/src/main/res

@@ -3,6 +3,7 @@ import { chevronBack, chevronForward } from 'ionicons/icons';
 import { useState } from 'react';
 
 import { formatDate, todayIn } from '../../lib/dates';
+import { BurnCard } from '../activity/BurnCard';
 import type { Profile } from '../auth/roles';
 import { useMealsOn } from '../food/api';
 import { DayProgress } from '../food/DayProgress';
@@ -47,6 +48,12 @@ export function ClientFoodTab({ client }: { client: Profile }) {
           />
         </IonCardContent>
       </IonCard>
+      <BurnCard
+        client={client}
+        day={day}
+        eatenKcal={mealTotals(meals.data ?? []).calories}
+        editable={false}
+      />
       {meals.isPending ? (
         <div className="ion-text-center">
           <IonSpinner name="crescent" />

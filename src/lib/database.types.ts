@@ -39,6 +39,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_daily: {
+        Row: {
+          active_calories: number | null
+          activity_date: string
+          client_id: string
+          resting_calories: number | null
+          sleep_minutes: number | null
+          source: string
+          steps: number | null
+          updated_at: string
+        }
+        Insert: {
+          active_calories?: number | null
+          activity_date: string
+          client_id: string
+          resting_calories?: number | null
+          sleep_minutes?: number | null
+          source: string
+          steps?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active_calories?: number | null
+          activity_date?: string
+          client_id?: string
+          resting_calories?: number | null
+          sleep_minutes?: number | null
+          source?: string
+          steps?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_daily_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage: {
         Row: {
           count: number
@@ -625,12 +666,19 @@ export type Database = {
         Args: { day: string; feat: string; uid: string }
         Returns: number
       }
+      call_cron_function: { Args: { body?: Json; fn: string }; Returns: number }
       can_edit_plan: { Args: { plan: string }; Returns: boolean }
       can_read_plan: { Args: { plan: string }; Returns: boolean }
       exercise_used_by_me: { Args: { ex: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_trainer_of: { Args: { client: string }; Returns: boolean }
       my_trainer: { Args: never; Returns: string }
+      old_meal_photos: {
+        Args: { cutoff: string }
+        Returns: {
+          name: string
+        }[]
+      }
       plan_of_day: { Args: { day: string }; Returns: string }
       plan_owner: { Args: { plan: string }; Returns: string }
       try_uuid: { Args: { t: string }; Returns: string }

@@ -12,7 +12,6 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonSpinner,
-  IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
@@ -21,6 +20,7 @@ import { camera } from 'ionicons/icons';
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
 import { DEFAULT_TIMEZONE, todayIn } from '../../lib/dates';
+import { BurnCard } from '../activity/BurnCard';
 import { useAuth } from '../auth/useAuth';
 import { useMealsOn } from '../food/api';
 import { DayProgress } from '../food/DayProgress';
@@ -39,7 +39,7 @@ function greeting(timeZone = DEFAULT_TIMEZONE): string {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-/** Client home: food vs targets, today's workout. Calories burnt arrive in Milestone 4. */
+/** Client home: food vs targets, calories burnt and net balance, today's workout. */
 export function TodayPage() {
   const { profile } = useAuth();
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
@@ -91,6 +91,14 @@ export function TodayPage() {
                   </IonButton>
                 </IonCardContent>
               </IonCard>
+              {profile && (
+                <BurnCard
+                  client={profile}
+                  day={todayIn(tz)}
+                  eatenKcal={mealTotals(meals.data ?? []).calories}
+                  editable
+                />
+              )}
               {!target && (
                 <TargetsCard
                   target={null}
@@ -101,9 +109,6 @@ export function TodayPage() {
             </>
           )}
           {profile && <TodayWorkoutCard profile={profile} />}
-          <IonText color="medium">
-            <p style={{ fontSize: '0.9rem' }}>Calories burnt are coming soon.</p>
-          </IonText>
         </div>
       </IonContent>
       <IonFooter>

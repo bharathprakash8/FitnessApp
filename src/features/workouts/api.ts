@@ -282,7 +282,7 @@ export function useWorkoutLogs(clientId: string | undefined) {
     queryFn: async (): Promise<LogWithExercise[]> => {
       const { data, error } = await supabase
         .from('workout_logs')
-        .select('*, exercises(id, name, log_type)')
+        .select('*, exercises(id, name, log_type, muscle_group)')
         .eq('client_id', clientId!)
         .order('performed_on', { ascending: false })
         .order('created_at', { ascending: false })

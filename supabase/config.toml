@@ -435,3 +435,7 @@ verify_jwt = false
 [functions.cron-photo-cleanup]
 verify_jwt = false
 
+
+[functions.health-sync]
+verify_jwt = false
+

@@ -23,6 +23,8 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        // Real pages that must not be replaced by the app shell.
+        navigateFallbackDenylist: [/^\/privacy\.html$/],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
       },
     }),

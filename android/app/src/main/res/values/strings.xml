@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FitCoach</string>
+    <string name="title_activity_main">FitCoach</string>
+    <string name="package_name">com.fitcoach.app</string>
+    <string name="custom_url_scheme">com.fitcoach.app</string>
+    <!-- Shown by Health Connect when the user taps "Privacy policy" -->
+    <string name="health_connect_privacy_policy_url">https://fitcoach-ten-nu.vercel.app/privacy.html</string>
+</resources>
