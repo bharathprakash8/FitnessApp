@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/sb/:path*",
+      "destination": "https://updctclaxbawgtrhtdor.supabase.co/:path*"
+    },
+    {
       "source": "/((?!assets/)[^.]*)",
       "destination": "/index.html"
     }
