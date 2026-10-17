@@ -36,6 +36,7 @@ export function AdminHomePage() {
         <IonToolbar color="primary">
           <IonTitle>Admin</IonTitle>
           <IonButtons slot="end">
+            <IonButton routerLink="/admin/exercises">Exercises</IonButton>
             <IonButton onClick={() => void signOut()}>Log out</IonButton>
           </IonButtons>
         </IonToolbar>

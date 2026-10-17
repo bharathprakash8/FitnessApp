@@ -16,17 +16,30 @@ import { MyDetailsPage } from './features/profile/MyDetailsPage';
 import { TodayPage } from './features/today/TodayPage';
 import { TrainerClientPage } from './features/trainer/TrainerClientPage';
 import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
+import { ExerciseLibraryPage } from './features/workouts/ExerciseLibraryPage';
+import { PlanEditorPage } from './features/workouts/PlanEditorPage';
+import { PlansPage } from './features/workouts/PlansPage';
+import { WorkoutDayPage } from './features/workouts/WorkoutDayPage';
+import { WorkoutHistoryPage } from './features/workouts/WorkoutHistoryPage';
+import { WorkoutsPage } from './features/workouts/WorkoutsPage';
 
 const KNOWN_PATHS = [
   '/login',
   '/admin',
   '/admin/users/new',
   '/admin/users/:id',
+  '/admin/exercises',
   '/trainer',
   '/trainer/clients/:id',
+  '/trainer/plans',
+  '/trainer/plans/:id',
+  '/trainer/exercises',
   '/trainer/me',
   '/onboarding',
   '/today',
+  '/workouts',
+  '/workouts/day/:dayId',
+  '/workouts/history',
   '/me',
   '/me/details',
 ];
@@ -61,6 +74,7 @@ export function App() {
             <Route path="/admin" element={guarded('admin', <AdminHomePage />)} />
             <Route path="/admin/users/new" element={guarded('admin', <CreateUserPage />)} />
             <Route path="/admin/users/:id" element={guarded('admin', <UserDetailPage />)} />
+            <Route path="/admin/exercises" element={guarded('admin', <ExerciseLibraryPage />)} />
 
             {/* Trainer */}
             <Route path="/trainer" element={guarded('trainer', <TrainerClientsPage />)} />
@@ -68,11 +82,20 @@ export function App() {
               path="/trainer/clients/:id"
               element={guarded('trainer', <TrainerClientPage />)}
             />
+            <Route path="/trainer/plans" element={guarded('trainer', <PlansPage />)} />
+            <Route path="/trainer/plans/:id" element={guarded('trainer', <PlanEditorPage />)} />
+            <Route
+              path="/trainer/exercises"
+              element={guarded('trainer', <ExerciseLibraryPage />)}
+            />
             <Route path="/trainer/me" element={guarded('trainer', <MePage />)} />
 
             {/* Client */}
             <Route path="/onboarding" element={guarded('client', <OnboardingPage />, true)} />
             <Route path="/today" element={guarded('client', <TodayPage />)} />
+            <Route path="/workouts" element={guarded('client', <WorkoutsPage />)} />
+            <Route path="/workouts/day/:dayId" element={guarded('client', <WorkoutDayPage />)} />
+            <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />
             <Route path="/me" element={guarded('client', <MePage />)} />
             <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
           </IonRouterOutlet>

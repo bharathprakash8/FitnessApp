@@ -18,6 +18,7 @@ import { useAuth } from '../auth/useAuth';
 import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
+import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
 
 function greeting(timeZone = DEFAULT_TIMEZONE): string {
   const h = Number(
@@ -67,10 +68,9 @@ export function TodayPage() {
               emptyText={`${trainerName} hasn't set your targets yet.`}
             />
           )}
+          {profile && <TodayWorkoutCard profile={profile} />}
           <IonText color="medium">
-            <p style={{ fontSize: '0.9rem' }}>
-              Food logging, workouts and calories burnt are coming soon.
-            </p>
+            <p style={{ fontSize: '0.9rem' }}>Food logging and calories burnt are coming soon.</p>
           </IonText>
         </div>
       </IonContent>

@@ -253,6 +253,158 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 2: exercises, plans, assignments, workout logs
+--   E1 = T1's own exercise, E2 = T2's own exercise, P1 = T1's plan (day D1) assigned to C1
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.exercises (id, trainer_id, name, log_type) values
+  ('00000000-0000-4000-b000-0000000000e1', '00000000-0000-4000-a000-0000000000f1', 'T1 special', 'weights'),
+  ('00000000-0000-4000-b000-0000000000e2', '00000000-0000-4000-a000-0000000000f2', 'T2 special', 'weights');
+insert into public.workout_plans (id, trainer_id, name) values
+  ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-0000000000f1', 'T1 plan');
+insert into public.plan_days (id, plan_id, day_index, title) values
+  ('00000000-0000-4000-b000-0000000000d1', '00000000-0000-4000-b000-0000000000b1', 0, 'Day 1');
+insert into public.plan_exercises (plan_day_id, exercise_id, sets, reps) values
+  ('00000000-0000-4000-b000-0000000000d1', '00000000-0000-4000-b000-0000000000e1', 3, '8-10'),
+  ('00000000-0000-4000-b000-0000000000d1', (select id from public.exercises where name = 'Push-up' and trainer_id is null), 3, '10');
+insert into public.plan_assignments (plan_id, client_id) values
+  ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-0000000000c1');
+insert into public.workout_logs (client_id, plan_day_id, exercise_id, set_number, reps, weight_kg) values
+  ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000d1', '00000000-0000-4000-b000-0000000000e1', 1, 8, 40),
+  ('00000000-0000-4000-a000-0000000000c2', null, '00000000-0000-4000-b000-0000000000e2', 1, 10, 20);
+
+set local role authenticated;
+
+-- Client C1
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.workout_plans) <> 1 then
+    raise exception 'FAIL: client does not see exactly the assigned plan';
+  end if;
+  if (select count(*) from public.plan_exercises) <> 2 then
+    raise exception 'FAIL: client cannot see the exercises of the assigned plan';
+  end if;
+  if (select count(*) from public.exercises where id = '00000000-0000-4000-b000-0000000000e1') <> 1 then
+    raise exception 'FAIL: client cannot see own trainer''s exercise';
+  end if;
+  if (select count(*) from public.exercises where id = '00000000-0000-4000-b000-0000000000e2') <> 0 then
+    raise exception 'FAIL: client can see another trainer''s exercise';
+  end if;
+  if (select count(*) from public.exercises where trainer_id is null) < 40 then
+    raise exception 'FAIL: client cannot see the shared library';
+  end if;
+  if (select count(*) from public.workout_logs) <> 1 then
+    raise exception 'FAIL: client does not see exactly own workout logs';
+  end if;
+  insert into public.workout_logs (client_id, exercise_id, set_number, reps, weight_kg)
+  values ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000e1', 2, 8, 42.5);
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.workout_logs (client_id, exercise_id, set_number, reps)
+    values ('00000000-0000-4000-a000-0000000000c2', '00000000-0000-4000-b000-0000000000e2', 1, 5);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client logged a workout for another client';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.workout_plans (trainer_id, name) values ('00000000-0000-4000-a000-0000000000c1', 'Mine');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: client created a workout plan';
+end $$;
+
+-- Client C2 (trainer T2)
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.workout_plans) + (select count(*) from public.plan_days) <> 0 then
+    raise exception 'FAIL: client can see a plan not assigned to them';
+  end if;
+  if (select count(*) from public.exercises where id = '00000000-0000-4000-b000-0000000000e1') <> 0 then
+    raise exception 'FAIL: client can see another trainer''s exercise';
+  end if;
+end $$;
+
+-- Trainer T2
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+declare new_plan uuid;
+begin
+  if (select count(*) from public.workout_plans where id = '00000000-0000-4000-b000-0000000000b1') <> 0 then
+    raise exception 'FAIL: trainer can see another trainer''s plan';
+  end if;
+  if (select count(*) from public.workout_logs where client_id = '00000000-0000-4000-a000-0000000000c1') <> 0 then
+    raise exception 'FAIL: trainer can see logs of another trainer''s client';
+  end if;
+  -- the app creates plans with INSERT ... RETURNING (checks the SELECT policy on the new row)
+  insert into public.workout_plans (id, trainer_id, name)
+  values ('00000000-0000-4000-b000-0000000000b2', '00000000-0000-4000-a000-0000000000f2', 'T2 plan')
+  returning id into new_plan;
+  insert into public.plan_days (id, plan_id, day_index, title)
+  values ('00000000-0000-4000-b000-0000000000d2', '00000000-0000-4000-b000-0000000000b2', 0, 'Day 1');
+  begin
+    insert into public.plan_exercises (plan_day_id, exercise_id)
+    values ('00000000-0000-4000-b000-0000000000d2', '00000000-0000-4000-b000-0000000000e1');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer used another trainer''s exercise in a plan';
+end $$;
+
+do $$
+begin
+  begin
+    update public.exercises set cues = 'hacked' where trainer_id is null and name = 'Push-up';
+    if found then raise exception 'FAIL: trainer edited a shared exercise'; end if;
+  end;
+end $$;
+
+-- Trainer T1
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.workout_logs where client_id = '00000000-0000-4000-a000-0000000000c1') <> 2 then
+    raise exception 'FAIL: trainer cannot see own client''s workout logs';
+  end if;
+  -- a second plan for C1 ends the first assignment
+  insert into public.workout_plans (id, trainer_id, name)
+  values ('00000000-0000-4000-b000-0000000000b3', '00000000-0000-4000-a000-0000000000f1', 'T1 plan 2');
+  insert into public.plan_assignments (plan_id, client_id)
+  values ('00000000-0000-4000-b000-0000000000b3', '00000000-0000-4000-a000-0000000000c1');
+  if (select count(*) from public.plan_assignments
+      where client_id = '00000000-0000-4000-a000-0000000000c1' and is_active) <> 1 then
+    raise exception 'FAIL: client has more than one active plan';
+  end if;
+  begin
+    insert into public.plan_assignments (plan_id, client_id)
+    values ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-0000000000c2');
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer assigned a plan to another trainer''s client';
+end $$;
+
+do $$
+begin
+  begin
+    insert into public.workout_logs (client_id, exercise_id, set_number, reps)
+    values ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000e1', 9, 5);
+  exception when others then
+    return;
+  end;
+  raise exception 'FAIL: trainer logged a workout for a client';
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

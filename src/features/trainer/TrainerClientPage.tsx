@@ -23,10 +23,11 @@ import { useLatestWeight, useProfileById } from '../profile/api';
 import { DIET_LABELS, SEX_LABELS, goalText, label } from '../profile/options';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
+import { ClientWorkoutsTab } from './ClientWorkoutsTab';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
-type Tab = 'overview' | 'targets';
+type Tab = 'overview' | 'targets' | 'workouts';
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,9 @@ export function TrainerClientPage() {
             <IonSegmentButton value="targets">
               <IonLabel>Targets</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="workouts">
+              <IonLabel>Workouts</IonLabel>
+            </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
       </IonHeader>
@@ -66,8 +70,10 @@ export function TrainerClientPage() {
             </IonText>
           ) : tab === 'overview' ? (
             <Overview client={client.data} />
-          ) : (
+          ) : tab === 'targets' ? (
             <TargetsTab client={client.data} />
+          ) : (
+            <ClientWorkoutsTab client={client.data} />
           )}
         </div>
       </IonContent>
