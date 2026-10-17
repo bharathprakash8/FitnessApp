@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "db:types": "supabase gen types typescript --linked > src/lib/database.types.ts",
+    "db:test": "supabase db query --linked -f supabase/tests/rls_checks.sql"
   },
   "dependencies": {
     "@ionic/react": "^9.0.8",
