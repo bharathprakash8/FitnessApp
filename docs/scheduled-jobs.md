@@ -5,9 +5,10 @@ Jobs run inside Postgres with `pg_cron` and call Edge Functions over HTTP with `
 function checks against its `CRON_SECRET` secret. The service-role key is never stored in
 the database.
 
-| Job                  | Schedule (UTC)                   | Function             | What it does                                                                |
-| -------------------- | -------------------------------- | -------------------- | --------------------------------------------------------------------------- |
-| `cron-photo-cleanup` | `30 17 * * 0` (Sunday 23:00 IST) | `cron-photo-cleanup` | Deletes meal photos older than 7 days and marks those meals `photo_deleted` |
+| Job                   | Schedule (UTC)                   | Function              | What it does                                                                                                   |
+| --------------------- | -------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `cron-photo-cleanup`  | `30 17 * * 0` (Sunday 23:00 IST) | `cron-photo-cleanup`  | Deletes meal photos older than 7 days and marks those meals `photo_deleted`                                    |
+| `cron-meal-reminders` | `*/15 * * * *`                   | `cron-meal-reminders` | Meal/workout reminders in each client's time zone, only if not logged yet; `notification_log` prevents doubles |
 
 ## One-time setup per Supabase project
 
