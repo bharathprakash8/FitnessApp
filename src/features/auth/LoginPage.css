@@ -31,7 +31,8 @@
   margin-bottom: 16px;
 }
 
-.login-code {
+/* Big, spaced digits – only on the typed value, not the label. */
+ion-input.login-code input.native-input {
   font-size: 1.5rem;
   letter-spacing: 0.4em;
 }
