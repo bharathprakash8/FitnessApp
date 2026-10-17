@@ -90,7 +90,7 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.p12"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: FitCoach-${{ env.ANDROID_VERSION_NAME }}
           path: ${{ runner.temp }}/FitCoach-${{ env.ANDROID_VERSION_NAME }}.apk

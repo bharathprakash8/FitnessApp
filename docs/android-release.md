@@ -16,6 +16,9 @@ The Android app is the same web app wrapped with Capacitor (`android/`), package
    the GitHub Secrets `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD`. It also sets the
    GitHub variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
+   Created 17 Oct 2026. Certificate: `C=IN, O=FitCoach, CN=FitCoach`, SHA-256 fingerprint
+   `2d4b96ac69be40aff1be669e32fda93a7ce20b61525c844fda191e66b5393ec6`.
+
    **Back up the `.p12` file and the password.** Android only installs updates signed with the
    same key; if it is lost, everyone has to uninstall and reinstall.
 
