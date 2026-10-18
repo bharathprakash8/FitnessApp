@@ -1053,6 +1053,56 @@ export type Database = {
           },
         ]
       }
+      weekly_summaries: {
+        Row: {
+          client_id: string
+          created_at: string
+          edited: boolean
+          id: string
+          period_end: string
+          period_start: string
+          shared_at: string | null
+          stats: Json
+          status: string
+          summary_text: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          edited?: boolean
+          id?: string
+          period_end: string
+          period_start: string
+          shared_at?: string | null
+          stats?: Json
+          status?: string
+          summary_text?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          edited?: boolean
+          id?: string
+          period_end?: string
+          period_start?: string
+          shared_at?: string | null
+          stats?: Json
+          status?: string
+          summary_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_summaries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_logs: {
         Row: {
           client_id: string
@@ -1194,6 +1244,20 @@ export type Database = {
       self_workout_owner: { Args: { w: string }; Returns: string }
       session_owner: { Args: { s: string }; Returns: string }
       tracks_self: { Args: never; Returns: boolean }
+      trainer_dashboard: {
+        Args: never
+        Returns: {
+          avg_kcal_3d: number
+          client_id: string
+          last_meal_on: string
+          last_session_missed: boolean
+          last_workout_on: string
+          plan_since: string
+          summary_ready: boolean
+          target_kcal: number
+          today: string
+        }[]
+      }
       try_uuid: { Args: { t: string }; Returns: string }
       user_has_data: { Args: { uid: string }; Returns: boolean }
     }

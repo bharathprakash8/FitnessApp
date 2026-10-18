@@ -940,6 +940,67 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 9: weekly summaries and the trainer dashboard
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.weekly_summaries (id, client_id, period_start, period_end, summary_text, status) values
+  ('00000000-0000-4000-b000-0000000000d9', '00000000-0000-4000-a000-0000000000c1', '2026-01-05', '2026-01-11', 'draft text', 'draft'),
+  ('00000000-0000-4000-b000-0000000000da', '00000000-0000-4000-a000-0000000000c1', '2026-01-12', '2026-01-18', 'shared text', 'shared');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.weekly_summaries) <> 1 then
+    raise exception 'FAIL: client sees a draft summary (or not the shared one)';
+  end if;
+  update public.weekly_summaries set summary_text = 'mine';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client edited a summary'; end if;
+  if (select count(*) from public.trainer_dashboard()) <> 0 then
+    raise exception 'FAIL: client can read the trainer dashboard';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.weekly_summaries) <> 0 then
+    raise exception 'FAIL: trainer T2 sees summaries of T1''s client';
+  end if;
+  if exists (select 1 from public.trainer_dashboard() where client_id = '00000000-0000-4000-a000-0000000000c1') then
+    raise exception 'FAIL: T2 dashboard shows T1''s client';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.weekly_summaries) <> 2 then
+    raise exception 'FAIL: trainer does not see their client''s summaries';
+  end if;
+  update public.weekly_summaries set summary_text = 'edited by trainer'
+  where id = '00000000-0000-4000-b000-0000000000d9';
+  get diagnostics n = row_count;
+  if n <> 1 or not (select edited from public.weekly_summaries where id = '00000000-0000-4000-b000-0000000000d9') then
+    raise exception 'FAIL: trainer edit not saved or not marked edited';
+  end if;
+  begin
+    update public.weekly_summaries set status = 'shared' where id = '00000000-0000-4000-b000-0000000000d9';
+    raise exception 'FAIL: trainer shared directly (must go through the function)';
+  exception when insufficient_privilege then null;
+  end;
+  if not exists (select 1 from public.trainer_dashboard() where client_id = '00000000-0000-4000-a000-0000000000c1' and summary_ready) then
+    raise exception 'FAIL: dashboard does not show the ready summary';
+  end if;
+  if exists (select 1 from public.trainer_dashboard() where client_id = '00000000-0000-4000-a000-0000000000c2') then
+    raise exception 'FAIL: T1 dashboard shows another trainer''s client';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

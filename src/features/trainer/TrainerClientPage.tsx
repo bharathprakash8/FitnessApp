@@ -26,11 +26,12 @@ import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { ClientFoodTab } from './ClientFoodTab';
 import { ClientRemindersTab } from './ClientRemindersTab';
+import { ClientSummaryTab } from './ClientSummaryTab';
 import { ClientWorkoutsTab } from './ClientWorkoutsTab';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
-type Tab = 'overview' | 'targets' | 'food' | 'workouts' | 'reminders';
+type Tab = 'overview' | 'summary' | 'targets' | 'food' | 'workouts' | 'reminders';
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -54,6 +55,9 @@ export function TrainerClientPage() {
           <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="overview">
               <IonLabel>Overview</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="summary">
+              <IonLabel>Summary</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="targets">
               <IonLabel>Targets</IonLabel>
@@ -83,6 +87,8 @@ export function TrainerClientPage() {
             </IonText>
           ) : tab === 'overview' ? (
             <Overview client={client.data} />
+          ) : tab === 'summary' ? (
+            <ClientSummaryTab client={client.data} />
           ) : tab === 'targets' ? (
             <TargetsTab client={client.data} />
           ) : tab === 'food' ? (

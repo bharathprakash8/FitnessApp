@@ -23,11 +23,13 @@ import { AppTabBar } from '../../components/AppTabBar';
 import { TRAINER_TABS } from '../../components/tabs';
 import { useAuth } from '../auth/useAuth';
 import { goalText } from '../profile/options';
-import { useMyClients, type TrainerClient } from './api';
+import { useDashboard, useMyClients, type ClientFlag, type TrainerClient } from './api';
+import './trainer.css';
 
 export function TrainerClientsPage() {
   const { profile } = useAuth();
   const clients = useMyClients(profile?.id);
+  const dashboard = useDashboard(profile?.id);
   const [search, setSearch] = useState('');
 
   return (
@@ -52,7 +54,11 @@ export function TrainerClientsPage() {
       <IonContent>
         <IonRefresher
           slot="fixed"
-          onIonRefresh={(e) => void clients.refetch().finally(() => e.detail.complete())}
+          onIonRefresh={(e) =>
+            void Promise.all([clients.refetch(), dashboard.refetch()]).finally(() =>
+              e.detail.complete(),
+            )
+          }
         >
           <IonRefresherContent />
         </IonRefresher>
@@ -67,7 +73,7 @@ export function TrainerClientsPage() {
             </p>
           </IonText>
         ) : (
-          <ClientList clients={clients.data} search={search} />
+          <ClientList clients={clients.data} flags={dashboard.data} search={search} />
         )}
       </IonContent>
       <IonFooter>
@@ -77,12 +83,32 @@ export function TrainerClientsPage() {
   );
 }
 
-function ClientList({ clients, search }: { clients: TrainerClient[]; search: string }) {
+/** Flags that mean "look at this client" (a ready summary is good news, not a problem). */
+const needsAttention = (f: ClientFlag[] | undefined) => (f ?? []).some((x) => x.key !== 'summary');
+
+function ClientList({
+  clients,
+  flags,
+  search,
+}: {
+  clients: TrainerClient[];
+  flags: Map<string, ClientFlag[]> | undefined;
+  search: string;
+}) {
   const term = search.trim().toLowerCase();
-  const shown = clients.filter(
-    (c) =>
-      !term || [c.profile.full_name, c.profile.email].some((v) => v?.toLowerCase().includes(term)),
-  );
+  // Clients who need attention first, then by name (the list arrives sorted by name).
+  const shown = clients
+    .filter(
+      (c) =>
+        !term ||
+        [c.profile.full_name, c.profile.email].some((v) => v?.toLowerCase().includes(term)),
+    )
+    .sort(
+      (a, b) =>
+        Number(needsAttention(flags?.get(b.profile.id))) -
+        Number(needsAttention(flags?.get(a.profile.id))),
+    );
+  const attention = clients.filter((c) => needsAttention(flags?.get(c.profile.id))).length;
 
   if (clients.length === 0) {
     return (
@@ -103,6 +129,13 @@ function ClientList({ clients, search }: { clients: TrainerClient[]; search: str
 
   return (
     <IonList>
+      {flags && (
+        <p className="trainer-attention">
+          {attention === 0
+            ? 'All clients are on track 👍'
+            : `${attention} client${attention === 1 ? ' needs' : 's need'} attention`}
+        </p>
+      )}
       {shown.map(({ profile: p, hasTarget }) => (
         <IonItem key={p.id} routerLink={`/trainer/clients/${p.id}`} detail>
           <IonLabel>
@@ -116,6 +149,13 @@ function ClientList({ clients, search }: { clients: TrainerClient[]; search: str
               {p.is_active && p.onboarded_at && !hasTarget && (
                 <IonBadge color="danger">No targets yet</IonBadge>
               )}
+              {p.is_active &&
+                p.onboarded_at &&
+                flags?.get(p.id)?.map((f) => (
+                  <IonBadge key={f.key} color={f.color}>
+                    {f.label}
+                  </IonBadge>
+                ))}
             </p>
           </IonLabel>
         </IonItem>

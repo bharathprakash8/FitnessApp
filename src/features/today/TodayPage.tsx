@@ -33,6 +33,7 @@ import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
 import { NextSessionCard } from '../sessions/NextSessionCard';
+import { LatestSummaryCard } from '../summaries/MySummariesPage';
 import { InstallCard } from './InstallCard';
 import './today.css';
 
@@ -149,6 +150,7 @@ function Today() {
               )}
             </>
           )}
+          {profile && !isTrainer && <LatestSummaryCard profile={profile} />}
           {profile && !isTrainer && <NextSessionCard profile={profile} />}
           {profile && <TodayWorkoutCard profile={profile} />}
         </div>

@@ -21,6 +21,7 @@ import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { MePage } from './features/profile/MePage';
 import { MyDetailsPage } from './features/profile/MyDetailsPage';
 import { MySessionsPage } from './features/sessions/MySessionsPage';
+import { MySummariesPage } from './features/summaries/MySummariesPage';
 import { SessionDetailPage } from './features/sessions/SessionDetailPage';
 import { SessionEditorPage } from './features/sessions/SessionEditorPage';
 import { SessionsPage } from './features/sessions/SessionsPage';
@@ -55,6 +56,7 @@ const KNOWN_PATHS = [
   '/trainer/sessions/:id',
   '/trainer/sessions/:id/edit',
   '/me/sessions',
+  '/me/summaries',
   '/onboarding',
   '/today',
   '/food',
@@ -151,6 +153,7 @@ export function App() {
             <Route path="/me/details" element={guarded(SELF, <MyDetailsPage />)} />
             <Route path="/me/health" element={guarded(SELF, <HealthSyncPage />)} />
             <Route path="/me/sessions" element={guarded('client', <MySessionsPage />)} />
+            <Route path="/me/summaries" element={guarded('client', <MySummariesPage />)} />
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />

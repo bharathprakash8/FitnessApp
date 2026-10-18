@@ -185,6 +185,11 @@ function ClientDetails({ profile }: { profile: Profile }) {
           My sessions
         </IonButton>
       )}
+      {isClient && (
+        <IonButton expand="block" fill="outline" routerLink="/me/summaries">
+          Weekly summaries
+        </IonButton>
+      )}
       {profile.consent_at && (
         <IonText color="medium">
           <p style={{ fontSize: '0.85rem' }}>
