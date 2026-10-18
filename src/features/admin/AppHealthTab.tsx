@@ -53,6 +53,7 @@ interface ServerStats {
   cpu_cores?: number | null;
   disk_total_bytes?: number | null;
   disk_used_bytes?: number | null;
+  ai_models?: { name: string; available: boolean | null }[];
 }
 
 const FEATURE_LABELS: Record<string, string> = {
@@ -235,6 +236,16 @@ export function AppHealthTab() {
               }
               label="AI requests per day, last 14 days"
             />
+          )}
+          {server.data?.ai_models && server.data.ai_models.length > 0 && (
+            <p className="health-detail">
+              Models in order (main, then backups):{' '}
+              {server.data.ai_models
+                .map((m) => `${m.available === false ? '✗' : m.available ? '✓' : '?'} ${m.name}`)
+                .join(' → ')}
+              {server.data.ai_models.some((m) => m.available === false) &&
+                ' – ✗ = Google has no model by that name; fix GEMINI_FALLBACK_MODELS.'}
+            </p>
           )}
           <LimitEditor current={limit} />
           <p className="health-detail">

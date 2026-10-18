@@ -50,11 +50,32 @@ function cpuTimes(s: Sample[]) {
   return { idle, total };
 }
 
+/** The AI models FitCoach is set to use, in order, and whether Google offers each one. */
+async function aiModels() {
+  const key = Deno.env.get('GEMINI_API_KEY');
+  const wanted = [
+    Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash',
+    ...(Deno.env.get('GEMINI_FALLBACK_MODELS') ?? '')
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean),
+  ];
+  if (!key) return wanted.map((name) => ({ name, available: null }));
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000', {
+    headers: { 'x-goog-api-key': key },
+    signal: AbortSignal.timeout(10_000),
+  }).catch(() => null);
+  const body = res?.ok ? ((await res.json()) as { models?: { name: string }[] }) : null;
+  const known = new Set((body?.models ?? []).map((m) => m.name.replace(/^models\//, '')));
+  return [...new Set(wanted)].map((name) => ({ name, available: body ? known.has(name) : null }));
+}
+
 serveJson(async (req) => {
   await requireAdmin(req, adminClient());
+  const models = aiModels().catch(() => []);
 
   const a = await fetchMetrics();
-  if (!a) return { available: false };
+  if (!a) return { available: false, ai_models: await models };
   // CPU use needs two readings a moment apart.
   await new Promise((r) => setTimeout(r, 1500));
   const b = (await fetchMetrics()) ?? a;
@@ -80,6 +101,7 @@ serveJson(async (req) => {
 
   return {
     available: true,
+    ai_models: await models,
     memory_total_bytes: memTotal,
     memory_used_bytes: memTotal !== null && memAvailable !== null ? memTotal - memAvailable : null,
     cpu_busy_percent:
