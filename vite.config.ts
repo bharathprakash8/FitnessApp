@@ -32,4 +32,15 @@ export default defineConfig({
     }),
   ],
   server: { port: 5173, strictPort: true },
+  build: {
+    rolldownOptions: {
+      treeshake: {
+        // Ionic's component files only register themselves when the app uses them, but the
+        // bundler can't tell, so every component (date picker, slider, menu…) was shipped.
+        // Treat them as side-effect free so unused ones are dropped.
+        moduleSideEffects: (id: string) =>
+          !/[\\/]@ionic[\\/]core[\\/]components[\\/]ion-[^\\/]+\.js$/.test(id),
+      },
+    },
+  },
 });
