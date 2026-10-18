@@ -170,8 +170,7 @@ export type ExerciseSlot = Pick<
 
 /** Where logged sets belong: a plan day, or the client's own ("self") training. */
 export type LogTarget =
-  | { source: 'plan'; planDayId: string }
-  | { source: 'self'; selfWorkoutId: string | null };
+  { source: 'plan'; planDayId: string } | { source: 'self'; selfWorkoutId: string | null };
 
 export function sortSelfWorkout(w: SelfWorkoutFull): SelfWorkoutFull {
   return {

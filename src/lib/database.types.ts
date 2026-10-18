@@ -112,6 +112,69 @@ export type Database = {
           },
         ]
       }
+      custom_reminders: {
+        Row: {
+          body: string | null
+          client_can_mute: boolean
+          client_id: string
+          created_at: string
+          created_by: string | null
+          days: number[]
+          id: string
+          is_active: boolean
+          kind: string
+          muted: boolean
+          remind_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          client_can_mute?: boolean
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          days?: number[]
+          id?: string
+          is_active?: boolean
+          kind?: string
+          muted?: boolean
+          remind_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          client_can_mute?: boolean
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          days?: number[]
+          id?: string
+          is_active?: boolean
+          kind?: string
+          muted?: boolean
+          remind_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_reminders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_reminders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           created_at: string
@@ -543,9 +606,11 @@ export type Database = {
           enabled: boolean
           lunch_on: boolean
           lunch_time: string
+          meal_times_locked: boolean
           snack_on: boolean
           snack_time: string
           updated_at: string
+          updated_by: string | null
           workout_reminder_time: string | null
         }
         Insert: {
@@ -557,9 +622,11 @@ export type Database = {
           enabled?: boolean
           lunch_on?: boolean
           lunch_time?: string
+          meal_times_locked?: boolean
           snack_on?: boolean
           snack_time?: string
           updated_at?: string
+          updated_by?: string | null
           workout_reminder_time?: string | null
         }
         Update: {
@@ -571,9 +638,11 @@ export type Database = {
           enabled?: boolean
           lunch_on?: boolean
           lunch_time?: string
+          meal_times_locked?: boolean
           snack_on?: boolean
           snack_time?: string
           updated_at?: string
+          updated_by?: string | null
           workout_reminder_time?: string | null
         }
         Relationships: [
@@ -581,6 +650,13 @@ export type Database = {
             foreignKeyName: "reminder_settings_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -887,6 +963,7 @@ export type Database = {
       can_read_plan: { Args: { plan: string }; Returns: boolean }
       claim_push_token: { Args: { p: string; t: string }; Returns: undefined }
       exercise_used_by_me: { Args: { ex: string }; Returns: boolean }
+      has_push_device: { Args: { client: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_trainer_of: { Args: { client: string }; Returns: boolean }
       my_trainer: { Args: never; Returns: string }

@@ -8,27 +8,16 @@ import {
   IonCardTitle,
   IonContent,
   IonHeader,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
   IonPage,
   IonSpinner,
-  IonText,
   IonTitle,
-  IonToggle,
   IonToolbar,
   useIonToast,
 } from '@ionic/react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../auth/useAuth';
-import {
-  DEFAULT_REMINDERS,
-  useReminderSettings,
-  useSaveReminderSettings,
-  type ReminderSettings,
-} from './api';
+import { useReminderSettings } from './api';
 import {
   disablePush,
   enablePush,
@@ -38,6 +27,8 @@ import {
   sendTestNotification,
   type PushPermission,
 } from './push';
+import { ReminderForm } from './ReminderForm';
+import { TrainerRemindersCard } from './TrainerRemindersCard';
 import './notifications.css';
 
 export function NotificationsPage() {
@@ -55,7 +46,12 @@ export function NotificationsPage() {
       <IonContent className="ion-padding">
         <div className="notif-page">
           <DeviceCard />
-          {profile?.role === 'client' && <RemindersCard clientId={profile.id} />}
+          {profile?.role === 'client' && (
+            <>
+              <RemindersCard clientId={profile.id} />
+              <TrainerRemindersCard clientId={profile.id} />
+            </>
+          )}
         </div>
       </IonContent>
     </IonPage>
@@ -221,15 +217,6 @@ function BatteryTips() {
   );
 }
 
-const MEALS = [
-  { key: 'breakfast', label: 'Breakfast' },
-  { key: 'lunch', label: 'Lunch' },
-  { key: 'snack', label: 'Evening snack' },
-  { key: 'dinner', label: 'Dinner' },
-] as const;
-
-const hhmm = (t: string | null) => (t ? t.slice(0, 5) : '');
-
 function RemindersCard({ clientId }: { clientId: string }) {
   const settings = useReminderSettings(clientId);
   return (
@@ -245,101 +232,10 @@ function RemindersCard({ clientId }: { clientId: string }) {
             key={settings.data.updated_at || 'defaults'}
             clientId={clientId}
             initial={settings.data}
+            mode="client"
           />
         )}
       </IonCardContent>
     </IonCard>
-  );
-}
-
-function ReminderForm({ clientId, initial }: { clientId: string; initial: ReminderSettings }) {
-  const save = useSaveReminderSettings(clientId);
-  const [toast] = useIonToast();
-  const [s, setS] = useState({
-    ...initial,
-    breakfast_time: hhmm(initial.breakfast_time),
-    lunch_time: hhmm(initial.lunch_time),
-    snack_time: hhmm(initial.snack_time),
-    dinner_time: hhmm(initial.dinner_time),
-    workout_reminder_time: hhmm(initial.workout_reminder_time),
-  });
-  const set = <K extends keyof typeof s>(k: K, v: (typeof s)[K]) => setS((p) => ({ ...p, [k]: v }));
-
-  async function submit() {
-    try {
-      await save.mutateAsync({
-        enabled: s.enabled,
-        breakfast_on: s.breakfast_on,
-        breakfast_time: s.breakfast_time || DEFAULT_REMINDERS.breakfast_time,
-        lunch_on: s.lunch_on,
-        lunch_time: s.lunch_time || DEFAULT_REMINDERS.lunch_time,
-        snack_on: s.snack_on,
-        snack_time: s.snack_time || DEFAULT_REMINDERS.snack_time,
-        dinner_on: s.dinner_on,
-        dinner_time: s.dinner_time || DEFAULT_REMINDERS.dinner_time,
-        workout_reminder_time: s.workout_reminder_time || null,
-      });
-      void toast({ message: 'Reminders saved', duration: 1500, position: 'top' });
-    } catch {
-      void toast({ message: 'Could not save', duration: 2500, color: 'danger', position: 'top' });
-    }
-  }
-
-  return (
-    <>
-      <IonList lines="full">
-        <IonItem>
-          <IonToggle checked={s.enabled} onIonChange={(e) => set('enabled', e.detail.checked)}>
-            <strong>All reminders</strong>
-          </IonToggle>
-        </IonItem>
-        {MEALS.map((m) => (
-          <IonItem key={m.key} disabled={!s.enabled}>
-            <IonToggle
-              slot="start"
-              aria-label={m.label}
-              checked={s[`${m.key}_on`]}
-              onIonChange={(e) => set(`${m.key}_on`, e.detail.checked)}
-            />
-            <IonLabel>{m.label}</IonLabel>
-            <IonInput
-              slot="end"
-              className="notif-time"
-              type="time"
-              aria-label={`${m.label} time`}
-              disabled={!s[`${m.key}_on`]}
-              value={s[`${m.key}_time`]}
-              onIonInput={(e) => set(`${m.key}_time`, String(e.detail.value ?? ''))}
-            />
-          </IonItem>
-        ))}
-        <IonItem disabled={!s.enabled}>
-          <IonToggle
-            slot="start"
-            aria-label="Workout reminder"
-            checked={Boolean(s.workout_reminder_time)}
-            onIonChange={(e) => set('workout_reminder_time', e.detail.checked ? '18:00' : '')}
-          />
-          <IonLabel>Workout</IonLabel>
-          <IonInput
-            slot="end"
-            className="notif-time"
-            type="time"
-            aria-label="Workout reminder time"
-            disabled={!s.workout_reminder_time}
-            value={s.workout_reminder_time}
-            onIonInput={(e) => set('workout_reminder_time', String(e.detail.value ?? ''))}
-          />
-        </IonItem>
-      </IonList>
-      <IonText color="medium">
-        <p className="notif-muted">
-          A reminder is sent only if you haven't logged that meal (or today's workout) yet.
-        </p>
-      </IonText>
-      <IonButton expand="block" disabled={save.isPending} onClick={() => void submit()}>
-        {save.isPending ? 'Saving…' : 'Save reminders'}
-      </IonButton>
-    </>
   );
 }

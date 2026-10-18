@@ -24,11 +24,12 @@ import { DIET_LABELS, SEX_LABELS, goalText, label } from '../profile/options';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { ClientFoodTab } from './ClientFoodTab';
+import { ClientRemindersTab } from './ClientRemindersTab';
 import { ClientWorkoutsTab } from './ClientWorkoutsTab';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
-type Tab = 'overview' | 'targets' | 'food' | 'workouts';
+type Tab = 'overview' | 'targets' | 'food' | 'workouts' | 'reminders';
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,6 +60,9 @@ export function TrainerClientPage() {
             <IonSegmentButton value="workouts">
               <IonLabel>Workouts</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="reminders">
+              <IonLabel>Reminders</IonLabel>
+            </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
       </IonHeader>
@@ -78,8 +82,10 @@ export function TrainerClientPage() {
             <TargetsTab client={client.data} />
           ) : tab === 'food' ? (
             <ClientFoodTab client={client.data} />
-          ) : (
+          ) : tab === 'workouts' ? (
             <ClientWorkoutsTab client={client.data} />
+          ) : (
+            <ClientRemindersTab client={client.data} />
           )}
         </div>
       </IonContent>

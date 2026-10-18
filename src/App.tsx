@@ -116,10 +116,7 @@ export function App() {
             <Route path="/workouts" element={guarded('client', <WorkoutsPage />)} />
             <Route path="/workouts/day/:dayId" element={guarded('client', <WorkoutDayPage />)} />
             <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />
-            <Route
-              path="/workouts/mine/:id"
-              element={guarded('client', <MyWorkoutEditorPage />)}
-            />
+            <Route path="/workouts/mine/:id" element={guarded('client', <MyWorkoutEditorPage />)} />
             <Route path="/workouts/self/:id" element={guarded('client', <SelfWorkoutPage />)} />
             <Route path="/me" element={guarded('client', <MePage />)} />
             <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />

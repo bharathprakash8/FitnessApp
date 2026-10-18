@@ -163,9 +163,10 @@ function MyWorkouts() {
             create.mutate(v, {
               onError: (err) =>
                 void toast({
-                  message: err instanceof Error && err.message.includes('up to 10')
-                    ? err.message
-                    : 'Could not create the workout. Try again.',
+                  message:
+                    err instanceof Error && err.message.includes('up to 10')
+                      ? err.message
+                      : 'Could not create the workout. Try again.',
                   duration: 3000,
                   color: 'danger',
                 }),

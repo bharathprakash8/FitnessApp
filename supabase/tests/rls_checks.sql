@@ -598,8 +598,12 @@ end $$;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
 do $$
 begin
-  if (select count(*) from public.reminder_settings) + (select count(*) from public.push_tokens) <> 0 then
-    raise exception 'FAIL: trainer can see client reminder settings or push tokens';
+  -- Trainers see their own clients' reminder settings (to set them), never device tokens.
+  if (select count(*) from public.push_tokens) <> 0 then
+    raise exception 'FAIL: trainer can see client push tokens';
+  end if;
+  if (select count(*) from public.reminder_settings) <> 1 then
+    raise exception 'FAIL: trainer does not see exactly their client''s reminder settings';
   end if;
 end $$;
 
@@ -681,6 +685,107 @@ do $$
 begin
   if (select count(*) from public.self_workouts where client_id = '00000000-0000-4000-a000-0000000000c1') <> 0 then
     raise exception 'FAIL: trainer T2 sees self workouts of T1''s client';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Trainer-set reminders: reminder_settings lock and custom_reminders
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  update public.reminder_settings set lunch_time = '13:15', meal_times_locked = true
+  where client_id = '00000000-0000-4000-a000-0000000000c1';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: trainer cannot set a client''s reminder times'; end if;
+  insert into public.custom_reminders (id, client_id, kind, title, remind_at, days, client_can_mute)
+  values ('00000000-0000-4000-b000-0000000000c9', '00000000-0000-4000-a000-0000000000c1',
+    'cardio', 'Cardio', '06:30', '{1,3,5}', false);
+  if not public.has_push_device('00000000-0000-4000-a000-0000000000c1') then
+    raise exception 'FAIL: trainer cannot see that their client has a device';
+  end if;
+  if public.has_push_device('00000000-0000-4000-a000-0000000000c2') then
+    raise exception 'FAIL: trainer can probe devices of another trainer''s client';
+  end if;
+  begin
+    insert into public.custom_reminders (client_id, title, remind_at)
+    values ('00000000-0000-4000-a000-0000000000c2', 'x', '07:00');
+    raise exception 'FAIL: trainer set a reminder for another trainer''s client';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.custom_reminders) <> 0 then
+    raise exception 'FAIL: trainer T2 sees reminders of T1''s client';
+  end if;
+  update public.reminder_settings set lunch_time = '15:00';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: trainer T2 changed reminders of T1''s client'; end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  -- the client's own pause switch still works when times are locked
+  update public.reminder_settings set enabled = false where client_id = '00000000-0000-4000-a000-0000000000c1';
+  begin
+    update public.reminder_settings set lunch_time = '14:00' where client_id = '00000000-0000-4000-a000-0000000000c1';
+    raise exception 'FAIL: client changed reminder times locked by the trainer';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.reminder_settings set meal_times_locked = false where client_id = '00000000-0000-4000-a000-0000000000c1';
+    raise exception 'FAIL: client unlocked their reminder times';
+  exception when insufficient_privilege then null;
+  end;
+  if (select count(*) from public.custom_reminders) <> 1 then
+    raise exception 'FAIL: client cannot see their trainer''s reminder';
+  end if;
+  begin
+    update public.custom_reminders set muted = true where id = '00000000-0000-4000-b000-0000000000c9';
+    raise exception 'FAIL: client muted an always-on reminder';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    update public.custom_reminders set title = 'nope' where id = '00000000-0000-4000-b000-0000000000c9';
+    raise exception 'FAIL: client changed the trainer''s reminder';
+  exception when insufficient_privilege then null;
+  end;
+  delete from public.custom_reminders;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client deleted the trainer''s reminder'; end if;
+  begin
+    insert into public.custom_reminders (client_id, title, remind_at)
+    values ('00000000-0000-4000-a000-0000000000c1', 'x', '07:00');
+    raise exception 'FAIL: client created a custom reminder';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+update public.custom_reminders set client_can_mute = true where id = '00000000-0000-4000-b000-0000000000c9';
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  update public.custom_reminders set muted = true where id = '00000000-0000-4000-b000-0000000000c9';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: client cannot mute a mutable reminder'; end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  update public.custom_reminders set client_can_mute = false where id = '00000000-0000-4000-b000-0000000000c9';
+  if (select muted from public.custom_reminders where id = '00000000-0000-4000-b000-0000000000c9') then
+    raise exception 'FAIL: making a reminder always-on did not unmute it';
   end if;
 end $$;
 
