@@ -420,3 +420,6 @@ Update after each milestone: date, what was built, anything deferred, open issue
 | 9 Dashboard + summary | Not started | | |
 | 10 Progress, habits, chat | Not started | | |
 | 11 Ops + go-live | Not started | | |
+
+### Deferred – do at the end (after Milestone 11)
+- **One-tap iPhone sync** (agreed 18 Oct 2026): Health sync page gets "Connect iPhone sync" (creates a code and opens `shortcuts://run-shortcut?name=FitCoach%20Sync&input=text&text=<code>`; the Shortcut saves the code to a file on first run, reads it on later runs, and drops the Import Question) and a "Sync now" button (runs the Shortcut; the app refetches when it becomes visible again). The 22:00 automation can't be created by an app – show the 5-tap steps with a button that opens Shortcuts. Add "Sync now" on Android too. The owner must edit the Shortcut and re-share the iCloud link (current link: https://www.icloud.com/shortcuts/502ebc485a414436a83d36174f9f57b2, in `src/config.ts`). Shortcut name must stay exactly "FitCoach Sync".
