@@ -66,6 +66,8 @@ function TargetsEditor({ client }: { client: Profile }) {
   const [protein, setProtein] = useState(current?.protein_g.toString() ?? '');
   const [carbs, setCarbs] = useState(current?.carbs_g.toString() ?? '');
   const [fat, setFat] = useState(current?.fat_g.toString() ?? '');
+  // Water goal in litres (empty = the default 2.5 L)
+  const [water, setWater] = useState(current?.water_ml ? String(current.water_ml / 1000) : '');
   const [estimated, setEstimated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +107,9 @@ function TargetsEditor({ client }: { client: Profile }) {
       ((values.carbs_g < 0 || values.carbs_g > 1000) && 'Carbs must be 0–1000 g.') ||
       ((values.fat_g < 0 || values.fat_g > 400) && 'Fat must be 0–400 g.') ||
       (!from && 'Please pick a start date.') ||
+      (water.trim() !== '' &&
+        !(Number(water.replace(',', '.')) >= 0.5 && Number(water.replace(',', '.')) <= 8) &&
+        'Water must be 0.5–8 litres.') ||
       null;
     if (problem || !me) {
       setError(problem);
@@ -112,7 +117,12 @@ function TargetsEditor({ client }: { client: Profile }) {
     }
     setError(null);
     try {
-      await setTarget.mutateAsync({ ...values, effective_from: from, set_by: me.id });
+      await setTarget.mutateAsync({
+        ...values,
+        water_ml: water.trim() ? Math.round(Number(water.replace(',', '.')) * 1000) : null,
+        effective_from: from,
+        set_by: me.id,
+      });
       setEstimated(false);
       void toast({ message: 'Targets saved', duration: 1800, position: 'top' });
     } catch {
@@ -240,6 +250,16 @@ function TargetsEditor({ client }: { client: Profile }) {
                 <p className="trainer-note">These are estimates – adjust them if needed.</p>
               </IonText>
             )}
+            <IonInput
+              fill="outline"
+              label="Water per day (litres)"
+              labelPlacement="floating"
+              type="number"
+              inputmode="decimal"
+              placeholder="2.5"
+              value={water}
+              onIonInput={(e) => setWater(String(e.detail.value ?? ''))}
+            />
             <IonInput
               fill="outline"
               label="Starts on"

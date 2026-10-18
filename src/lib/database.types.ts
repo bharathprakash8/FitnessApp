@@ -222,6 +222,35 @@ export type Database = {
           },
         ]
       }
+      habits_daily: {
+        Row: {
+          client_id: string
+          habit_date: string
+          updated_at: string
+          water_ml: number
+        }
+        Insert: {
+          client_id: string
+          habit_date: string
+          updated_at?: string
+          water_ml?: number
+        }
+        Update: {
+          client_id?: string
+          habit_date?: string
+          updated_at?: string
+          water_ml?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habits_daily_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_tokens: {
         Row: {
           google_email: string | null
@@ -970,6 +999,7 @@ export type Database = {
           id: string
           protein_g: number
           set_by: string | null
+          water_ml: number | null
         }
         Insert: {
           calories: number
@@ -981,6 +1011,7 @@ export type Database = {
           id?: string
           protein_g: number
           set_by?: string | null
+          water_ml?: number | null
         }
         Update: {
           calories?: number
@@ -992,6 +1023,7 @@ export type Database = {
           id?: string
           protein_g?: number
           set_by?: string | null
+          water_ml?: number | null
         }
         Relationships: [
           {

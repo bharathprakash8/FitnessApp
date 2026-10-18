@@ -174,6 +174,9 @@ function ClientDetails({ profile }: { profile: Profile }) {
       <IonButton expand="block" fill="outline" routerLink="/me/details">
         Edit my details
       </IonButton>
+      <IonButton expand="block" fill="outline" routerLink="/me/progress">
+        Progress: weight, photos and charts
+      </IonButton>
       <IonButton expand="block" fill="outline" routerLink="/me/health">
         Health sync (calories burnt, steps, sleep)
       </IonButton>

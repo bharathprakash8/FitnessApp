@@ -20,6 +20,7 @@ import { PushAutoRegister } from './features/notifications/PushAutoRegister';
 import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { MePage } from './features/profile/MePage';
 import { MyDetailsPage } from './features/profile/MyDetailsPage';
+import { AddMeasurementPage, ProgressPage } from './features/progress/ProgressPage';
 import { MySessionsPage } from './features/sessions/MySessionsPage';
 import { MySummariesPage } from './features/summaries/MySummariesPage';
 import { SessionDetailPage } from './features/sessions/SessionDetailPage';
@@ -57,6 +58,8 @@ const KNOWN_PATHS = [
   '/trainer/sessions/:id/edit',
   '/me/sessions',
   '/me/summaries',
+  '/me/progress',
+  '/me/progress/new',
   '/onboarding',
   '/today',
   '/food',
@@ -154,6 +157,8 @@ export function App() {
             <Route path="/me/health" element={guarded(SELF, <HealthSyncPage />)} />
             <Route path="/me/sessions" element={guarded('client', <MySessionsPage />)} />
             <Route path="/me/summaries" element={guarded('client', <MySummariesPage />)} />
+            <Route path="/me/progress" element={guarded(SELF, <ProgressPage />)} />
+            <Route path="/me/progress/new" element={guarded(SELF, <AddMeasurementPage />)} />
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />

@@ -43,7 +43,9 @@ export function upcomingTarget(targets: Target[] | undefined, timeZone?: string)
 export function useSetTarget(clientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Macros & { effective_from: string; set_by: string }) => {
+    mutationFn: async (
+      input: Macros & { effective_from: string; set_by: string; water_ml?: number | null },
+    ) => {
       const { error } = await supabase.from('targets').insert({ client_id: clientId, ...input });
       if (error) throw error;
     },

@@ -26,12 +26,13 @@ import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { ClientFoodTab } from './ClientFoodTab';
 import { ClientRemindersTab } from './ClientRemindersTab';
+import { ProgressView } from '../progress/ProgressView';
 import { ClientSummaryTab } from './ClientSummaryTab';
 import { ClientWorkoutsTab } from './ClientWorkoutsTab';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
-type Tab = 'overview' | 'summary' | 'targets' | 'food' | 'workouts' | 'reminders';
+type Tab = 'overview' | 'progress' | 'summary' | 'targets' | 'food' | 'workouts' | 'reminders';
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +56,9 @@ export function TrainerClientPage() {
           <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="overview">
               <IonLabel>Overview</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="progress">
+              <IonLabel>Progress</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="summary">
               <IonLabel>Summary</IonLabel>
@@ -87,6 +91,8 @@ export function TrainerClientPage() {
             </IonText>
           ) : tab === 'overview' ? (
             <Overview client={client.data} />
+          ) : tab === 'progress' ? (
+            <ProgressView person={client.data} editable={false} />
           ) : tab === 'summary' ? (
             <ClientSummaryTab client={client.data} />
           ) : tab === 'targets' ? (

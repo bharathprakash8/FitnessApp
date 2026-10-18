@@ -32,6 +32,7 @@ import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
+import { WaterCard } from '../progress/WaterCard';
 import { NextSessionCard } from '../sessions/NextSessionCard';
 import { LatestSummaryCard } from '../summaries/MySummariesPage';
 import { InstallCard } from './InstallCard';
@@ -153,6 +154,7 @@ function Today() {
           {profile && !isTrainer && <LatestSummaryCard profile={profile} />}
           {profile && !isTrainer && <NextSessionCard profile={profile} />}
           {profile && <TodayWorkoutCard profile={profile} />}
+          {profile && <WaterCard profile={profile} />}
         </div>
       </IonContent>
       <IonFooter>

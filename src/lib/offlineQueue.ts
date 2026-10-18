@@ -35,6 +35,7 @@ export type QueuedItem = Base &
         exercise: ExerciseSnapshot;
       }
     | { kind: 'activity'; row: TablesInsert<'activity_daily'> }
+    | { kind: 'water'; row: TablesInsert<'habits_daily'> }
   );
 
 type NewItem = QueuedItem extends infer T
@@ -114,6 +115,13 @@ async function send(item: QueuedItem) {
       const { error } = await supabase
         .from('activity_daily')
         .upsert(item.row, { onConflict: 'client_id,activity_date' });
+      if (error) throw error;
+      return;
+    }
+    case 'water': {
+      const { error } = await supabase
+        .from('habits_daily')
+        .upsert(item.row, { onConflict: 'client_id,habit_date' });
       if (error) throw error;
       return;
     }

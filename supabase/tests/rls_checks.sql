@@ -1001,6 +1001,57 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 10: water (habits_daily) and progress photos
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare me uuid := '00000000-0000-4000-a000-0000000000c1';
+begin
+  insert into public.habits_daily (client_id, habit_date, water_ml) values (me, current_date, 750);
+  begin
+    insert into public.habits_daily (client_id, habit_date, water_ml)
+    values ('00000000-0000-4000-a000-0000000000c2', current_date, 250);
+    raise exception 'FAIL: client logged water for another client';
+  exception when insufficient_privilege then null;
+  end;
+  insert into public.measurements (client_id, measured_on, weight_kg, photo_paths)
+  values (me, current_date, 71.5, array[me::text || '/a.jpg']);
+  begin
+    insert into public.measurements (client_id, measured_on, photo_paths)
+    values (me, current_date - 3, array[me::text || '/b.jpg']);
+    raise exception 'FAIL: two photo entries within a week were allowed';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  begin
+    insert into public.measurements (client_id, measured_on, photo_paths)
+    values (me, current_date - 30, array['00000000-0000-4000-a000-0000000000c2/x.jpg']);
+    raise exception 'FAIL: photo path in another client''s folder was allowed';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.habits_daily where client_id = '00000000-0000-4000-a000-0000000000c1') <> 0 then
+    raise exception 'FAIL: trainer T2 sees water of T1''s client';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.habits_daily where client_id = '00000000-0000-4000-a000-0000000000c1') <> 1 then
+    raise exception 'FAIL: trainer cannot see their client''s water';
+  end if;
+  update public.habits_daily set water_ml = 9000 where client_id = '00000000-0000-4000-a000-0000000000c1';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: trainer changed a client''s water'; end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

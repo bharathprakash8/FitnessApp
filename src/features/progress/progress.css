@@ -1,0 +1,108 @@
+.progress-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.progress-card {
+  margin-inline: 0;
+}
+
+.progress-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--ion-color-primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.chart-dot {
+  fill: var(--ion-color-primary);
+}
+
+.chart-bar.primary {
+  fill: var(--ion-color-primary);
+}
+
+.chart-bar.secondary {
+  fill: var(--ion-color-secondary);
+}
+
+.chart-grid {
+  stroke: var(--ion-color-step-150, #e5e7eb);
+  stroke-width: 1;
+}
+
+.chart-target {
+  stroke: var(--ion-color-danger);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.chart-label {
+  font-size: 9px;
+  fill: var(--ion-color-medium);
+}
+
+.progress-empty {
+  margin: 8px 0;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+.progress-photos {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.progress-photos img {
+  width: 30%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.progress-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progress-row {
+  display: flex;
+  gap: 8px;
+}
+
+.progress-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.progress-note {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+
+.water-glasses {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.water-amount {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.photo-viewer {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}

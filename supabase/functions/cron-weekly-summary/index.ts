@@ -62,7 +62,7 @@ interface ClientInfo {
 const zoneOf = (c: ClientInfo) => c.timezone || 'Asia/Kolkata';
 
 async function weekStats(db: SupabaseClient, c: ClientInfo, start: string, end: string) {
-  const [meals, target, logs, plan, activity, weights, sessions] = await Promise.all([
+  const [meals, target, logs, plan, activity, weights, sessions, water] = await Promise.all([
     db
       .from('meal_logs')
       .select('eaten_on, total_calories, protein_g')
@@ -111,8 +111,15 @@ async function weekStats(db: SupabaseClient, c: ClientInfo, start: string, end: 
       .eq('sessions.status', 'scheduled')
       .gte('sessions.starts_at', `${addDays(start, -1)}T00:00:00Z`)
       .lte('sessions.starts_at', `${addDays(end, 1)}T23:59:59Z`),
+    db
+      .from('habits_daily')
+      .select('water_ml')
+      .eq('client_id', c.id)
+      .gte('habit_date', start)
+      .lte('habit_date', end)
+      .gt('water_ml', 0),
   ]);
-  for (const r of [meals, target, logs, plan, activity, weights, sessions])
+  for (const r of [meals, target, logs, plan, activity, weights, sessions, water])
     if (r.error) throw r.error;
 
   // Food: per logged day
@@ -195,6 +202,10 @@ async function weekStats(db: SupabaseClient, c: ClientInfo, start: string, end: 
       end_kg: endW ? Number(endW.weight_kg) : null,
       change_kg:
         startW && endW ? round(Number(endW.weight_kg) - Number(startW.weight_kg), 1) : null,
+    },
+    water: {
+      days_tracked: (water.data ?? []).length,
+      avg_litres: round((avg((water.data ?? []).map((w) => w.water_ml)) ?? NaN) / 1000, 1),
     },
     sessions: {
       attended: s.filter((x) => x.status === 'present').length,
