@@ -8,6 +8,7 @@ import {
   IonContent,
   IonFooter,
   IonHeader,
+  IonIcon,
   IonItem,
   IonLabel,
   IonList,
@@ -19,13 +20,23 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
+  useIonAlert,
+  useIonRouter,
+  useIonToast,
 } from '@ionic/react';
+import { add, flash } from 'ionicons/icons';
 
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
 import { todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
-import { useActivePlan, useWorkoutLogs } from './api';
+import {
+  selfWorkoutApi,
+  useActivePlan,
+  useSelfWorkoutMutation,
+  useSelfWorkouts,
+  useWorkoutLogs,
+} from './api';
 import { nextDay } from './model';
 import './workouts.css';
 
@@ -34,6 +45,7 @@ export function WorkoutsPage() {
   const { profile } = useAuth();
   const active = useActivePlan(profile?.id);
   const logs = useWorkoutLogs(profile?.id);
+  const mine = useSelfWorkouts(profile?.id);
   const today = todayIn(profile?.timezone);
 
   const plan = active.data?.plan;
@@ -50,7 +62,9 @@ export function WorkoutsPage() {
         <IonRefresher
           slot="fixed"
           onIonRefresh={(e) =>
-            void Promise.all([active.refetch(), logs.refetch()]).finally(() => e.detail.complete())
+            void Promise.all([active.refetch(), logs.refetch(), mine.refetch()]).finally(() =>
+              e.detail.complete(),
+            )
           }
         >
           <IonRefresherContent />
@@ -110,6 +124,7 @@ export function WorkoutsPage() {
               </IonList>
             </>
           )}
+          <MyWorkouts />
           <IonButton expand="block" fill="outline" routerLink="/workouts/history">
             History and personal bests
           </IonButton>
@@ -119,5 +134,83 @@ export function WorkoutsPage() {
         <AppTabBar tabs={CLIENT_TABS} selected="workouts" />
       </IonFooter>
     </IonPage>
+  );
+}
+
+/** Workouts the person saved for themselves, plus a quick log. Logged as "Self". */
+function MyWorkouts() {
+  const { profile } = useAuth();
+  const workouts = useSelfWorkouts(profile?.id);
+  const router = useIonRouter();
+  const [alert] = useIonAlert();
+  const [toast] = useIonToast();
+  const create = useSelfWorkoutMutation(profile?.id, (name: string) =>
+    selfWorkoutApi.create(name).then((id) => router.push(`/workouts/mine/${id}`)),
+  );
+
+  function newWorkout() {
+    void alert({
+      header: 'New workout',
+      message: 'Give it a name, then add exercises from the library.',
+      inputs: [{ name: 'v', placeholder: 'e.g. Home legs', attributes: { maxlength: 60 } }],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Create',
+          handler: (data: { v?: string }) => {
+            const v = (data.v ?? '').trim();
+            if (!v) return false;
+            create.mutate(v, {
+              onError: (err) =>
+                void toast({
+                  message: err instanceof Error && err.message.includes('up to 10')
+                    ? err.message
+                    : 'Could not create the workout. Try again.',
+                  duration: 3000,
+                  color: 'danger',
+                }),
+            });
+            return true;
+          },
+        },
+      ],
+    });
+  }
+
+  return (
+    <IonList inset style={{ margin: '16px 0' }}>
+      <IonListHeader>
+        <IonLabel>My workouts (logged as Self)</IonLabel>
+      </IonListHeader>
+      {(workouts.data ?? []).map((w) => (
+        <IonItem
+          key={w.id}
+          // An empty workout opens the editor; otherwise go straight to logging it.
+          routerLink={
+            w.self_workout_exercises.length ? `/workouts/self/${w.id}` : `/workouts/mine/${w.id}`
+          }
+          detail
+        >
+          <IonLabel>
+            <h3>{w.name}</h3>
+            <p>
+              {w.self_workout_exercises.length} exercise
+              {w.self_workout_exercises.length === 1 ? '' : 's'}
+            </p>
+          </IonLabel>
+        </IonItem>
+      ))}
+      <IonItem button detail={false} onClick={newWorkout} disabled={create.isPending}>
+        <IonIcon slot="start" icon={add} />
+        <IonLabel>Create a workout</IonLabel>
+      </IonItem>
+      <IonItem routerLink="/workouts/self/quick" detail={false} lines="none">
+        <IonIcon slot="start" icon={flash} />
+        <IonLabel>
+          <h3>Quick log</h3>
+          <p>Log any exercise without saving a workout</p>
+        </IonLabel>
+      </IonItem>
+    </IonList>
   );
 }

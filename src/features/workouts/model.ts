@@ -134,19 +134,50 @@ export function groupByDate(logs: LogWithExercise[]) {
     byDate.set(l.performed_on, list);
   }
   return [...byDate.entries()].map(([date, items]) => {
+    // Plan and self sets of the same exercise on one day are shown separately.
     const byExercise = new Map<string, LogWithExercise[]>();
     for (const l of items) {
-      const list = byExercise.get(l.exercise_id) ?? [];
+      const key = `${l.exercise_id}:${l.source}`;
+      const list = byExercise.get(key) ?? [];
       list.push(l);
-      byExercise.set(l.exercise_id, list);
+      byExercise.set(key, list);
     }
     return {
       date,
-      exercises: [...byExercise.values()].map((sets) => ({
+      exercises: [...byExercise.entries()].map(([key, sets]) => ({
+        key,
         name: sets[0]!.exercises.name,
         type: sets[0]!.exercises.log_type,
+        self: sets[0]!.source === 'self',
         sets: sets.sort((a, b) => a.set_number - b.set_number),
       })),
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Self workouts (saved by the client themselves, logged with source = 'self')
+// ---------------------------------------------------------------------------
+export type SelfWorkout = Tables<'self_workouts'>;
+export type SelfWorkoutExerciseFull = Tables<'self_workout_exercises'> & { exercises: Exercise };
+export type SelfWorkoutFull = SelfWorkout & { self_workout_exercises: SelfWorkoutExerciseFull[] };
+
+/** One exercise to do in a workout – a plan exercise or a self workout exercise. */
+export type ExerciseSlot = Pick<
+  PlanExerciseFull,
+  'id' | 'exercise_id' | 'sets' | 'reps' | 'rest_seconds' | 'notes' | 'exercises'
+>;
+
+/** Where logged sets belong: a plan day, or the client's own ("self") training. */
+export type LogTarget =
+  | { source: 'plan'; planDayId: string }
+  | { source: 'self'; selfWorkoutId: string | null };
+
+export function sortSelfWorkout(w: SelfWorkoutFull): SelfWorkoutFull {
+  return {
+    ...w,
+    self_workout_exercises: [...w.self_workout_exercises].sort(
+      (a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at),
+    ),
+  };
 }

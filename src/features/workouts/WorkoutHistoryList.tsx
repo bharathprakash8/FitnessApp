@@ -31,8 +31,9 @@ export function WorkoutHistoryList({
           </IonCardHeader>
           <IonCardContent>
             {s.exercises.map((ex) => (
-              <p key={ex.name} style={{ margin: '0 0 6px' }}>
+              <p key={ex.key} style={{ margin: '0 0 6px' }}>
                 <strong>{ex.name}</strong>
+                {ex.self && <span className="workout-self-tag">Self</span>}
                 <br />
                 <span className="workout-muted">
                   {ex.sets.map((set) => formatSet(set, ex.type)).join(' · ')}

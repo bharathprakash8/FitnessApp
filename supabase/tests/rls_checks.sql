@@ -604,6 +604,87 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Self workouts (client's own saved workouts, logged as source 'self')
+--   S2 = C2's saved workout
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.self_workouts (id, client_id, name) values
+  ('00000000-0000-4000-b000-0000000000a2', '00000000-0000-4000-a000-0000000000c2', 'C2 home');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare w uuid;
+declare src text;
+declare pd uuid;
+begin
+  insert into public.self_workouts (name) values ('C1 legs') returning id into w;
+  if (select client_id from public.self_workouts where id = w) <> '00000000-0000-4000-a000-0000000000c1' then
+    raise exception 'FAIL: self workout not owned by its creator';
+  end if;
+  insert into public.self_workout_exercises (self_workout_id, exercise_id)
+  values (w, (select id from public.exercises where name = 'Push-up' and trainer_id is null));
+  insert into public.self_workout_exercises (self_workout_id, exercise_id)
+  values (w, '00000000-0000-4000-b000-0000000000e1');
+  if (select count(*) from public.self_workouts) <> 1 then
+    raise exception 'FAIL: client sees self workouts of others';
+  end if;
+  begin
+    insert into public.self_workout_exercises (self_workout_id, exercise_id)
+    values (w, '00000000-0000-4000-b000-0000000000e2');
+    raise exception 'FAIL: client used another trainer''s exercise in a self workout';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into public.self_workout_exercises (self_workout_id, exercise_id)
+    values ('00000000-0000-4000-b000-0000000000a2', '00000000-0000-4000-b000-0000000000e1');
+    raise exception 'FAIL: client added to another client''s self workout';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into public.self_workouts (client_id, name) values ('00000000-0000-4000-a000-0000000000c2', 'x');
+    raise exception 'FAIL: client created a self workout for another client';
+  exception when insufficient_privilege then null;
+  end;
+  -- A log against a self workout is always 'self' and never counts for the plan.
+  insert into public.workout_logs (client_id, plan_day_id, self_workout_id, exercise_id, set_number, reps)
+  values ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000d1', w,
+    '00000000-0000-4000-b000-0000000000e1', 1, 10)
+  returning source, plan_day_id into src, pd;
+  if src <> 'self' or pd is not null then
+    raise exception 'FAIL: self workout log not tagged self';
+  end if;
+  begin
+    insert into public.workout_logs (client_id, self_workout_id, exercise_id, set_number, reps)
+    values ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000a2',
+      '00000000-0000-4000-b000-0000000000e1', 1, 10);
+    raise exception 'FAIL: client logged against another client''s self workout';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.self_workouts) <> 1
+    or (select count(*) from public.self_workout_exercises) <> 2 then
+    raise exception 'FAIL: trainer T1 does not see exactly C1''s self workouts';
+  end if;
+  update public.self_workouts set name = 'hacked';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: trainer renamed a client''s self workout'; end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.self_workouts where client_id = '00000000-0000-4000-a000-0000000000c1') <> 0 then
+    raise exception 'FAIL: trainer T2 sees self workouts of T1''s client';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

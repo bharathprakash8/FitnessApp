@@ -24,8 +24,11 @@ export function ExercisePicker({
   onClose,
 }: {
   isOpen: boolean;
-  /** Only shared exercises and this trainer's own can go into their plans. */
-  trainerId: string;
+  /**
+   * Only shared exercises and this trainer's own can go into their plans. Leave it out for
+   * a client: they only see the shared library and their trainer's exercises anyway.
+   */
+  trainerId?: string;
   onPick: (exercise: Exercise) => void;
   onClose: () => void;
 }) {
@@ -34,7 +37,7 @@ export function ExercisePicker({
   const term = search.trim().toLowerCase();
   const shown = (exercises.data ?? []).filter(
     (ex) =>
-      (ex.trainer_id === null || ex.trainer_id === trainerId) &&
+      (!trainerId || ex.trainer_id === null || ex.trainer_id === trainerId) &&
       (!term ||
         [ex.name, ex.muscle_group, ex.equipment].some((v) => v?.toLowerCase().includes(term))),
   );

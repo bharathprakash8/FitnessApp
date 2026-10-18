@@ -103,3 +103,15 @@
 .rest-timer.done {
   color: var(--ion-color-success);
 }
+
+.workout-self-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--ion-color-tertiary-contrast);
+  background: var(--ion-color-tertiary);
+}

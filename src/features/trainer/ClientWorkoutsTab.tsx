@@ -14,7 +14,8 @@ import {
 import { formatDate } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
-import { useActivePlan, useMyPlans, useWorkoutLogs } from '../workouts/api';
+import { useActivePlan, useMyPlans, useSelfWorkouts, useWorkoutLogs } from '../workouts/api';
+import { prescription } from '../workouts/model';
 import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { WorkoutHistoryList } from '../workouts/WorkoutHistoryList';
@@ -27,6 +28,7 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
   const active = useActivePlan(client.id);
   const plans = useMyPlans(me?.id);
   const logs = useWorkoutLogs(client.id);
+  const own = useSelfWorkouts(client.id);
   const qc = useQueryClient();
   const [toast] = useIonToast();
 
@@ -102,6 +104,26 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
           )}
         </IonCardContent>
       </IonCard>
+      {(own.data ?? []).length > 0 && (
+        <IonCard className="trainer-card">
+          <IonCardHeader>
+            <IonCardSubtitle>Their own workouts (logged as Self)</IonCardSubtitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {own.data!.map((w) => (
+              <p key={w.id} style={{ margin: '0 0 8px' }}>
+                <strong>{w.name}</strong>
+                <br />
+                <span className="trainer-note">
+                  {w.self_workout_exercises
+                    .map((x) => `${x.exercises.name} ${prescription(x)}`)
+                    .join(' · ') || 'No exercises yet'}
+                </span>
+              </p>
+            ))}
+          </IonCardContent>
+        </IonCard>
+      )}
       <h3>Logged workouts</h3>
       <WorkoutHistoryList
         logs={logs.data ?? []}

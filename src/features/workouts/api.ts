@@ -8,7 +8,9 @@ import {
   type LogWithExercise,
   type PlanAssignment,
   type PlanFull,
+  type SelfWorkoutFull,
   type WorkoutPlan,
+  sortSelfWorkout,
 } from './model';
 
 // ---------------------------------------------------------------------------
@@ -21,6 +23,8 @@ export const assignmentKey = (clientId: string | undefined) => ['assignment', cl
 export const planAssignmentsKey = (planId: string | undefined) =>
   ['plan-assignments', planId] as const;
 export const logsKey = (clientId: string | undefined) => ['workout-logs', clientId] as const;
+export const selfWorkoutsKey = (clientId: string | undefined) =>
+  ['self-workouts', clientId] as const;
 
 const PLAN_SELECT = '*, plan_days(*, plan_exercises(*, exercises(*)))';
 
@@ -310,3 +314,59 @@ export function useDeleteLog(clientId: string | undefined) {
     onSuccess: () => qc.invalidateQueries({ queryKey: logsKey(clientId) }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Self workouts
+// ---------------------------------------------------------------------------
+
+const SELF_SELECT = '*, self_workout_exercises(*, exercises(*))';
+
+/** Workouts this person saved for themselves (also read by their trainer). */
+export function useSelfWorkouts(clientId: string | undefined) {
+  return useQuery({
+    queryKey: selfWorkoutsKey(clientId),
+    enabled: Boolean(clientId),
+    queryFn: async (): Promise<SelfWorkoutFull[]> => {
+      const { data, error } = await supabase
+        .from('self_workouts')
+        .select(SELF_SELECT)
+        .eq('client_id', clientId!)
+        .order('created_at');
+      if (error) throw error;
+      return (data as unknown as SelfWorkoutFull[]).map(sortSelfWorkout);
+    },
+  });
+}
+
+/** All self workout editing goes through here; every change refreshes the list. */
+export function useSelfWorkoutMutation<T>(
+  clientId: string | undefined,
+  fn: (input: T) => Promise<void>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => qc.invalidateQueries({ queryKey: selfWorkoutsKey(clientId) }),
+  });
+}
+
+export const selfWorkoutApi = {
+  async create(name: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('self_workouts')
+      .insert({ name })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data.id;
+  },
+  rename: async (id: string, name: string) =>
+    check(await supabase.from('self_workouts').update({ name }).eq('id', id)),
+  remove: async (id: string) => check(await supabase.from('self_workouts').delete().eq('id', id)),
+  addExercise: async (row: TablesInsert<'self_workout_exercises'>) =>
+    check(await supabase.from('self_workout_exercises').insert(row)),
+  updateExercise: async (id: string, fields: TablesUpdate<'self_workout_exercises'>) =>
+    check(await supabase.from('self_workout_exercises').update(fields).eq('id', id)),
+  removeExercise: async (id: string) =>
+    check(await supabase.from('self_workout_exercises').delete().eq('id', id)),
+};

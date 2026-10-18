@@ -24,8 +24,10 @@ import { TodayPage } from './features/today/TodayPage';
 import { TrainerClientPage } from './features/trainer/TrainerClientPage';
 import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
 import { ExerciseLibraryPage } from './features/workouts/ExerciseLibraryPage';
+import { MyWorkoutEditorPage } from './features/workouts/MyWorkoutEditorPage';
 import { PlanEditorPage } from './features/workouts/PlanEditorPage';
 import { PlansPage } from './features/workouts/PlansPage';
+import { SelfWorkoutPage } from './features/workouts/SelfWorkoutPage';
 import { WorkoutDayPage } from './features/workouts/WorkoutDayPage';
 import { WorkoutHistoryPage } from './features/workouts/WorkoutHistoryPage';
 import { WorkoutsPage } from './features/workouts/WorkoutsPage';
@@ -50,6 +52,8 @@ const KNOWN_PATHS = [
   '/workouts',
   '/workouts/day/:dayId',
   '/workouts/history',
+  '/workouts/mine/:id',
+  '/workouts/self/:id',
   '/me',
   '/me/details',
   '/me/health',
@@ -112,6 +116,11 @@ export function App() {
             <Route path="/workouts" element={guarded('client', <WorkoutsPage />)} />
             <Route path="/workouts/day/:dayId" element={guarded('client', <WorkoutDayPage />)} />
             <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />
+            <Route
+              path="/workouts/mine/:id"
+              element={guarded('client', <MyWorkoutEditorPage />)}
+            />
+            <Route path="/workouts/self/:id" element={guarded('client', <SelfWorkoutPage />)} />
             <Route path="/me" element={guarded('client', <MePage />)} />
             <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
             <Route path="/me/health" element={guarded('client', <HealthSyncPage />)} />

@@ -12,7 +12,7 @@ import {
 } from '@ionic/react';
 import { useState } from 'react';
 
-import type { PlanExerciseFull } from './model';
+import type { ExerciseSlot } from './model';
 
 export interface PlanExerciseFields {
   sets: number;
@@ -21,15 +21,18 @@ export interface PlanExerciseFields {
   notes: string | null;
 }
 
-/** Edit sets / reps / rest / notes for one exercise in a plan day. */
+/** Edit sets / reps / rest / notes for one exercise in a plan day (or a self workout). */
 export function PlanExerciseEditor({
   item,
   busy,
   onSave,
   onRemove,
   onClose,
+  forSelf = false,
 }: {
-  item: PlanExerciseFull | null;
+  item: ExerciseSlot | null;
+  /** Wording for a person's own workout instead of a trainer's plan. */
+  forSelf?: boolean;
   busy: boolean;
   onSave: (fields: PlanExerciseFields) => void;
   onRemove: () => void;
@@ -47,7 +50,14 @@ export function PlanExerciseEditor({
       </IonHeader>
       <IonContent className="ion-padding">
         {item && (
-          <Fields key={item.id} item={item} busy={busy} onSave={onSave} onRemove={onRemove} />
+          <Fields
+            key={item.id}
+            item={item}
+            busy={busy}
+            forSelf={forSelf}
+            onSave={onSave}
+            onRemove={onRemove}
+          />
         )}
       </IonContent>
     </IonModal>
@@ -57,11 +67,13 @@ export function PlanExerciseEditor({
 function Fields({
   item,
   busy,
+  forSelf,
   onSave,
   onRemove,
 }: {
-  item: PlanExerciseFull;
+  item: ExerciseSlot;
   busy: boolean;
+  forSelf: boolean;
   onSave: (fields: PlanExerciseFields) => void;
   onRemove: () => void;
 }) {
@@ -114,7 +126,7 @@ function Fields({
       </div>
       <IonTextarea
         fill="outline"
-        label="Notes for the client (optional)"
+        label={forSelf ? 'Notes (optional)' : 'Notes for the client (optional)'}
         labelPlacement="floating"
         autoGrow
         maxlength={500}
@@ -130,7 +142,7 @@ function Fields({
         {busy ? 'Saving…' : 'Save'}
       </IonButton>
       <IonButton expand="block" fill="clear" color="danger" disabled={busy} onClick={onRemove}>
-        Remove from this day
+        {forSelf ? 'Remove from this workout' : 'Remove from this day'}
       </IonButton>
     </div>
   );
