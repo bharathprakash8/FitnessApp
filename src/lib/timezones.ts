@@ -34,10 +34,19 @@ export function timeZoneLabel(tz: string | null | undefined): string {
   return TIME_ZONES.find((t) => t.tz === z)?.label ?? z.replace(/_/g, ' ');
 }
 
+/** Old names some systems still report, mapped to the current ones. */
+const ZONE_ALIASES: Record<string, string> = {
+  'Asia/Calcutta': 'Asia/Kolkata',
+  'Asia/Katmandu': 'Asia/Kathmandu',
+  'Asia/Saigon': 'Asia/Ho_Chi_Minh',
+  'Asia/Rangoon': 'Asia/Yangon',
+};
+
 /** The phone's own time zone (e.g. "Europe/London"), or IST if it can't tell. */
 export function deviceTimeZone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || DEFAULT_TIMEZONE;
+    return ZONE_ALIASES[tz] ?? tz;
   } catch {
     return DEFAULT_TIMEZONE;
   }

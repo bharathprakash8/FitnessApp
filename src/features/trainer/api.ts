@@ -66,10 +66,11 @@ export function useDashboard(trainerId: string | undefined) {
   return useQuery({
     queryKey: ['trainer-dashboard', trainerId],
     enabled: Boolean(trainerId),
-    queryFn: async (): Promise<Map<string, ClientFlag[]>> => {
+    // A plain object, not a Map: query results are saved on the phone as JSON (offline use).
+    queryFn: async (): Promise<Record<string, ClientFlag[]>> => {
       const { data, error } = await supabase.rpc('trainer_dashboard');
       if (error) throw error;
-      const flags = new Map<string, ClientFlag[]>();
+      const flags: Record<string, ClientFlag[]> = {};
       for (const r of data) {
         const f: ClientFlag[] = [];
         if (!r.last_meal_on || daysBetween(r.last_meal_on, r.today) >= 2) {
@@ -96,7 +97,7 @@ export function useDashboard(trainerId: string | undefined) {
         if (r.summary_ready) {
           f.push({ key: 'summary', label: 'Weekly summary ready', color: 'primary' });
         }
-        flags.set(r.client_id, f);
+        flags[r.client_id] = f;
       }
       return flags;
     },

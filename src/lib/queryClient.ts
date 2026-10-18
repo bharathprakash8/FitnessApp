@@ -39,6 +39,8 @@ export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
     throttleTime: 2000,
   }),
   maxAge: WEEK,
+  // Bump when the shape of saved query data changes, so old copies on phones are dropped.
+  buster: '2026-10-19',
   dehydrateOptions: {
     // Signed photo links expire after an hour – never keep them.
     shouldDehydrateQuery: (q) =>

@@ -30,7 +30,7 @@ import { useParams } from 'react-router-dom';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
-import { planApi, usePlan, usePlanMutation } from './api';
+import { planApi, useExercises, usePlan, usePlanMutation } from './api';
 import { AssignPlanModal } from './AssignPlanModal';
 import { ExercisePicker } from './ExercisePicker';
 import { prescription, type PlanDayFull, type PlanExerciseFull, type PlanFull } from './model';
@@ -40,6 +40,8 @@ import './workouts.css';
 export function PlanEditorPage() {
   const { id } = useParams<{ id: string }>();
   const plan = usePlan(id);
+  // Load the exercise list (for "Add exercise") alongside the plan, not after it.
+  useExercises();
 
   return (
     <IonPage>

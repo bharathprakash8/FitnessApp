@@ -92,7 +92,7 @@ function ClientList({
   search,
 }: {
   clients: TrainerClient[];
-  flags: Map<string, ClientFlag[]> | undefined;
+  flags: Record<string, ClientFlag[]> | undefined;
   search: string;
 }) {
   const term = search.trim().toLowerCase();
@@ -105,10 +105,10 @@ function ClientList({
     )
     .sort(
       (a, b) =>
-        Number(needsAttention(flags?.get(b.profile.id))) -
-        Number(needsAttention(flags?.get(a.profile.id))),
+        Number(needsAttention(flags?.[b.profile.id])) -
+        Number(needsAttention(flags?.[a.profile.id])),
     );
-  const attention = clients.filter((c) => needsAttention(flags?.get(c.profile.id))).length;
+  const attention = clients.filter((c) => needsAttention(flags?.[c.profile.id])).length;
 
   if (clients.length === 0) {
     return (
@@ -151,7 +151,7 @@ function ClientList({
               )}
               {p.is_active &&
                 p.onboarded_at &&
-                flags?.get(p.id)?.map((f) => (
+                flags?.[p.id]?.map((f) => (
                   <IonBadge key={f.key} color={f.color}>
                     {f.label}
                   </IonBadge>
