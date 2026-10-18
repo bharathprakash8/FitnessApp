@@ -1,37 +1,86 @@
 import { IonApp, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import type { ReactElement } from 'react';
+import { Suspense, lazy, type ComponentType, type ReactElement } from 'react';
 import { Route, matchPath, useLocation } from 'react-router-dom';
 
+import { StatusScreen } from './components/StatusScreen';
+
 import { HealthAutoSync } from './features/activity/HealthAutoSync';
-import { HealthSyncPage } from './features/activity/HealthSyncPage';
-import { AdminHomePage } from './features/admin/AdminHomePage';
-import { CreateUserPage } from './features/admin/CreateUserPage';
-import { UserDetailPage } from './features/admin/UserDetailPage';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { LoginPage } from './features/auth/LoginPage';
 import { HomeRedirect, RequireRole } from './features/auth/RequireRole';
 import type { Role } from './features/auth/roles';
-import { EditMealPage } from './features/food/EditMealPage';
-import { FoodPage } from './features/food/FoodPage';
-import { LogMealPage } from './features/food/LogMealPage';
-import { NotificationsPage } from './features/notifications/NotificationsPage';
 import { PushAutoRegister } from './features/notifications/PushAutoRegister';
-import { OnboardingPage } from './features/onboarding/OnboardingPage';
-import { MePage } from './features/profile/MePage';
-import { MyDetailsPage } from './features/profile/MyDetailsPage';
 import { TodayPage } from './features/today/TodayPage';
-import { MyTargetsPage } from './features/trainer/MyTargetsPage';
-import { TrainerClientPage } from './features/trainer/TrainerClientPage';
-import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
-import { ExerciseLibraryPage } from './features/workouts/ExerciseLibraryPage';
-import { MyWorkoutEditorPage } from './features/workouts/MyWorkoutEditorPage';
-import { PlanEditorPage } from './features/workouts/PlanEditorPage';
-import { PlansPage } from './features/workouts/PlansPage';
-import { SelfWorkoutPage } from './features/workouts/SelfWorkoutPage';
-import { WorkoutDayPage } from './features/workouts/WorkoutDayPage';
-import { WorkoutHistoryPage } from './features/workouts/WorkoutHistoryPage';
-import { WorkoutsPage } from './features/workouts/WorkoutsPage';
+
+/**
+ * Screens other than Login and Today load when first opened, so the app starts faster on
+ * a slow connection (the service worker still caches all of them for offline use).
+ */
+function lazyPage(load: () => Promise<ComponentType>) {
+  return lazy(async () => ({ default: await load() }));
+}
+
+const HealthSyncPage = lazyPage(() =>
+  import('./features/activity/HealthSyncPage').then((m) => m.HealthSyncPage),
+);
+const AdminHomePage = lazyPage(() =>
+  import('./features/admin/AdminHomePage').then((m) => m.AdminHomePage),
+);
+const CreateUserPage = lazyPage(() =>
+  import('./features/admin/CreateUserPage').then((m) => m.CreateUserPage),
+);
+const UserDetailPage = lazyPage(() =>
+  import('./features/admin/UserDetailPage').then((m) => m.UserDetailPage),
+);
+const EditMealPage = lazyPage(() =>
+  import('./features/food/EditMealPage').then((m) => m.EditMealPage),
+);
+const FoodPage = lazyPage(() => import('./features/food/FoodPage').then((m) => m.FoodPage));
+const LogMealPage = lazyPage(() =>
+  import('./features/food/LogMealPage').then((m) => m.LogMealPage),
+);
+const NotificationsPage = lazyPage(() =>
+  import('./features/notifications/NotificationsPage').then((m) => m.NotificationsPage),
+);
+const OnboardingPage = lazyPage(() =>
+  import('./features/onboarding/OnboardingPage').then((m) => m.OnboardingPage),
+);
+const MePage = lazyPage(() => import('./features/profile/MePage').then((m) => m.MePage));
+const MyDetailsPage = lazyPage(() =>
+  import('./features/profile/MyDetailsPage').then((m) => m.MyDetailsPage),
+);
+const MyTargetsPage = lazyPage(() =>
+  import('./features/trainer/MyTargetsPage').then((m) => m.MyTargetsPage),
+);
+const TrainerClientPage = lazyPage(() =>
+  import('./features/trainer/TrainerClientPage').then((m) => m.TrainerClientPage),
+);
+const TrainerClientsPage = lazyPage(() =>
+  import('./features/trainer/TrainerClientsPage').then((m) => m.TrainerClientsPage),
+);
+const ExerciseLibraryPage = lazyPage(() =>
+  import('./features/workouts/ExerciseLibraryPage').then((m) => m.ExerciseLibraryPage),
+);
+const MyWorkoutEditorPage = lazyPage(() =>
+  import('./features/workouts/MyWorkoutEditorPage').then((m) => m.MyWorkoutEditorPage),
+);
+const PlanEditorPage = lazyPage(() =>
+  import('./features/workouts/PlanEditorPage').then((m) => m.PlanEditorPage),
+);
+const PlansPage = lazyPage(() => import('./features/workouts/PlansPage').then((m) => m.PlansPage));
+const SelfWorkoutPage = lazyPage(() =>
+  import('./features/workouts/SelfWorkoutPage').then((m) => m.SelfWorkoutPage),
+);
+const WorkoutDayPage = lazyPage(() =>
+  import('./features/workouts/WorkoutDayPage').then((m) => m.WorkoutDayPage),
+);
+const WorkoutHistoryPage = lazyPage(() =>
+  import('./features/workouts/WorkoutHistoryPage').then((m) => m.WorkoutHistoryPage),
+);
+const WorkoutsPage = lazyPage(() =>
+  import('./features/workouts/WorkoutsPage').then((m) => m.WorkoutsPage),
+);
 
 const KNOWN_PATHS = [
   '/login',
@@ -76,7 +125,7 @@ function RootRedirect() {
 
 const guarded = (role: Role | Role[], page: ReactElement, onboarding = false) => (
   <RequireRole role={role} onboarding={onboarding}>
-    {page}
+    <Suspense fallback={<StatusScreen loading />}>{page}</Suspense>
   </RequireRole>
 );
 
