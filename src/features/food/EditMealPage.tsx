@@ -15,6 +15,7 @@ import {
 } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DEFAULT_TIMEZONE, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { itemsJson, useDeleteMeal, useMeal, usePhotoUrls, useSaveMeal } from './api';
@@ -46,7 +47,11 @@ export function EditMealPage() {
             <IonBackButton defaultHref="/food" />
           </IonButtons>
           <IonTitle>Edit meal</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="food-page">

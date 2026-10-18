@@ -68,8 +68,15 @@ export function BurnCard({
       return;
     }
     try {
-      await saveManual.mutateAsync({ day, activeCalories: n });
+      const result = await saveManual.mutateAsync({ day, activeCalories: n });
       setManual('');
+      if (result === 'offline') {
+        void toast({
+          message: 'Saved offline – will sync when you’re back online',
+          duration: 2500,
+          position: 'top',
+        });
+      }
     } catch {
       void toast({
         message: 'Could not save. Try again.',

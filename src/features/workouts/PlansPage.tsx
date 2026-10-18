@@ -24,6 +24,7 @@ import {
 import { add, barbellOutline } from 'ionicons/icons';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { TRAINER_TABS } from '../../components/tabs';
 import { formatDate } from '../../lib/dates';
@@ -74,12 +75,14 @@ export function PlansPage() {
         <IonToolbar color="primary">
           <IonTitle>Workout plans</IonTitle>
           <IonButtons slot="end">
+            <RefreshButton />
             <IonButton routerLink="/trainer/exercises">
               <IonIcon slot="start" icon={barbellOutline} />
               Exercises
             </IonButton>
           </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent>
         <IonRefresher

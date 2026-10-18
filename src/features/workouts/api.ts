@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import type { TablesInsert, TablesUpdate } from '../../lib/database.types';
+import {
+  enqueue,
+  isNetworkError,
+  removeQueued,
+  useQueuedItems,
+  type ExerciseSnapshot,
+} from '../../lib/offlineQueue';
 import { supabase } from '../../lib/supabase';
 import {
   sortPlan,
@@ -287,7 +295,38 @@ export function useSetPlanClients(defaultPlanId: string) {
 // Workout logs
 // ---------------------------------------------------------------------------
 
+/** Logged sets, including sets saved offline that are still waiting to sync. */
 export function useWorkoutLogs(clientId: string | undefined) {
+  const query = useWorkoutLogsFromServer(clientId);
+  const queued = useQueuedItems();
+  const data = useMemo(() => {
+    const waiting: LogWithExercise[] = queued.flatMap((i) =>
+      i.kind === 'workout_set' && i.row.client_id === clientId
+        ? [
+            {
+              performed_on: i.createdAt.slice(0, 10),
+              plan_day_id: null,
+              self_workout_id: null,
+              source: 'plan',
+              reps: null,
+              weight_kg: null,
+              duration_min: null,
+              created_at: i.createdAt,
+              ...i.row,
+              exercises: i.exercise,
+              offline: true,
+            } as LogWithExercise,
+          ]
+        : [],
+    );
+    if (!query.data) return waiting.length ? waiting : undefined;
+    const ids = new Set(query.data.map((l) => l.id));
+    return [...waiting.filter((l) => !ids.has(l.id)).reverse(), ...query.data];
+  }, [query.data, queued, clientId]);
+  return { ...query, data };
+}
+
+function useWorkoutLogsFromServer(clientId: string | undefined) {
   return useQuery({
     queryKey: logsKey(clientId),
     enabled: Boolean(clientId),
@@ -305,20 +344,40 @@ export function useWorkoutLogs(clientId: string | undefined) {
   });
 }
 
+/** Log one set. Without a connection the set is kept on the phone ('offline') and synced later. */
 export function useLogSet(clientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (row: Omit<TablesInsert<'workout_logs'>, 'client_id'>) =>
-      check(await supabase.from('workout_logs').insert({ ...row, client_id: clientId! })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: logsKey(clientId) }),
+    mutationFn: async ({
+      row: input,
+      exercise,
+    }: {
+      row: Omit<TablesInsert<'workout_logs'>, 'client_id'>;
+      exercise: ExerciseSnapshot;
+    }): Promise<'saved' | 'offline'> => {
+      const row = { ...input, id: crypto.randomUUID(), client_id: clientId! };
+      try {
+        check(await supabase.from('workout_logs').insert(row));
+        return 'saved';
+      } catch (err) {
+        if (!isNetworkError(err)) throw err;
+        await enqueue({ kind: 'workout_set', id: row.id, userId: row.client_id, row, exercise });
+        return 'offline';
+      }
+    },
+    onSuccess: (result) =>
+      result === 'saved' ? qc.invalidateQueries({ queryKey: logsKey(clientId) }) : undefined,
   });
 }
 
 export function useDeleteLog(clientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) =>
-      check(await supabase.from('workout_logs').delete().eq('id', id)),
+    mutationFn: async (id: string) => {
+      // A set that never left the phone is just dropped from the queue.
+      await removeQueued(id);
+      check(await supabase.from('workout_logs').delete().eq('id', id));
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: logsKey(clientId) }),
   });
 }

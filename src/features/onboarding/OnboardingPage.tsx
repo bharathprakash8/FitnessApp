@@ -13,6 +13,7 @@ import {
 } from '@ionic/react';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useAcceptConsent, useMyTrainer, useSaveClientDetails } from '../profile/api';
 import { ClientDetailsForm } from '../profile/ClientDetailsForm';
@@ -48,6 +49,7 @@ export function OnboardingPage() {
         <IonToolbar color="primary">
           <IonTitle>Welcome to FitCoach</IonTitle>
           <IonButtons slot="end">
+            <RefreshButton />
             {isTrainer ? (
               <IonButton routerLink="/trainer" routerDirection="root">
                 Not now
@@ -58,6 +60,7 @@ export function OnboardingPage() {
           </IonButtons>
         </IonToolbar>
         <IonProgressBar value={(STEPS.indexOf(step) + 1) / STEPS.length} />
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="onboarding">

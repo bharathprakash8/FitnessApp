@@ -16,6 +16,7 @@ import {
 } from '@ionic/react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useReminderSettings } from './api';
 import {
@@ -27,6 +28,7 @@ import {
   sendTestNotification,
   type PushPermission,
 } from './push';
+import { IosInstallSteps } from './IosInstallSteps';
 import { ReminderForm } from './ReminderForm';
 import { TrainerRemindersCard } from './TrainerRemindersCard';
 import './notifications.css';
@@ -41,7 +43,11 @@ export function NotificationsPage() {
             <IonBackButton defaultHref="/me" />
           </IonButtons>
           <IonTitle>Notifications</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="notif-page">
@@ -176,26 +182,6 @@ function DeviceCard() {
         {support === 'android' && <BatteryTips />}
       </IonCardContent>
     </IonCard>
-  );
-}
-
-function IosInstallSteps() {
-  return (
-    <>
-      <p>
-        On iPhone, notifications work only when FitCoach is added to your Home Screen (iOS 16.4 or
-        newer):
-      </p>
-      <ol className="notif-steps">
-        <li>
-          Tap the <strong>Share</strong> button (square with an arrow) at the bottom of Safari.
-        </li>
-        <li>
-          Scroll down and tap <strong>Add to Home Screen</strong> → <strong>Add</strong>.
-        </li>
-        <li>Open FitCoach from the new Home Screen icon and come back to Me → Notifications.</li>
-      </ol>
-    </>
   );
 }
 

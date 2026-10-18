@@ -1,4 +1,5 @@
 import {
+  IonButtons,
   IonButton,
   IonCard,
   IonCardContent,
@@ -18,6 +19,7 @@ import {
 } from '@ionic/react';
 import { barbell, camera, flag, restaurant } from 'ionicons/icons';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
 import { DEFAULT_TIMEZONE, todayIn } from '../../lib/dates';
@@ -30,6 +32,7 @@ import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
+import { InstallCard } from './InstallCard';
 import './today.css';
 
 function greeting(timeZone = DEFAULT_TIMEZONE): string {
@@ -67,7 +70,11 @@ function Today() {
       <IonHeader>
         <IonToolbar color="primary">
           <IonTitle>{isTrainer ? 'My fitness' : 'Today'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <IonRefresher
@@ -101,6 +108,7 @@ function Today() {
               </IonButton>
             </div>
           )}
+          <InstallCard />
           {targets.isPending || meals.isPending ? (
             <div className="ion-text-center">
               <IonSpinner name="crescent" />

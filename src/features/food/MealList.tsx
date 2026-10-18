@@ -47,8 +47,11 @@ export function MealList({
                   .join(', ') ||
                 m.input_text ||
                 'Meal';
+              // Saved offline and not synced yet: can't be opened until it reaches the server.
+              const waiting = 'offline' in m;
+              const link = waiting ? undefined : linkTo?.(m);
               return (
-                <IonItem key={m.id} routerLink={linkTo?.(m)} detail={Boolean(linkTo)} lines="full">
+                <IonItem key={m.id} routerLink={link} detail={Boolean(link)} lines="full">
                   {url ? <img slot="start" src={url} alt="" className="food-meal-thumb" /> : null}
                   <IonLabel>
                     <h3>{names}</h3>
@@ -65,6 +68,7 @@ export function MealList({
                           : 'Estimated'}
                       {m.photo_deleted ? ' · photo deleted after 7 days' : ''}
                     </p>
+                    {waiting && <p className="offline-badge">Saved offline – will sync</p>}
                   </IonLabel>
                 </IonItem>
               );

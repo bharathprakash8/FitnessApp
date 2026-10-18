@@ -1,14 +1,58 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import type { Json, TablesInsert, TablesUpdate } from '../../lib/database.types';
+import { enqueue, isNetworkError, useQueuedItems } from '../../lib/offlineQueue';
 import { supabase } from '../../lib/supabase';
 import type { MealItem, MealLog, MealType } from './model';
 
 export const mealsKey = (clientId: string | undefined, day: string) =>
   ['meals', clientId, day] as const;
 
+/** Meals of one day, including meals saved offline that are still waiting to sync. */
 export function useMealsOn(clientId: string | undefined, day: string) {
+  const query = useMealsFromServer(clientId, day);
+  const queued = useQueuedItems();
+  const data = useMemo(() => {
+    const waiting = queued.flatMap((i) =>
+      i.kind === 'meal' && i.row.client_id === clientId && i.row.eaten_on === day
+        ? [queuedMeal(i.row, i.createdAt)]
+        : [],
+    );
+    if (!query.data) return waiting.length ? waiting : undefined;
+    const ids = new Set(query.data.map((m) => m.id));
+    return [...query.data, ...waiting.filter((m) => !ids.has(m.id))].sort((a, b) =>
+      a.eaten_at.localeCompare(b.eaten_at),
+    );
+  }, [query.data, queued, clientId, day]);
+  return { ...query, data };
+}
+
+/** A meal row that is still waiting in the offline queue, shaped like a saved one. */
+function queuedMeal(
+  row: TablesInsert<'meal_logs'> & { id: string; client_id: string },
+  at: string,
+) {
+  return {
+    eaten_at: at,
+    eaten_on: at.slice(0, 10),
+    photo_path: null,
+    photo_deleted: false,
+    input_text: null,
+    items: [],
+    total_calories: 0,
+    protein_g: 0,
+    carbs_g: 0,
+    fat_g: 0,
+    edited: false,
+    created_at: at,
+    ...row,
+    offline: true,
+  } as MealLog & { offline: true };
+}
+
+function useMealsFromServer(clientId: string | undefined, day: string) {
   return useQuery({
     queryKey: mealsKey(clientId, day),
     enabled: Boolean(clientId),
@@ -103,18 +147,35 @@ function invalidateMeals(qc: ReturnType<typeof useQueryClient>) {
   ]);
 }
 
+/**
+ * Save a new meal (or update one with `id`). A new meal that can't reach the server is
+ * kept on the phone and synced later: the result is then 'offline'.
+ */
 export function useSaveMeal() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (meal: TablesInsert<'meal_logs'> & { id?: string }) => {
+    mutationFn: async (
+      meal: TablesInsert<'meal_logs'> & { id?: string },
+    ): Promise<'saved' | 'offline'> => {
       const { id, ...fields } = meal;
-      const { error } = id
-        ? await supabase
-            .from('meal_logs')
-            .update(fields as TablesUpdate<'meal_logs'>)
-            .eq('id', id)
-        : await supabase.from('meal_logs').insert(fields);
-      if (error) throw error;
+      if (id) {
+        const { error } = await supabase
+          .from('meal_logs')
+          .update(fields as TablesUpdate<'meal_logs'>)
+          .eq('id', id);
+        if (error) throw error;
+        return 'saved';
+      }
+      const row = { ...fields, id: crypto.randomUUID() };
+      try {
+        const { error } = await supabase.from('meal_logs').insert(row);
+        if (error) throw error;
+        return 'saved';
+      } catch (err) {
+        if (!isNetworkError(err)) throw err;
+        await enqueue({ kind: 'meal', id: row.id, userId: row.client_id, row });
+        return 'offline';
+      }
     },
     onSuccess: () => invalidateMeals(qc),
   });

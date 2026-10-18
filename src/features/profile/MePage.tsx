@@ -1,4 +1,5 @@
 import {
+  IonButtons,
   IonButton,
   IonContent,
   IonFooter,
@@ -15,6 +16,7 @@ import {
 } from '@ionic/react';
 import { useState, type FormEvent } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS, TRAINER_TABS } from '../../components/tabs';
 import { DetailRow } from '../../components/DetailRow';
@@ -36,7 +38,11 @@ export function MePage() {
       <IonHeader>
         <IonToolbar color="primary">
           <IonTitle>Me</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="profile-page">

@@ -16,6 +16,7 @@ import {
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DetailRow } from '../../components/DetailRow';
 import { ageFrom, formatDate } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
@@ -45,6 +46,9 @@ export function TrainerClientPage() {
             <IonBackButton defaultHref="/trainer" />
           </IonButtons>
           <IonTitle>{name}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
         <IonToolbar>
           <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
@@ -65,6 +69,7 @@ export function TrainerClientPage() {
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="trainer-page">

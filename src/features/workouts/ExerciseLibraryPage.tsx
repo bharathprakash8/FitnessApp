@@ -26,6 +26,7 @@ import {
 import { add } from 'ionicons/icons';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useArchiveExercise, useExercises, useSaveExercise } from './api';
 import { ExerciseForm, type ExerciseInput } from './ExerciseForm';
@@ -105,6 +106,9 @@ export function ExerciseLibraryPage() {
             <IonBackButton defaultHref={isAdmin ? '/admin' : '/trainer/plans'} />
           </IonButtons>
           <IonTitle>Exercise library</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
         <IonToolbar>
           <IonSearchbar
@@ -129,6 +133,7 @@ export function ExerciseLibraryPage() {
             </IonSegment>
           </IonToolbar>
         )}
+        <SyncStatusBar />
       </IonHeader>
       <IonContent>
         {exercises.isPending ? (

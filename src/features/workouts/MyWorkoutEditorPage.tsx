@@ -21,6 +21,7 @@ import { add, arrowDown, arrowUp } from 'ionicons/icons';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { selfWorkoutApi, useSelfWorkoutMutation, useSelfWorkouts } from './api';
 import { ExercisePicker } from './ExercisePicker';
@@ -43,7 +44,11 @@ export function MyWorkoutEditorPage() {
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
           <IonTitle>{workout?.name ?? 'My workout'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="workout-page">

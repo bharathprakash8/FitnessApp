@@ -1,13 +1,12 @@
 import type { Session } from '@supabase/supabase-js';
-import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { clearPersistedCache } from '../../lib/queryClient';
 import { supabase } from '../../lib/supabase';
 import { useProfile } from './api';
 import { AuthContext, type AuthState, type AuthStatus } from './authContext';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const queryClient = useQueryClient();
   // undefined = still reading the saved session from storage
   const [session, setSession] = useState<Session | null | undefined>(undefined);
 
@@ -31,8 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-    queryClient.clear();
-  }, [queryClient]);
+    // Also forgets the data kept on this phone for offline use.
+    await clearPersistedCache();
+  }, []);
 
   const { refetch } = profileQuery;
   const retry = useCallback(() => {

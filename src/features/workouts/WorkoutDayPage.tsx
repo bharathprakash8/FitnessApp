@@ -15,6 +15,7 @@ import {
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { formatDate, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { useActivePlan, useWorkoutLogs } from './api';
@@ -42,7 +43,11 @@ export function WorkoutDayPage() {
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
           <IonTitle>{day?.title ?? 'Workout'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="workout-page">

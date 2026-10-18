@@ -1,4 +1,5 @@
 import {
+  IonButtons,
   IonButton,
   IonCard,
   IonCardContent,
@@ -16,6 +17,7 @@ import {
 import { camera, chevronBack, chevronForward, create, text } from 'ionicons/icons';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
 import { DEFAULT_TIMEZONE, formatDate, todayIn } from '../../lib/dates';
@@ -41,7 +43,11 @@ export function FoodPage() {
       <IonHeader>
         <IonToolbar color="primary">
           <IonTitle>Food</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <IonRefresher

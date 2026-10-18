@@ -19,6 +19,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { HEALTH_CONNECT_PLAY_URL, IPHONE_SHORTCUT_URL } from '../../config';
 import { isAndroidApp } from '../../lib/platform';
 import { supabase } from '../../lib/supabase';
@@ -46,7 +47,11 @@ export function HealthSyncPage() {
             <IonBackButton defaultHref="/me" />
           </IonButtons>
           <IonTitle>Health sync</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div style={{ maxWidth: 560, margin: '0 auto' }}>

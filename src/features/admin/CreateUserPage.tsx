@@ -17,6 +17,7 @@ import {
 } from '@ionic/react';
 import { useState, type FormEvent } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import type { Role } from '../auth/roles';
 import { loginInstructions, useAdminAction, useAdminUsers, type AdminUser } from './api';
 import { RoleSegment } from './RoleSegment';
@@ -64,7 +65,11 @@ export function CreateUserPage() {
             <IonBackButton defaultHref="/admin" />
           </IonButtons>
           <IonTitle>{created ? 'User added' : 'Add user'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="admin-form">

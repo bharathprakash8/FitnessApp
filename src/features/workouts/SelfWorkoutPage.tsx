@@ -17,6 +17,7 @@ import { add } from 'ionicons/icons';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { formatDate, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { useExercises, useSelfWorkouts, useWorkoutLogs } from './api';
@@ -87,12 +88,12 @@ export function SelfWorkoutPage() {
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
           <IonTitle>{quick ? 'Quick log' : (workout?.name ?? 'My workout')}</IonTitle>
-          {workout && (
-            <IonButtons slot="end">
-              <IonButton routerLink={`/workouts/mine/${workout.id}`}>Edit</IonButton>
-            </IonButtons>
-          )}
+          <IonButtons slot="end">
+            <RefreshButton />
+            {workout && <IonButton routerLink={`/workouts/mine/${workout.id}`}>Edit</IonButton>}
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="workout-page">

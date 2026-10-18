@@ -28,6 +28,7 @@ import { add, arrowDown, arrowUp, ellipsisVertical } from 'ionicons/icons';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { planApi, usePlan, usePlanMutation } from './api';
 import { AssignPlanModal } from './AssignPlanModal';
@@ -48,7 +49,11 @@ export function PlanEditorPage() {
             <IonBackButton defaultHref="/trainer/plans" />
           </IonButtons>
           <IonTitle>{plan.data?.name ?? 'Plan'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="workout-page">

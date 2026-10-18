@@ -22,6 +22,7 @@ import {
 import { useState, type FormEvent } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { formatDate } from '../../lib/dates';
 import type { Role } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
@@ -52,7 +53,11 @@ export function UserDetailPage() {
             <IonBackButton defaultHref="/admin" />
           </IonButtons>
           <IonTitle>{user ? displayName(user) : 'User'}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <QueryState query={users}>

@@ -17,6 +17,7 @@ import {
 } from '@ionic/react';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { formatDate } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { useWorkoutLogs } from './api';
@@ -39,6 +40,9 @@ export function WorkoutHistoryPage() {
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
           <IonTitle>My workouts</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
         <IonToolbar>
           <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
@@ -50,6 +54,7 @@ export function WorkoutHistoryPage() {
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="workout-page">

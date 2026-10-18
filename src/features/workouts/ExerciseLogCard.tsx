@@ -104,7 +104,14 @@ export function ExerciseLogCard({
       return;
     }
     try {
-      await logSet.mutateAsync(row);
+      const result = await logSet.mutateAsync({ row, exercise: pe.exercises });
+      if (result === 'offline') {
+        void toast({
+          message: 'Saved offline – will sync when you’re back online',
+          duration: 2500,
+          position: 'top',
+        });
+      }
       setKg('');
       setReps('');
       setMins('');
@@ -164,6 +171,7 @@ export function ExerciseLogCard({
               <li key={s.id}>
                 <span>
                   Set {s.set_number}: <strong>{formatSet(s, type)}</strong>
+                  {'offline' in s && <span className="offline-badge"> waiting to sync</span>}
                 </span>
                 <IonButton
                   fill="clear"

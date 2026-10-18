@@ -8,6 +8,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
@@ -23,7 +24,11 @@ export function MyTargetsPage() {
             <IonBackButton defaultHref="/today" />
           </IonButtons>
           <IonTitle>My targets</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="trainer-page">{profile && <TargetsTab client={profile} />}</div>

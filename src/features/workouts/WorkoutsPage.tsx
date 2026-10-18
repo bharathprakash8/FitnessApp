@@ -1,4 +1,5 @@
 import {
+  IonButtons,
   IonButton,
   IonCard,
   IonCardContent,
@@ -28,6 +29,7 @@ import {
 } from '@ionic/react';
 import { add, flash } from 'ionicons/icons';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
 import { todayIn } from '../../lib/dates';
@@ -60,7 +62,11 @@ export function WorkoutsPage() {
       <IonHeader>
         <IonToolbar color="primary">
           <IonTitle>Workouts</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <IonRefresher

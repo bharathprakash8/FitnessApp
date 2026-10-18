@@ -18,8 +18,10 @@ import { camera, images } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DEFAULT_TIMEZONE } from '../../lib/dates';
 import { compressImage } from '../../lib/image';
+import { useOnline } from '../../lib/network';
 import { useAuth } from '../auth/useAuth';
 import { analyzeMeal, itemsJson, uploadMealPhoto, useSaveMeal, type Analysis } from './api';
 import { MealEditor, type MealEditorValues } from './MealEditor';
@@ -43,6 +45,7 @@ export function LogMealPage() {
   const router = useIonRouter();
   const [toast] = useIonToast();
   const save = useSaveMeal();
+  const online = useOnline();
   const [stage, setStage] = useState<Stage>(source === 'manual' ? 'review' : 'input');
   const [status, setStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +129,7 @@ export function LogMealPage() {
   async function onSave(v: MealEditorValues) {
     const t = totalsOf(v.items);
     try {
-      await save.mutateAsync({
+      const result = await save.mutateAsync({
         client_id: clientId,
         eaten_on: v.date,
         eaten_at: localToIso(v.date, v.time, tz),
@@ -141,7 +144,12 @@ export function LogMealPage() {
         fat_g: t.fat_g,
         edited: Boolean(analysis) && v.edited,
       });
-      void toast({ message: 'Meal saved', duration: 1500, position: 'top' });
+      void toast({
+        message:
+          result === 'offline' ? 'Saved offline – will sync when you’re back online' : 'Meal saved',
+        duration: result === 'offline' ? 3000 : 1500,
+        position: 'top',
+      });
       router.push('/food', 'back');
     } catch {
       void toast({
@@ -164,10 +172,25 @@ export function LogMealPage() {
             <IonBackButton defaultHref="/food" />
           </IonButtons>
           <IonTitle>{title}</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="food-page">
+          {!online && source !== 'manual' && stage === 'input' && (
+            <div className="offline-note">
+              <p>
+                You're offline. Photo and text estimates need the internet – you can enter the meal
+                yourself now and it will sync later.
+              </p>
+              <IonButton size="small" routerLink="/food/new/manual" routerDirection="forward">
+                Enter manually
+              </IonButton>
+            </div>
+          )}
           {preview && <img src={preview} alt="Your meal" className="food-preview" />}
 
           {stage === 'input' && source === 'photo' && (

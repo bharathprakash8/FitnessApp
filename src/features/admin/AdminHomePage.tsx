@@ -18,6 +18,7 @@ import {
 import { add } from 'ionicons/icons';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useAdminUsers } from './api';
 import { AssignmentsView } from './AssignmentsView';
@@ -36,6 +37,7 @@ export function AdminHomePage() {
         <IonToolbar color="primary">
           <IonTitle>Admin</IonTitle>
           <IonButtons slot="end">
+            <RefreshButton />
             <IonButton routerLink="/admin/exercises">Exercises</IonButton>
             <IonButton onClick={() => void signOut()}>Log out</IonButton>
           </IonButtons>
@@ -50,6 +52,7 @@ export function AdminHomePage() {
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent>
         <IonRefresher

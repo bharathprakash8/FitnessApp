@@ -11,6 +11,7 @@ import {
   useIonToast,
 } from '@ionic/react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useLatestWeight, useSaveClientDetails } from './api';
 import { ClientDetailsForm } from './ClientDetailsForm';
@@ -32,7 +33,11 @@ export function MyDetailsPage() {
             <IonBackButton defaultHref="/me" />
           </IonButtons>
           <IonTitle>My details</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="profile-page">

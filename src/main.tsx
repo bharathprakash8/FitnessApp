@@ -1,5 +1,5 @@
 import { setupIonicReact } from '@ionic/react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -14,19 +14,32 @@ import '@ionic/react/css/display.css';
 import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
+import './theme/app.css';
 
 import { App } from './App';
-import { queryClient } from './lib/queryClient';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { flushQueue, onSynced, startAutoSync } from './lib/offlineQueue';
+import { persistOptions, queryClient } from './lib/queryClient';
 
 setupIonicReact();
+
+// Saves made offline are sent when the connection is back; then the screens refresh.
+onSynced(() => void queryClient.invalidateQueries());
+startAutoSync();
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');
 
 createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+      onSuccess={() => void flushQueue()}
+    >
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </PersistQueryClientProvider>
   </StrictMode>,
 );

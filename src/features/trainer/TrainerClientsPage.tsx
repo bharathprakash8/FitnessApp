@@ -1,4 +1,5 @@
 import {
+  IonButtons,
   IonBadge,
   IonContent,
   IonFooter,
@@ -17,6 +18,7 @@ import {
 } from '@ionic/react';
 import { useState } from 'react';
 
+import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { TRAINER_TABS } from '../../components/tabs';
 import { useAuth } from '../auth/useAuth';
@@ -33,6 +35,9 @@ export function TrainerClientsPage() {
       <IonHeader>
         <IonToolbar color="primary">
           <IonTitle>My clients</IonTitle>
+          <IonButtons slot="end">
+            <RefreshButton />
+          </IonButtons>
         </IonToolbar>
         <IonToolbar>
           <IonSearchbar
@@ -42,6 +47,7 @@ export function TrainerClientsPage() {
             debounce={150}
           />
         </IonToolbar>
+        <SyncStatusBar />
       </IonHeader>
       <IonContent>
         <IonRefresher
