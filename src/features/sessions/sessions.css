@@ -1,0 +1,75 @@
+.sessions-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.sessions-card {
+  margin-inline: 0;
+}
+
+.sessions-note {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+}
+
+.sessions-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ion-color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sessions-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--ion-color-primary-contrast);
+  background: var(--ion-color-primary);
+}
+
+.sessions-tag.cancelled {
+  background: var(--ion-color-medium);
+}
+
+.sessions-tag.todo {
+  color: #7c4a03;
+  background: #fde7c0;
+}
+
+.sessions-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 32px;
+}
+
+.sessions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.sessions-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.sessions-label {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.sessions-join {
+  margin-top: 12px;
+}
+
+.sessions-attendance {
+  width: 190px;
+}

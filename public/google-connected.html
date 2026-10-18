@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FitCoach – Google Calendar</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          Arial,
+          sans-serif;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 64px 20px;
+        text-align: center;
+        line-height: 1.5;
+        color: #1f2937;
+        background: #fff;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      .ok {
+        color: #0e9f6e;
+      }
+      .back {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 12px 24px;
+        border-radius: 10px;
+        color: #fff;
+        background: #0e9f6e;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .bad {
+        color: #b91c1c;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #e5e7eb;
+          background: #111827;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/icon.svg" alt="" width="64" height="64" />
+    <h1 id="title">Google Calendar</h1>
+    <p id="message"></p>
+    <p>You can close this page and go back to the FitCoach app.</p>
+    <p><a class="back" href="/trainer/sessions">Back to FitCoach</a></p>
+    <script>
+      // Shown after "Connect Google Calendar"; the result comes from the FitCoach server.
+      var messages = {
+        ok: [
+          'Connected ✅',
+          'Your Google Calendar is connected. Sessions you schedule in FitCoach now send invites with a Meet link from your Google account.',
+          'ok',
+        ],
+        denied: [
+          'Not connected',
+          'You chose not to allow access. You can try again any time from FitCoach → Sessions.',
+          'bad',
+        ],
+        calendar_not_allowed: [
+          'Not connected',
+          'Please tick the box that lets FitCoach manage calendar events, then try again.',
+          'bad',
+        ],
+        expired: [
+          'Link expired',
+          'The connect link expired. Start again from FitCoach → Sessions.',
+          'bad',
+        ],
+        not_trainer: ['Not connected', 'Only trainer accounts can connect Google Calendar.', 'bad'],
+        failed: [
+          'Something went wrong',
+          'Google could not be connected. Please try again from FitCoach → Sessions.',
+          'bad',
+        ],
+      };
+      var result = new URLSearchParams(location.search).get('result') || 'failed';
+      var m = messages[result] || messages.failed;
+      document.getElementById('title').textContent = m[0];
+      document.getElementById('title').className = m[2];
+      document.getElementById('message').textContent = m[1];
+    </script>
+  </body>
+</html>

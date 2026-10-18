@@ -446,3 +446,6 @@ verify_jwt = false
 [functions.cron-meal-reminders]
 verify_jwt = false
 
+
+[functions.calendar-session]
+verify_jwt = false

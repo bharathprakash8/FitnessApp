@@ -25,6 +25,7 @@ import type { Profile } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { useLatestWeight, useMyTrainer, useSaveBasics } from './api';
 import { DIET_LABELS, SEX_LABELS, goalText, label } from './options';
+import { TimeZoneSetting } from './TimeZoneSetting';
 import './profile.css';
 
 /** "Me" tab for clients and trainers: name/phone, own fitness details, log out. */
@@ -51,6 +52,7 @@ export function MePage() {
           </IonText>
           {/* key: refresh the form when the saved values change */}
           <BasicsForm key={`${profile.full_name}|${profile.phone}`} profile={profile} />
+          <TimeZoneSetting profile={profile} />
           {isClient || profile.onboarded_at ? (
             <ClientDetails profile={profile} />
           ) : (
@@ -178,6 +180,11 @@ function ClientDetails({ profile }: { profile: Profile }) {
       <IonButton expand="block" fill="outline" routerLink="/me/notifications">
         Notifications and reminders
       </IonButton>
+      {isClient && (
+        <IonButton expand="block" fill="outline" routerLink="/me/sessions">
+          My sessions
+        </IonButton>
+      )}
       {profile.consent_at && (
         <IonText color="medium">
           <p style={{ fontSize: '0.85rem' }}>

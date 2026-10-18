@@ -143,6 +143,19 @@ export function useSaveBasics(profile: Profile | null) {
   });
 }
 
+/** The user's own time zone (used for reminders, sessions and "today"). */
+export function useSaveTimeZone(profile: Profile | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (timezone: string) => {
+      if (!profile) throw new Error('Not signed in');
+      const { error } = await supabase.from('profiles').update({ timezone }).eq('id', profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey(profile?.id) }),
+  });
+}
+
 export function useAcceptConsent(profile: Profile | null, version: string) {
   const queryClient = useQueryClient();
   return useMutation({

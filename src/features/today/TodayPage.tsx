@@ -32,6 +32,7 @@ import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
+import { NextSessionCard } from '../sessions/NextSessionCard';
 import { InstallCard } from './InstallCard';
 import './today.css';
 
@@ -148,6 +149,7 @@ function Today() {
               )}
             </>
           )}
+          {profile && !isTrainer && <NextSessionCard profile={profile} />}
           {profile && <TodayWorkoutCard profile={profile} />}
         </div>
       </IonContent>

@@ -21,7 +21,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Single-page app: every in-app address loads index.html, except real pages.
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL('/index.html'), {
-    denylist: [/^\/privacy\.html$/],
+    denylist: [/^\/privacy\.html$/, /^\/google-connected\.html$/],
   }),
 );
 

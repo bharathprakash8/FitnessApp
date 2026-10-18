@@ -3,6 +3,7 @@
 // and that meal isn't logged today; same for the workout reminder. notification_log makes
 // sure each reminder goes out at most once a day.
 // Also sends the trainer's custom reminders (cardio, session, food, other) on their weekdays.
+// Also: "your session starts in 15 minutes" to attendees and the trainer.
 // Reminders the trainer locked (meal_times_locked, or client_can_mute = false) are sent even
 // when the client has paused reminders.
 import { adminClient } from '../_shared/auth.ts';
@@ -184,5 +185,47 @@ serveJson(async (req) => {
       sent += r.sent;
     }
   }
+  sent += await sessionReminders(db, new Set(withDevice));
   return { checked: clients.length, sent };
 });
+
+/** Sessions starting in the next ~15 minutes: remind attendees and the trainer once. */
+async function sessionReminders(
+  db: ReturnType<typeof adminClient>,
+  withDevice: Set<string>,
+): Promise<number> {
+  const now = Date.now();
+  const { data: soon, error } = await db
+    .from('sessions')
+    .select(
+      'id, title, starts_at, type, trainer_id, session_attendees(client_id, profiles!session_attendees_client_id_fkey(timezone, is_active))',
+    )
+    .eq('status', 'scheduled')
+    .gt('starts_at', new Date(now).toISOString())
+    .lte('starts_at', new Date(now + 16 * 60_000).toISOString());
+  if (error) throw error;
+  let sent = 0;
+  for (const s of soon ?? []) {
+    const people = [
+      s.trainer_id,
+      ...s.session_attendees
+        .filter((a) => (a.profiles as unknown as { is_active: boolean } | null)?.is_active)
+        .map((a) => a.client_id),
+    ].filter((id) => withDevice.has(id));
+    const mins = Math.max(1, Math.round((Date.parse(s.starts_at) - now) / 60_000));
+    for (const uid of people) {
+      const { error: logErr } = await db
+        .from('notification_log')
+        .insert({ user_id: uid, kind: `session_${s.id}`, ref_date: s.starts_at.slice(0, 10) });
+      if (logErr) continue; // already reminded
+      const r = await sendToUsers(db, [uid], {
+        title: `${s.title} starts in ${mins} min`,
+        body: s.type === 'online' ? 'Tap to open FitCoach and join.' : 'See you there!',
+        url: uid === s.trainer_id ? `/trainer/sessions/${s.id}` : '/today',
+        tag: `session-${s.id}`,
+      });
+      sent += r.sent;
+    }
+  }
+  return sent;
+}

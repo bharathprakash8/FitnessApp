@@ -861,6 +861,85 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Milestone 7: sessions, attendees, Google tokens
+--   S1 = T1's session with C1
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.sessions (id, trainer_id, title, starts_at, duration_min, type) values
+  ('00000000-0000-4000-b000-0000000000f7', '00000000-0000-4000-a000-0000000000f1', 'T1 session', now() - interval '1 hour', 45, 'online');
+insert into public.session_attendees (session_id, client_id) values
+  ('00000000-0000-4000-b000-0000000000f7', '00000000-0000-4000-a000-0000000000c1');
+insert into public.integration_tokens (owner_id, provider, refresh_token_encrypted, google_email) values
+  ('00000000-0000-4000-a000-0000000000f1', 'google_calendar', 'v1.x.y', 't1@example.com');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.sessions) <> 1 or (select count(*) from public.session_attendees) <> 1 then
+    raise exception 'FAIL: client cannot see their own session';
+  end if;
+  update public.session_attendees set status = 'present';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client marked their own attendance'; end if;
+  begin
+    insert into public.sessions (trainer_id, title, starts_at, duration_min, type)
+    values ('00000000-0000-4000-a000-0000000000f1', 'x', now(), 30, 'online');
+    raise exception 'FAIL: client created a session';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform 1 from public.integration_tokens;
+    raise exception 'FAIL: client can query integration_tokens';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.sessions) + (select count(*) from public.session_attendees) <> 0 then
+    raise exception 'FAIL: another client sees the session';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.sessions) <> 0 then
+    raise exception 'FAIL: trainer T2 sees T1''s sessions';
+  end if;
+  if public.my_google_connection() is not null then
+    raise exception 'FAIL: T2 sees a Google connection';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  update public.session_attendees set status = 'present'
+  where session_id = '00000000-0000-4000-b000-0000000000f7';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: trainer cannot mark attendance'; end if;
+  begin
+    update public.session_attendees set client_id = '00000000-0000-4000-a000-0000000000c2'
+    where session_id = '00000000-0000-4000-b000-0000000000f7';
+    raise exception 'FAIL: trainer changed who attended';
+  exception when insufficient_privilege then null;
+  end;
+  if public.my_google_connection() is distinct from 't1@example.com' then
+    raise exception 'FAIL: trainer cannot see their Google connection';
+  end if;
+  begin
+    perform refresh_token_encrypted from public.integration_tokens;
+    raise exception 'FAIL: trainer can read the stored Google token';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

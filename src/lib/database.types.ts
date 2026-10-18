@@ -222,6 +222,44 @@ export type Database = {
           },
         ]
       }
+      integration_tokens: {
+        Row: {
+          google_email: string | null
+          id: string
+          owner_id: string
+          provider: string
+          refresh_token_encrypted: string
+          scope: string | null
+          updated_at: string
+        }
+        Insert: {
+          google_email?: string | null
+          id?: string
+          owner_id: string
+          provider: string
+          refresh_token_encrypted: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Update: {
+          google_email?: string | null
+          id?: string
+          owner_id?: string
+          provider?: string
+          refresh_token_encrypted?: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_tokens_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_logs: {
         Row: {
           carbs_g: number
@@ -745,6 +783,182 @@ export type Database = {
           },
         ]
       }
+      session_attendees: {
+        Row: {
+          client_id: string
+          session_id: string
+          status: string
+        }
+        Insert: {
+          client_id: string
+          session_id: string
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_attendees_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_attendees_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_series: {
+        Row: {
+          calendar_event_id: string | null
+          created_at: string
+          duration_min: number
+          ends_after: number | null
+          ends_on: string | null
+          id: string
+          location: string | null
+          meet_url: string | null
+          notes: string | null
+          repeat: string
+          send_invite: boolean
+          start_date: string
+          start_time: string
+          time_zone: string
+          title: string
+          trainer_id: string
+          type: string
+          weekdays: number[]
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          created_at?: string
+          duration_min: number
+          ends_after?: number | null
+          ends_on?: string | null
+          id?: string
+          location?: string | null
+          meet_url?: string | null
+          notes?: string | null
+          repeat: string
+          send_invite?: boolean
+          start_date: string
+          start_time: string
+          time_zone?: string
+          title: string
+          trainer_id: string
+          type: string
+          weekdays?: number[]
+        }
+        Update: {
+          calendar_event_id?: string | null
+          created_at?: string
+          duration_min?: number
+          ends_after?: number | null
+          ends_on?: string | null
+          id?: string
+          location?: string | null
+          meet_url?: string | null
+          notes?: string | null
+          repeat?: string
+          send_invite?: boolean
+          start_date?: string
+          start_time?: string
+          time_zone?: string
+          title?: string
+          trainer_id?: string
+          type?: string
+          weekdays?: number[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_series_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          calendar_event_id: string | null
+          created_at: string
+          duration_min: number
+          id: string
+          location: string | null
+          meet_url: string | null
+          notes: string | null
+          send_invite: boolean
+          series_id: string | null
+          starts_at: string
+          status: string
+          time_zone: string
+          title: string
+          trainer_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          created_at?: string
+          duration_min: number
+          id?: string
+          location?: string | null
+          meet_url?: string | null
+          notes?: string | null
+          send_invite?: boolean
+          series_id?: string | null
+          starts_at: string
+          status?: string
+          time_zone?: string
+          title: string
+          trainer_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          calendar_event_id?: string | null
+          created_at?: string
+          duration_min?: number
+          id?: string
+          location?: string | null
+          meet_url?: string | null
+          notes?: string | null
+          send_invite?: boolean
+          series_id?: string | null
+          starts_at?: string
+          status?: string
+          time_zone?: string
+          title?: string
+          trainer_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "session_series"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       targets: {
         Row: {
           calories: number
@@ -965,7 +1179,9 @@ export type Database = {
       exercise_used_by_me: { Args: { ex: string }; Returns: boolean }
       has_push_device: { Args: { client: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_session_attendee: { Args: { s: string }; Returns: boolean }
       is_trainer_of: { Args: { client: string }; Returns: boolean }
+      my_google_connection: { Args: never; Returns: string }
       my_trainer: { Args: never; Returns: string }
       old_meal_photos: {
         Args: { cutoff: string }
@@ -976,6 +1192,7 @@ export type Database = {
       plan_of_day: { Args: { day: string }; Returns: string }
       plan_owner: { Args: { plan: string }; Returns: string }
       self_workout_owner: { Args: { w: string }; Returns: string }
+      session_owner: { Args: { s: string }; Returns: string }
       tracks_self: { Args: never; Returns: boolean }
       try_uuid: { Args: { t: string }; Returns: string }
       user_has_data: { Args: { uid: string }; Returns: boolean }

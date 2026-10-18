@@ -36,21 +36,27 @@ export function json(req: Request, status: number, body: unknown): Response {
 
 /** Wrap a handler: answers CORS preflight, allows POST only, turns errors into { error }. */
 export function serveJson(handler: (req: Request) => Promise<unknown>) {
-  Deno.serve(async (req) => {
-    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
-    if (req.method !== 'POST') {
-      return json(req, 405, { error: { code: 'method_not_allowed', message: 'Use POST' } });
+  Deno.serve((req) => handleJson(req, handler));
+}
+
+/** The body of serveJson, for functions that also answer other requests (e.g. a GET callback). */
+export async function handleJson(
+  req: Request,
+  handler: (req: Request) => Promise<unknown>,
+): Promise<Response> {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
+  if (req.method !== 'POST') {
+    return json(req, 405, { error: { code: 'method_not_allowed', message: 'Use POST' } });
+  }
+  try {
+    const data = await handler(req);
+    return json(req, 200, { data });
+  } catch (err) {
+    if (err instanceof HttpError) {
+      return json(req, err.status, { error: { code: err.code, message: err.message } });
     }
-    try {
-      const data = await handler(req);
-      return json(req, 200, { data });
-    } catch (err) {
-      if (err instanceof HttpError) {
-        return json(req, err.status, { error: { code: err.code, message: err.message } });
-      }
-      // Log without request bodies or secrets.
-      console.error('Unhandled error:', err instanceof Error ? err.message : String(err));
-      return json(req, 500, { error: { code: 'internal', message: 'Something went wrong' } });
-    }
-  });
+    // Log without request bodies or secrets.
+    console.error('Unhandled error:', err instanceof Error ? err.message : String(err));
+    return json(req, 500, { error: { code: 'internal', message: 'Something went wrong' } });
+  }
 }

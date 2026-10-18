@@ -50,6 +50,18 @@ const MePage = lazyPage(() => import('./features/profile/MePage').then((m) => m.
 const MyDetailsPage = lazyPage(() =>
   import('./features/profile/MyDetailsPage').then((m) => m.MyDetailsPage),
 );
+const SessionsPage = lazyPage(() =>
+  import('./features/sessions/SessionsPage').then((m) => m.SessionsPage),
+);
+const SessionEditorPage = lazyPage(() =>
+  import('./features/sessions/SessionEditorPage').then((m) => m.SessionEditorPage),
+);
+const SessionDetailPage = lazyPage(() =>
+  import('./features/sessions/SessionDetailPage').then((m) => m.SessionDetailPage),
+);
+const MySessionsPage = lazyPage(() =>
+  import('./features/sessions/MySessionsPage').then((m) => m.MySessionsPage),
+);
 const MyTargetsPage = lazyPage(() =>
   import('./features/trainer/MyTargetsPage').then((m) => m.MyTargetsPage),
 );
@@ -95,6 +107,11 @@ const KNOWN_PATHS = [
   '/trainer/exercises',
   '/trainer/me',
   '/trainer/my-targets',
+  '/trainer/sessions',
+  '/trainer/sessions/new',
+  '/trainer/sessions/:id',
+  '/trainer/sessions/:id/edit',
+  '/me/sessions',
   '/onboarding',
   '/today',
   '/food',
@@ -160,6 +177,19 @@ export function App() {
             />
             <Route path="/trainer/me" element={guarded('trainer', <MePage />)} />
             <Route path="/trainer/my-targets" element={guarded('trainer', <MyTargetsPage />)} />
+            <Route path="/trainer/sessions" element={guarded('trainer', <SessionsPage />)} />
+            <Route
+              path="/trainer/sessions/new"
+              element={guarded('trainer', <SessionEditorPage />)}
+            />
+            <Route
+              path="/trainer/sessions/:id"
+              element={guarded('trainer', <SessionDetailPage />)}
+            />
+            <Route
+              path="/trainer/sessions/:id/edit"
+              element={guarded('trainer', <SessionEditorPage />)}
+            />
 
             {/* Client – and trainers for their own fitness ("My fitness") */}
             <Route path="/onboarding" element={guarded(SELF, <OnboardingPage />, true)} />
@@ -175,6 +205,7 @@ export function App() {
             <Route path="/me" element={guarded(SELF, <MePage />)} />
             <Route path="/me/details" element={guarded(SELF, <MyDetailsPage />)} />
             <Route path="/me/health" element={guarded(SELF, <HealthSyncPage />)} />
+            <Route path="/me/sessions" element={guarded('client', <MySessionsPage />)} />
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
