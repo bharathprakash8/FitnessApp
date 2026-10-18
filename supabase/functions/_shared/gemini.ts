@@ -1,15 +1,34 @@
 // Minimal Gemini client (generateContent with JSON output). Key and model come from secrets.
+import { adminClient } from './auth.ts';
 import { HttpError } from './http.ts';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 export type Part = { text: string } | { inline_data: { mime_type: string; data: string } };
 
+/** Add one answer's token counts to the App health numbers (never fails the request). */
+async function recordTokens(feature: string, usage: Record<string, number> | undefined) {
+  try {
+    const input = usage?.promptTokenCount ?? 0;
+    const output = (usage?.candidatesTokenCount ?? 0) + (usage?.thoughtsTokenCount ?? 0);
+    await adminClient().rpc('record_ai_tokens', {
+      feat: feature,
+      input_t: input,
+      output_t: output,
+      total_t: usage?.totalTokenCount ?? input + output,
+    });
+  } catch (err) {
+    console.error('Could not record AI tokens:', err instanceof Error ? err.message : String(err));
+  }
+}
+
 export async function generateJson(opts: {
   system: string;
   parts: Part[];
   schema: Record<string, unknown>;
   temperature?: number;
+  /** Label for App health (e.g. 'meal-photo', 'weekly-summary'). */
+  feature: string;
 }): Promise<unknown> {
   const key = Deno.env.get('GEMINI_API_KEY');
   const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash';
@@ -73,6 +92,7 @@ export async function generateJson(opts: {
   }
 
   const body = await res.json();
+  await recordTokens(opts.feature, body?.usageMetadata);
   const text: string | undefined = body?.candidates?.[0]?.content?.parts
     ?.map((p: { text?: string }) => p.text ?? '')
     .join('');

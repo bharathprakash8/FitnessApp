@@ -1,5 +1,7 @@
-import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonText } from '@ionic/react';
+import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle } from '@ionic/react';
+import { barbellOutline } from 'ionicons/icons';
 
+import { EmptyState } from '../../components/EmptyState';
 import { formatDate } from '../../lib/dates';
 import { formatSet, groupByDate, type LogWithExercise } from './model';
 import './workouts.css';
@@ -16,11 +18,7 @@ export function WorkoutHistoryList({
 }) {
   const sessions = groupByDate(logs).slice(0, limitDays);
   if (sessions.length === 0) {
-    return (
-      <IonText color="medium">
-        <p className="ion-text-center">{emptyText}</p>
-      </IonText>
-    );
+    return <EmptyState icon={barbellOutline} title={emptyText} />;
   }
   return (
     <>

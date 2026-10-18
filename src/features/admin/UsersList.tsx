@@ -15,6 +15,7 @@ import { useMemo, useState } from 'react';
 import { formatDate } from '../../lib/dates';
 import type { Role } from '../auth/roles';
 import { ROLE_COLORS, ROLE_LABELS, displayName, type AdminUser } from './api';
+import { Avatar } from '../../components/Avatar';
 import { QueryState } from './QueryState';
 
 type RoleFilter = 'all' | Role;
@@ -104,6 +105,7 @@ function FilteredList({
         const trainer = u.trainer_id ? byId.get(u.trainer_id) : undefined;
         return (
           <IonItem key={u.id} routerLink={`/admin/users/${u.id}`} detail>
+            <Avatar slot="start" id={u.id} name={u.full_name} email={u.email} />
             <IonLabel>
               <h2>
                 {displayName(u)}{' '}

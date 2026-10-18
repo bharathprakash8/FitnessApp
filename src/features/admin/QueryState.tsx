@@ -1,6 +1,8 @@
-import { IonButton, IonSpinner, IonText } from '@ionic/react';
+import { IonButton, IonText } from '@ionic/react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+
+import { ListSkeleton } from '../../components/ListSkeleton';
 
 /** Spinner / error with retry / children, for a TanStack query. */
 export function QueryState<T>({
@@ -11,11 +13,7 @@ export function QueryState<T>({
   children: (data: T) => ReactNode;
 }) {
   if (query.isPending) {
-    return (
-      <div className="ion-padding ion-text-center">
-        <IonSpinner name="crescent" aria-label="Loading" />
-      </div>
-    );
+    return <ListSkeleton rows={5} avatar />;
   }
   if (query.isError) {
     return (

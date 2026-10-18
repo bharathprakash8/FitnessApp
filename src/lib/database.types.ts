@@ -80,6 +80,33 @@ export type Database = {
           },
         ]
       }
+      ai_token_usage: {
+        Row: {
+          calls: number
+          day: string
+          feature: string
+          input_tokens: number
+          output_tokens: number
+          total_tokens: number
+        }
+        Insert: {
+          calls?: number
+          day: string
+          feature: string
+          input_tokens?: number
+          output_tokens?: number
+          total_tokens?: number
+        }
+        Update: {
+          calls?: number
+          day?: string
+          feature?: string
+          input_tokens?: number
+          output_tokens?: number
+          total_tokens?: number
+        }
+        Relationships: []
+      }
       ai_usage: {
         Row: {
           count: number
@@ -111,6 +138,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
       }
       custom_reminders: {
         Row: {
@@ -1249,6 +1294,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_app_health: { Args: never; Returns: Json }
       app_role: { Args: never; Returns: string }
       bump_ai_usage: {
         Args: { day: string; feat: string; uid: string }
@@ -1273,6 +1319,15 @@ export type Database = {
       }
       plan_of_day: { Args: { day: string }; Returns: string }
       plan_owner: { Args: { plan: string }; Returns: string }
+      record_ai_tokens: {
+        Args: {
+          feat: string
+          input_t: number
+          output_t: number
+          total_t: number
+        }
+        Returns: undefined
+      }
       self_workout_owner: { Args: { w: string }; Returns: string }
       session_owner: { Args: { s: string }; Returns: string }
       tracks_self: { Args: never; Returns: boolean }

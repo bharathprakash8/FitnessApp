@@ -249,6 +249,7 @@ async function writeSummary(c: ClientInfo, stats: Stats): Promise<string> {
       ],
       schema: SCHEMA,
       temperature: 0.4,
+      feature: 'weekly-summary',
     })) as { summary?: unknown };
     const text = typeof r.summary === 'string' ? r.summary.trim() : '';
     if (text.length >= 20) return text.slice(0, 2000);

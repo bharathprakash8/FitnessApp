@@ -100,10 +100,18 @@ function TodayContent() {
         <IonRefresherContent />
       </IonRefresher>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <h2 style={{ marginTop: 4 }}>
+        <h2 style={{ marginTop: 4, marginBottom: 0 }}>
           {greeting(tz)}
           {firstName ? `, ${firstName}` : ''}!
         </h2>
+        <p className="today-date">
+          {new Intl.DateTimeFormat('en-IN', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            timeZone: tz,
+          }).format(new Date())}
+        </p>
         {isTrainer && (
           <div className="today-links">
             <IonButton fill="outline" size="small" routerLink="/food">

@@ -8,3 +8,8 @@
 .today-links ion-button {
   margin: 0;
 }
+
+.today-date {
+  margin: 2px 0 12px;
+  color: var(--ion-color-medium-shade);
+}

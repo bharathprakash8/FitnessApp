@@ -10,11 +10,12 @@ import {
   IonListHeader,
   IonPage,
   IonSpinner,
-  IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import { calendarOutline } from 'ionicons/icons';
 
+import { EmptyState } from '../../components/EmptyState';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DEFAULT_TIMEZONE } from '../../lib/dates';
 import { formatWhen, timeZoneLabel, zoneAbbr } from '../../lib/timezones';
@@ -61,11 +62,11 @@ export function MySessionsPage() {
               <IonSpinner name="crescent" />
             </div>
           ) : all.length === 0 ? (
-            <IonText color="medium">
-              <p className="ion-text-center">
-                No sessions yet. Your trainer will schedule them here.
-              </p>
-            </IonText>
+            <EmptyState
+              icon={calendarOutline}
+              title="No sessions yet"
+              text="When your trainer schedules a session, it appears here with a Join button."
+            />
           ) : (
             <>
               <IonList inset style={{ margin: '12px 0' }}>

@@ -11,11 +11,12 @@ import {
   IonHeader,
   IonPage,
   IonSpinner,
-  IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import { documentTextOutline } from 'ionicons/icons';
 
+import { EmptyState } from '../../components/EmptyState';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import type { Profile } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
@@ -47,11 +48,11 @@ export function MySummariesPage() {
               <IonSpinner name="crescent" />
             </div>
           ) : (summaries.data ?? []).length === 0 ? (
-            <IonText color="medium">
-              <p className="ion-text-center">
-                Your trainer hasn't shared a weekly summary yet. They usually come on Mondays.
-              </p>
-            </IonText>
+            <EmptyState
+              icon={documentTextOutline}
+              title="No weekly summary yet"
+              text="Your trainer shares a short review of your week – usually on Mondays."
+            />
           ) : (
             summaries.data!.map((s) => (
               <IonCard key={s.id} style={{ marginInline: 0 }}>

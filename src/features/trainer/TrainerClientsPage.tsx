@@ -11,13 +11,17 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonSearchbar,
-  IonSpinner,
   IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
 import { useState } from 'react';
 
+import { people } from 'ionicons/icons';
+
+import { Avatar } from '../../components/Avatar';
+import { EmptyState } from '../../components/EmptyState';
+import { ListSkeleton } from '../../components/ListSkeleton';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { TRAINER_TABS } from '../../components/tabs';
@@ -63,9 +67,7 @@ export function TrainerClientsPage() {
           <IonRefresherContent />
         </IonRefresher>
         {clients.isPending ? (
-          <div className="ion-padding ion-text-center">
-            <IonSpinner name="crescent" />
-          </div>
+          <ListSkeleton rows={4} avatar />
         ) : clients.isError ? (
           <IonText color="danger">
             <p className="ion-padding ion-text-center">
@@ -112,11 +114,11 @@ function ClientList({
 
   if (clients.length === 0) {
     return (
-      <IonText color="medium">
-        <p className="ion-padding ion-text-center">
-          You don't have any clients yet. The admin assigns clients to you.
-        </p>
-      </IonText>
+      <EmptyState
+        icon={people}
+        title="No clients yet"
+        text="The admin assigns clients to you. They'll appear here with their progress."
+      />
     );
   }
   if (shown.length === 0) {
@@ -138,6 +140,7 @@ function ClientList({
       )}
       {shown.map(({ profile: p, hasTarget }) => (
         <IonItem key={p.id} routerLink={`/trainer/clients/${p.id}`} detail>
+          <Avatar slot="start" id={p.id} name={p.full_name} email={p.email} />
           <IonLabel>
             <h2>{p.full_name || p.email}</h2>
             <p>{goalText(p.goal, p.goal_other) || p.email}</p>

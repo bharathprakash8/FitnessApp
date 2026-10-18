@@ -146,7 +146,14 @@ serveJson(async (req) => {
   }
   parts.push({ text: prompt });
 
-  const result = AiResult.safeParse(await generateJson({ system: SYSTEM, parts, schema: SCHEMA }));
+  const result = AiResult.safeParse(
+    await generateJson({
+      system: SYSTEM,
+      parts,
+      schema: SCHEMA,
+      feature: body.follow_up ? 'meal-follow-up' : body.photo_path ? 'meal-photo' : 'meal-text',
+    }),
+  );
   if (!result.success) {
     throw new HttpError(
       502,

@@ -452,3 +452,6 @@ verify_jwt = false
 
 [functions.cron-weekly-summary]
 verify_jwt = false
+
+[functions.admin-health]
+verify_jwt = false

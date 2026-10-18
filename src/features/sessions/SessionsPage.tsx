@@ -16,17 +16,18 @@ import {
   IonPage,
   IonSegment,
   IonSegmentButton,
-  IonSpinner,
   IonText,
   IonTitle,
   IonToolbar,
   useIonAlert,
   useIonToast,
 } from '@ionic/react';
-import { add, logoGoogle, videocam, walk } from 'ionicons/icons';
+import { add, calendarOutline, logoGoogle, videocam, walk } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 
 import { AppTabBar } from '../../components/AppTabBar';
+import { EmptyState } from '../../components/EmptyState';
+import { ListSkeleton } from '../../components/ListSkeleton';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { TRAINER_TABS } from '../../components/tabs';
 import { DEFAULT_TIMEZONE } from '../../lib/dates';
@@ -82,17 +83,24 @@ export function SessionsPage() {
         <div className="sessions-page">
           <GoogleCard />
           {sessions.isPending ? (
-            <div className="ion-text-center">
-              <IonSpinner name="crescent" />
-            </div>
+            <ListSkeleton rows={3} />
           ) : list.length === 0 ? (
-            <IonText color="medium">
-              <p className="ion-text-center">
-                {tab === 'upcoming'
-                  ? 'No upcoming sessions. Tap + to schedule one.'
-                  : 'No sessions in the last 60 days.'}
-              </p>
-            </IonText>
+            <EmptyState
+              icon={calendarOutline}
+              title={
+                tab === 'upcoming' ? 'No upcoming sessions' : 'No sessions in the last 60 days'
+              }
+              text={
+                tab === 'upcoming'
+                  ? 'Schedule a one-off or repeating session – online with Google Meet or in person.'
+                  : undefined
+              }
+              action={
+                tab === 'upcoming'
+                  ? { label: 'Schedule a session', routerLink: '/trainer/sessions/new' }
+                  : undefined
+              }
+            />
           ) : (
             <IonList inset style={{ margin: '12px 0 80px' }}>
               {tab === 'past' && (

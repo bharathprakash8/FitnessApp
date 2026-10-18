@@ -1,5 +1,7 @@
-import { IonItem, IonItemDivider, IonLabel, IonList, IonNote, IonText } from '@ionic/react';
+import { IonItem, IonItemDivider, IonLabel, IonList, IonNote } from '@ionic/react';
+import { restaurantOutline } from 'ionicons/icons';
 
+import { EmptyState } from '../../components/EmptyState';
 import { usePhotoUrls } from './api';
 import { MEAL_LABELS, MEAL_TYPES, itemsOf, timeIn, type MealLog } from './model';
 import './food.css';
@@ -19,11 +21,7 @@ export function MealList({
   const photos = usePhotoUrls(meals.filter((m) => m.photo_path).map((m) => m.photo_path!));
 
   if (meals.length === 0) {
-    return (
-      <IonText color="medium">
-        <p className="ion-text-center">{emptyText}</p>
-      </IonText>
-    );
+    return <EmptyState icon={restaurantOutline} title={emptyText} />;
   }
 
   return (

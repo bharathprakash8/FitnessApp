@@ -21,10 +21,11 @@ import { useState } from 'react';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useAdminUsers } from './api';
+import { AppHealthTab } from './AppHealthTab';
 import { AssignmentsView } from './AssignmentsView';
 import { UsersList } from './UsersList';
 
-type Tab = 'users' | 'assignments';
+type Tab = 'users' | 'assignments' | 'health';
 
 export function AdminHomePage() {
   const { signOut } = useAuth();
@@ -50,6 +51,9 @@ export function AdminHomePage() {
             <IonSegmentButton value="assignments">
               <IonLabel>Assignments</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="health">
+              <IonLabel>App health</IonLabel>
+            </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
         <SyncStatusBar />
@@ -62,7 +66,13 @@ export function AdminHomePage() {
           <IonRefresherContent />
         </IonRefresher>
 
-        {tab === 'users' ? <UsersList query={users} /> : <AssignmentsView query={users} />}
+        {tab === 'users' ? (
+          <UsersList query={users} />
+        ) : tab === 'assignments' ? (
+          <AssignmentsView query={users} />
+        ) : (
+          <AppHealthTab />
+        )}
 
         {tab === 'users' && (
           <IonFab slot="fixed" vertical="bottom" horizontal="end">
