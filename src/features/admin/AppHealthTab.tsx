@@ -218,7 +218,12 @@ export function AppHealthTab() {
           {h.ai_last_14_days.length > 0 && (
             <BarChart
               points={lastDays(h.ai_last_14_days)}
-              target={limit}
+              // Show the limit line only once usage is a noticeable share of it.
+              target={
+                Math.max(...h.ai_last_14_days.map((d) => Number(d.calls))) >= limit * 0.2
+                  ? limit
+                  : undefined
+              }
               label="AI requests per day, last 14 days"
             />
           )}
@@ -241,7 +246,8 @@ export function AppHealthTab() {
             {h.users.inactive ? ` · ${h.users.inactive} deactivated` : ''}
           </p>
           <p className="health-detail">
-            Notifications on for {h.push_users} people ({h.push_devices} devices).
+            {`Notifications on for ${h.push_users} ${h.push_users === 1 ? 'person' : 'people'} ` +
+              `(${h.push_devices} ${h.push_devices === 1 ? 'device' : 'devices'}).`}
           </p>
         </IonCardContent>
       </IonCard>

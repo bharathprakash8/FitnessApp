@@ -24,6 +24,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--port", "5186", "--strictPort"],
       "port": 5186
+    },
+    {
+      "name": "fitcoach-dev-admin",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5187", "--strictPort"],
+      "port": 5187
     }
   ]
 }

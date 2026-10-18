@@ -44,7 +44,7 @@ export function AdminHomePage() {
           </IonButtons>
         </IonToolbar>
         <IonToolbar>
-          <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
+          <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="users">
               <IonLabel>Users</IonLabel>
             </IonSegmentButton>

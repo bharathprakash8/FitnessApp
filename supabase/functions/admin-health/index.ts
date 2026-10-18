@@ -67,6 +67,10 @@ serveJson(async (req) => {
   const cores = new Set(
     b.filter((x) => x.name === 'node_cpu_seconds_total').map((x) => x.labels.cpu),
   ).size;
+  // The metrics are only refreshed every few seconds; if both readings are the same, use
+  // the 1-minute load average per core instead.
+  const load = first(b, 'node_load1');
+  const loadPct = load !== null && cores ? load / cores : null;
   const diskSize =
     first(b, 'node_filesystem_size_bytes', { mountpoint: '/data' }) ??
     first(b, 'node_filesystem_size_bytes', { mountpoint: '/' });
@@ -78,7 +82,12 @@ serveJson(async (req) => {
     available: true,
     memory_total_bytes: memTotal,
     memory_used_bytes: memTotal !== null && memAvailable !== null ? memTotal - memAvailable : null,
-    cpu_busy_percent: busy === null ? null : Math.round(Math.max(0, Math.min(1, busy)) * 100),
+    cpu_busy_percent:
+      busy !== null && t2.total !== t1.total
+        ? Math.round(Math.max(0, Math.min(1, busy)) * 100)
+        : loadPct !== null
+          ? Math.round(Math.min(1, loadPct) * 100)
+          : null,
     cpu_cores: cores || null,
     load_1m: first(b, 'node_load1'),
     disk_total_bytes: diskSize,
