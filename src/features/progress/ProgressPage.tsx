@@ -44,7 +44,7 @@ export function ProgressPage() {
       <IonContent className="ion-padding">
         <IonButton expand="block" routerLink="/me/progress/new">
           <IonIcon slot="start" icon={add} />
-          Add weight, waist or photos
+          Add measurement
         </IonButton>
         {profile && <ProgressView person={profile} editable />}
       </IonContent>
