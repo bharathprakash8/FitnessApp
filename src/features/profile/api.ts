@@ -32,11 +32,17 @@ export function useLatestWeight(clientId: string | undefined) {
   });
 }
 
-/** Another user's profile (a trainer looking at a client, or a client at their trainer). */
-export function useProfileById(id: string | undefined) {
+/**
+ * Another user's profile (a trainer looking at a client, or a client at their trainer).
+ * `initial` (e.g. from the trainer's client list) shows the page at once; it is still
+ * refreshed from the server in the background.
+ */
+export function useProfileById(id: string | undefined, initial?: Profile) {
   return useQuery({
     queryKey: ['profiles', id],
     enabled: Boolean(id),
+    initialData: initial,
+    initialDataUpdatedAt: 0,
     queryFn: async (): Promise<Profile | null> => {
       const { data, error } = await supabase
         .from('profiles')
@@ -55,20 +61,14 @@ export function useMyTrainer(clientId: string | undefined) {
     queryKey: ['my-trainer', clientId],
     enabled: Boolean(clientId),
     queryFn: async (): Promise<Profile | null> => {
+      // One request: the mapping with the trainer's profile embedded.
       const { data: link, error } = await supabase
         .from('trainer_clients')
-        .select('trainer_id')
+        .select('profiles!trainer_clients_trainer_id_fkey(*)')
         .eq('client_id', clientId!)
         .maybeSingle();
       if (error) throw error;
-      if (!link) return null;
-      const { data, error: pErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', link.trainer_id)
-        .maybeSingle();
-      if (pErr) throw pErr;
-      return data;
+      return (link?.profiles as unknown as Profile | null) ?? null;
     },
   });
 }

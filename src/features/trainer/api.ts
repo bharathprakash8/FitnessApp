@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { todayIn } from '../../lib/dates';
 import { supabase } from '../../lib/supabase';
@@ -12,32 +12,40 @@ export interface TrainerClient {
 export const myClientsKey = (trainerId: string | undefined) =>
   ['trainer', trainerId, 'clients'] as const;
 
+/** A client's profile from the already-loaded client list, if it's there. */
+export function cachedClient(
+  qc: ReturnType<typeof useQueryClient>,
+  trainerId: string | undefined,
+  clientId: string | undefined,
+): Profile | undefined {
+  return qc
+    .getQueryData<TrainerClient[]>(myClientsKey(trainerId))
+    ?.find((c) => c.profile.id === clientId)?.profile;
+}
+
 /** The signed-in trainer's clients (RLS limits every query to mapped clients). */
 export function useMyClients(trainerId: string | undefined) {
   return useQuery({
     queryKey: myClientsKey(trainerId),
     enabled: Boolean(trainerId),
     queryFn: async (): Promise<TrainerClient[]> => {
-      const { data: links, error } = await supabase
-        .from('trainer_clients')
-        .select('client_id')
-        .eq('trainer_id', trainerId!);
-      if (error) throw error;
-      const ids = links.map((l) => l.client_id);
-      if (ids.length === 0) return [];
-
-      const [profiles, targets] = await Promise.all([
-        supabase.from('profiles').select('*').in('id', ids).order('full_name'),
+      // Both requests at once: clients with their profiles, and which clients have targets
+      // (RLS already limits targets to this trainer's clients and their own).
+      const [links, targets] = await Promise.all([
         supabase
-          .from('targets')
-          .select('client_id')
-          .in('client_id', ids)
-          .lte('effective_from', todayIn()),
+          .from('trainer_clients')
+          .select('profiles!trainer_clients_client_id_fkey(*)')
+          .eq('trainer_id', trainerId!),
+        supabase.from('targets').select('client_id').lte('effective_from', todayIn()),
       ]);
-      if (profiles.error) throw profiles.error;
+      if (links.error) throw links.error;
       if (targets.error) throw targets.error;
       const withTarget = new Set(targets.data.map((t) => t.client_id));
-      return profiles.data.map((p) => ({ profile: p, hasTarget: withTarget.has(p.id) }));
+      return links.data
+        .map((l) => l.profiles as unknown as Profile)
+        .filter(Boolean)
+        .sort((a, b) => (a.full_name ?? a.email).localeCompare(b.full_name ?? b.email))
+        .map((p) => ({ profile: p, hasTarget: withTarget.has(p.id) }));
     },
   });
 }

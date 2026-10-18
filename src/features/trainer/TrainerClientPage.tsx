@@ -13,6 +13,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -20,10 +21,12 @@ import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DetailRow } from '../../components/DetailRow';
 import { ageFrom, formatDate } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
+import { useAuth } from '../auth/useAuth';
 import { useLatestWeight, useProfileById } from '../profile/api';
 import { DIET_LABELS, SEX_LABELS, goalText, label } from '../profile/options';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
+import { cachedClient } from './api';
 import { ClientFoodTab } from './ClientFoodTab';
 import { ClientRemindersTab } from './ClientRemindersTab';
 import { ProgressView } from '../progress/ProgressView';
@@ -36,7 +39,12 @@ type Tab = 'overview' | 'progress' | 'summary' | 'targets' | 'food' | 'workouts'
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
-  const client = useProfileById(id);
+  const { profile: me } = useAuth();
+  const qc = useQueryClient();
+  const client = useProfileById(id, cachedClient(qc, me?.id, id));
+  // Start the Overview's other requests now, in parallel, instead of after the profile.
+  useLatestWeight(id);
+  useTargets(id);
   const [tab, setTab] = useState<Tab>('overview');
   const name = client.data?.full_name || client.data?.email || 'Client';
 
