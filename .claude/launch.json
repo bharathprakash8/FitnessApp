@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4173", "--strictPort"],
       "port": 4173
+    },
+    {
+      "name": "fitcoach-dev-test",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5185", "--strictPort"],
+      "port": 5185
     }
   ]
 }

@@ -40,11 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refetch]);
 
   const value = useMemo<AuthState>(() => {
+    // Once the profile has loaded, keep using it while it is refreshed in the background –
+    // even if a refresh fails (weak signal). Swapping every screen for a loading/error page
+    // and back leaves Ionic pages invisible (blank screen).
     let status: AuthStatus;
     if (session === undefined) status = 'loading';
     else if (session === null) status = 'signed_out';
-    else if (profileQuery.isPending) status = 'loading';
-    else if (profileQuery.isError) status = 'error';
+    else if (profileQuery.data === undefined) status = profileQuery.isError ? 'error' : 'loading';
     else if (profileQuery.data === null || !profileQuery.data.is_active) status = 'inactive';
     else status = 'ready';
 
@@ -55,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       retry,
     };
-  }, [session, profileQuery.isPending, profileQuery.isError, profileQuery.data, signOut, retry]);
+  }, [session, profileQuery.isError, profileQuery.data, signOut, retry]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

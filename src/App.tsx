@@ -3,6 +3,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import type { ReactElement } from 'react';
 import { Route, matchPath, useLocation } from 'react-router-dom';
 
+import { StuckPageRescue } from './components/StuckPageRescue';
 import { HealthAutoSync } from './features/activity/HealthAutoSync';
 import { HealthSyncPage } from './features/activity/HealthSyncPage';
 import { AdminHomePage } from './features/admin/AdminHomePage';
@@ -162,6 +163,7 @@ export function App() {
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
+          <StuckPageRescue />
           <PushAutoRegister />
         </IonReactRouter>
       </AuthProvider>
