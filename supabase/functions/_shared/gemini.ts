@@ -39,9 +39,8 @@ export async function generateJson(opts: {
       'ai_not_configured',
     );
 
-  let res: Response;
-  try {
-    res = await fetch(`${API}/${model}:generateContent`, {
+  const request = () =>
+    fetch(`${API}/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
@@ -55,15 +54,36 @@ export async function generateJson(opts: {
       }),
       signal: AbortSignal.timeout(45_000),
     });
+
+  let res: Response;
+  try {
+    res = await request();
+    // Google's free tier allows only a few requests per second; when several people ask at
+    // the same moment, wait a little (randomised so they don't collide again) and retry once.
+    if (res.status === 429) {
+      await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
+      res = await request();
+    }
   } catch {
     throw new HttpError(504, 'The AI took too long. Please try again.', 'ai_timeout');
   }
 
   if (res.status === 429) {
+    // Which Google quota was hit (e.g. requests per minute) – no secrets in here.
+    const err = await res.json().catch(() => null);
+    const violation = (err?.error?.details ?? [])
+      .flatMap(
+        (d: { violations?: { quotaId?: string; quotaValue?: string }[] }) => d.violations ?? [],
+      )
+      .at(0);
+    const quota = violation
+      ? `${violation.quotaId ?? '?'}=${violation.quotaValue ?? '?'}`
+      : 'unknown';
+    console.error('Gemini rate limited', quota);
     throw new HttpError(
       429,
       'The AI is busy right now. Try again in a minute, or enter the meal manually.',
-      'ai_rate_limited',
+      `ai_rate_limited ${quota}`,
     );
   }
   if (!res.ok) {

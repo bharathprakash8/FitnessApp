@@ -455,3 +455,6 @@ verify_jwt = false
 
 [functions.admin-health]
 verify_jwt = false
+
+[functions.test-users]
+verify_jwt = false

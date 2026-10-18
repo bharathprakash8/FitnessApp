@@ -111,7 +111,7 @@ export function AppHealthTab() {
     (s, a) => ({ calls: s.calls + a.calls, tokens: s.tokens + Number(a.total_tokens) }),
     { calls: 0, tokens: 0 },
   );
-  const limit = h.ai_daily_request_limit ?? 250;
+  const limit = h.ai_daily_request_limit ?? 20;
 
   return (
     <div className="health-page">
