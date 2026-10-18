@@ -52,6 +52,9 @@ export function NotificationsPage() {
               <TrainerRemindersCard clientId={profile.id} />
             </>
           )}
+          {profile?.role === 'trainer' && profile.onboarded_at && (
+            <RemindersCard clientId={profile.id} />
+          )}
         </div>
       </IonContent>
     </IonPage>

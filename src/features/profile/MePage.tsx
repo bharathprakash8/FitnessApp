@@ -25,7 +25,7 @@ import { useLatestWeight, useMyTrainer, useSaveBasics } from './api';
 import { DIET_LABELS, SEX_LABELS, goalText, label } from './options';
 import './profile.css';
 
-/** "Me" tab for clients and trainers: name/phone, client details, log out. */
+/** "Me" tab for clients and trainers: name/phone, own fitness details, log out. */
 export function MePage() {
   const { profile, signOut } = useAuth();
   if (!profile) return null;
@@ -45,7 +45,18 @@ export function MePage() {
           </IonText>
           {/* key: refresh the form when the saved values change */}
           <BasicsForm key={`${profile.full_name}|${profile.phone}`} profile={profile} />
-          {isClient && <ClientDetails profile={profile} />}
+          {isClient || profile.onboarded_at ? (
+            <ClientDetails profile={profile} />
+          ) : (
+            <IonButton
+              expand="block"
+              fill="outline"
+              style={{ marginTop: 24 }}
+              routerLink="/onboarding"
+            >
+              Set up My fitness
+            </IonButton>
+          )}
           <IonButton
             expand="block"
             fill="outline"
@@ -125,7 +136,8 @@ function BasicsForm({ profile }: { profile: Profile }) {
 
 function ClientDetails({ profile }: { profile: Profile }) {
   const weight = useLatestWeight(profile.id);
-  const trainer = useMyTrainer(profile.id);
+  const isClient = profile.role === 'client';
+  const trainer = useMyTrainer(isClient ? profile.id : undefined);
   const age = ageFrom(profile.date_of_birth, profile.timezone);
 
   return (
@@ -134,7 +146,9 @@ function ClientDetails({ profile }: { profile: Profile }) {
         <IonListHeader>
           <IonLabel>My details</IonLabel>
         </IonListHeader>
-        <DetailRow label="Trainer" value={trainer.data?.full_name ?? trainer.data?.email ?? ''} />
+        {isClient && (
+          <DetailRow label="Trainer" value={trainer.data?.full_name ?? trainer.data?.email ?? ''} />
+        )}
         <DetailRow
           label="Age"
           value={age !== null ? `${age} (born ${formatDate(profile.date_of_birth)})` : ''}
@@ -162,7 +176,7 @@ function ClientDetails({ profile }: { profile: Profile }) {
         <IonText color="medium">
           <p style={{ fontSize: '0.85rem' }}>
             You accepted the privacy and health terms on {formatDate(profile.consent_at)}. To have
-            your data deleted, ask your trainer or the admin.
+            your data deleted, ask {isClient ? 'your trainer or ' : ''}the admin.
           </p>
         </IonText>
       )}

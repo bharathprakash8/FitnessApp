@@ -790,6 +790,77 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Trainer "My fitness": a trainer tracks their own data; nobody but admins sees it
+-- ---------------------------------------------------------------------------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare me uuid := '00000000-0000-4000-a000-0000000000f1';
+begin
+  insert into public.meal_logs (client_id, eaten_at, meal_type, source, total_calories)
+  values (me, now(), 'lunch', 'manual', 600);
+  insert into public.workout_logs (client_id, exercise_id, set_number, reps, weight_kg)
+  values (me, '00000000-0000-4000-b000-0000000000e1', 1, 5, 100);
+  insert into public.activity_daily (client_id, activity_date, active_calories, source)
+  values (me, current_date, 450, 'manual');
+  insert into public.measurements (client_id, weight_kg) values (me, 80);
+  insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g, set_by)
+  values (me, 2600, 150, 300, 80, me);
+  insert into public.plan_assignments (plan_id, client_id)
+  values ('00000000-0000-4000-b000-0000000000b1', me);
+  insert into public.reminder_settings (client_id) values (me);
+  if (select count(*) from public.meal_logs where client_id = me) <> 1
+    or (select count(*) from public.targets where client_id = me) <> 1
+    or (select count(*) from public.plan_assignments where client_id = me and is_active) <> 1 then
+    raise exception 'FAIL: trainer cannot read back their own tracking data';
+  end if;
+  begin
+    insert into public.targets (client_id, calories, protein_g, carbs_g, fat_g, set_by)
+    values ('00000000-0000-4000-a000-0000000000f2', 2000, 100, 200, 60, me);
+    raise exception 'FAIL: trainer set targets for another trainer';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    insert into public.meal_logs (client_id, eaten_at, meal_type, source)
+    values ('00000000-0000-4000-a000-0000000000c1', now(), 'lunch', 'manual');
+    raise exception 'FAIL: trainer logged a meal for a client';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+declare t1 uuid := '00000000-0000-4000-a000-0000000000f1';
+begin
+  if (select count(*) from public.meal_logs where client_id = t1)
+     + (select count(*) from public.workout_logs where client_id = t1)
+     + (select count(*) from public.activity_daily where client_id = t1)
+     + (select count(*) from public.measurements where client_id = t1)
+     + (select count(*) from public.targets where client_id = t1)
+     + (select count(*) from public.reminder_settings where client_id = t1) <> 0 then
+    raise exception 'FAIL: trainer T2 sees trainer T1''s own data';
+  end if;
+  begin
+    insert into public.plan_assignments (plan_id, client_id)
+    values ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-0000000000f2');
+    raise exception 'FAIL: trainer followed another trainer''s plan';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare t1 uuid := '00000000-0000-4000-a000-0000000000f1';
+begin
+  if (select count(*) from public.meal_logs where client_id = t1)
+     + (select count(*) from public.workout_logs where client_id = t1)
+     + (select count(*) from public.activity_daily where client_id = t1)
+     + (select count(*) from public.measurements where client_id = t1)
+     + (select count(*) from public.targets where client_id = t1) <> 0 then
+    raise exception 'FAIL: a client sees their trainer''s own data';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

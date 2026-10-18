@@ -244,10 +244,18 @@ export function usePlanAssignments(planId: string | undefined) {
 }
 
 /** Give `planId` to `add` clients and end it for `remove` clients. */
-export function useSetPlanClients(planId: string) {
+export function useSetPlanClients(defaultPlanId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ add, remove }: { add: string[]; remove: string[] }) => {
+    mutationFn: async ({
+      add,
+      remove,
+      planId = defaultPlanId,
+    }: {
+      add: string[];
+      remove: string[];
+      planId?: string;
+    }) => {
       if (add.length) {
         check(
           await supabase

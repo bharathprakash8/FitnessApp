@@ -6,9 +6,10 @@ import { homePathFor, needsOnboarding, type Role } from './roles';
 import { useAuth } from './useAuth';
 
 /**
- * Shows `children` only to a signed-in, active user with the given role.
+ * Shows `children` only to a signed-in, active user with one of the given roles.
  * Others are sent to login or to their own home. Clients who haven't finished
- * onboarding are kept on /onboarding (`onboarding` marks that page itself).
+ * onboarding are kept on /onboarding (`onboarding` marks that page itself). Trainers may
+ * open /onboarding once, to set up "My fitness"; afterwards it sends them to /today.
  * The database enforces access through RLS; this guard is for a sensible UI.
  */
 export function RequireRole({
@@ -16,7 +17,7 @@ export function RequireRole({
   onboarding = false,
   children,
 }: {
-  role: Role;
+  role: Role | Role[];
   onboarding?: boolean;
   children: ReactElement;
 }) {
@@ -48,7 +49,13 @@ export function RequireRole({
       );
     case 'ready':
       if (!profile) return <StatusScreen loading />;
-      if (profile.role !== role || needsOnboarding(profile) !== onboarding) {
+      if (!(Array.isArray(role) ? role : [role]).includes(profile.role as Role)) {
+        return <Navigate to={homePathFor(profile)} replace />;
+      }
+      if (profile.role === 'trainer') {
+        return onboarding && profile.onboarded_at ? <Navigate to="/today" replace /> : children;
+      }
+      if (needsOnboarding(profile) !== onboarding) {
         return <Navigate to={homePathFor(profile)} replace />;
       }
       return children;

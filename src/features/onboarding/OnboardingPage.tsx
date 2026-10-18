@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { useAcceptConsent, useMyTrainer, useSaveClientDetails } from '../profile/api';
 import { ClientDetailsForm } from '../profile/ClientDetailsForm';
-import { CONSENT_SECTIONS, CONSENT_VERSION } from './consent';
+import { CONSENT_VERSION, consentSections } from './consent';
 import './onboarding.css';
 
 type Step = 'welcome' | 'consent' | 'details';
@@ -36,6 +36,7 @@ export function OnboardingPage() {
 
   if (!profile) return null;
   const firstName = (profile.full_name || '').split(' ')[0];
+  const isTrainer = profile.role === 'trainer';
   const trainerName = trainer.data?.full_name || 'your trainer';
 
   const fail = (message: string) =>
@@ -47,7 +48,13 @@ export function OnboardingPage() {
         <IonToolbar color="primary">
           <IonTitle>Welcome to FitCoach</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={() => void signOut()}>Log out</IonButton>
+            {isTrainer ? (
+              <IonButton routerLink="/trainer" routerDirection="root">
+                Not now
+              </IonButton>
+            ) : (
+              <IonButton onClick={() => void signOut()}>Log out</IonButton>
+            )}
           </IonButtons>
         </IonToolbar>
         <IonProgressBar value={(STEPS.indexOf(step) + 1) / STEPS.length} />
@@ -59,8 +66,9 @@ export function OnboardingPage() {
               <img src="/icon.svg" alt="" className="onboarding-logo" />
               <h1>Hi{firstName ? ` ${firstName}` : ''}! 👋</h1>
               <p>
-                {trainerName === 'your trainer' ? 'Your trainer' : trainerName} will plan your
-                workouts and food targets here, and you'll log your meals, workouts and activity.
+                {isTrainer
+                  ? 'Set up My fitness to log your own meals, workouts and activity, just like your clients do.'
+                  : `${trainerName === 'your trainer' ? 'Your trainer' : trainerName} will plan your workouts and food targets here, and you'll log your meals, workouts and activity.`}
               </p>
               <p>It takes about 2 minutes to get started.</p>
               <IonButton expand="block" size="large" onClick={() => setStep('consent')}>
@@ -72,7 +80,7 @@ export function OnboardingPage() {
           {step === 'consent' && (
             <>
               <h2>Your privacy and health</h2>
-              {CONSENT_SECTIONS.map((s) => (
+              {consentSections(profile.role).map((s) => (
                 <section key={s.title}>
                   <h3>{s.title}</h3>
                   <ul>
@@ -116,7 +124,11 @@ export function OnboardingPage() {
           {step === 'details' && (
             <>
               <h2>About you</h2>
-              <p>This helps {trainerName} plan the right targets for you.</p>
+              <p>
+                {isTrainer
+                  ? 'This is used to estimate your calories and calories burnt.'
+                  : `This helps ${trainerName} plan the right targets for you.`}
+              </p>
               <ClientDetailsForm
                 profile={profile}
                 weightKg={null}

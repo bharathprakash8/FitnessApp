@@ -4,7 +4,15 @@
  */
 export const CONSENT_VERSION = '2026-10-17';
 
-export const CONSENT_SECTIONS: { title: string; points: string[] }[] = [
+export function consentSections(role: string): { title: string; points: string[] }[] {
+  return CONSENT_SECTIONS.map((s) =>
+    role === 'trainer' && s.title === 'Who can see it'
+      ? { ...s, points: ['You and the admin. Your clients can’t see it.', ...s.points.slice(1)] }
+      : s,
+  );
+}
+
+const CONSENT_SECTIONS: { title: string; points: string[] }[] = [
   {
     title: 'What we collect',
     points: [

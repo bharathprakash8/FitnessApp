@@ -51,7 +51,7 @@ serveJson(async (req) => {
     .eq('health_sync_token_hash', await sha256(token))
     .maybeSingle();
   if (error) throw error;
-  if (!profile || !profile.is_active || profile.role !== 'client') {
+  if (!profile || !profile.is_active || (profile.role !== 'client' && profile.role !== 'trainer')) {
     throw new HttpError(
       401,
       'Sync token not recognised. Set up iPhone sync again in the app.',

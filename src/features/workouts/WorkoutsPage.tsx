@@ -14,6 +14,8 @@ import {
   IonList,
   IonListHeader,
   IonPage,
+  IonSelect,
+  IonSelectOption,
   IonRefresher,
   IonRefresherContent,
   IonSpinner,
@@ -33,6 +35,8 @@ import { useAuth } from '../auth/useAuth';
 import {
   selfWorkoutApi,
   useActivePlan,
+  useMyPlans,
+  useSetPlanClients,
   useSelfWorkoutMutation,
   useSelfWorkouts,
   useWorkoutLogs,
@@ -75,12 +79,17 @@ export function WorkoutsPage() {
               <IonSpinner name="crescent" />
             </div>
           ) : !plan ? (
-            <IonText color="medium">
-              <p className="ion-text-center">Your trainer hasn't given you a workout plan yet.</p>
-            </IonText>
+            profile?.role === 'trainer' ? (
+              <MyPlanPicker />
+            ) : (
+              <IonText color="medium">
+                <p className="ion-text-center">Your trainer hasn't given you a workout plan yet.</p>
+              </IonText>
+            )
           ) : (
             <>
               <h2 style={{ marginTop: 0 }}>{plan.name}</h2>
+              {profile?.role === 'trainer' && <MyPlanPicker current={plan.id} />}
               {plan.description && <p className="workout-muted">{plan.description}</p>}
               {next && (
                 <IonCard className="workout-card">
@@ -213,5 +222,57 @@ function MyWorkouts() {
         </IonLabel>
       </IonItem>
     </IonList>
+  );
+}
+
+const NO_PLAN = 'none';
+
+/** Trainer → My fitness: follow one of your own plans (or none). */
+function MyPlanPicker({ current }: { current?: string }) {
+  const { profile } = useAuth();
+  const plans = useMyPlans(profile?.id);
+  const [toast] = useIonToast();
+  const value = current ?? NO_PLAN;
+  const setPlan = useSetPlanClients(current ?? '');
+
+  async function change(planId: string) {
+    if (!profile || planId === value) return;
+    try {
+      // Following a plan ends the previous one automatically; "No plan" ends the current one.
+      if (planId === NO_PLAN) await setPlan.mutateAsync({ add: [], remove: [profile.id] });
+      else await setPlan.mutateAsync({ planId, add: [profile.id], remove: [] });
+    } catch {
+      void toast({ message: 'Could not change the plan', duration: 2500, color: 'danger' });
+    }
+  }
+
+  if (plans.isPending) return null;
+  if ((plans.data ?? []).length === 0) {
+    return (
+      <IonText color="medium">
+        <p className="ion-text-center">
+          Build a plan in the Plans tab, then follow it here – or use My workouts below.
+        </p>
+      </IonText>
+    );
+  }
+  return (
+    <IonSelect
+      fill="outline"
+      label={current ? 'Change my plan' : 'Follow one of my plans'}
+      labelPlacement="stacked"
+      interface="action-sheet"
+      interfaceOptions={{ header: 'Choose a plan' }}
+      value={value}
+      onIonChange={(e) => void change(String(e.detail.value))}
+      style={{ margin: '8px 0 16px' }}
+    >
+      <IonSelectOption value={NO_PLAN}>No plan</IonSelectOption>
+      {(plans.data ?? []).map((p) => (
+        <IonSelectOption key={p.id} value={p.id}>
+          {p.name}
+        </IonSelectOption>
+      ))}
+    </IonSelect>
   );
 }

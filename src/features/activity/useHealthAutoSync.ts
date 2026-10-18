@@ -9,7 +9,11 @@ import { healthConnectState, syncHealthConnect } from './healthConnect';
 /** Android app: sync Health Connect when the app opens and whenever it comes back to the front. */
 export function useHealthAutoSync(profile: Profile | null) {
   const qc = useQueryClient();
-  const clientId = profile?.role === 'client' && profile.onboarded_at ? profile.id : null;
+  // Clients, and trainers who set up "My fitness".
+  const clientId =
+    (profile?.role === 'client' || profile?.role === 'trainer') && profile.onboarded_at
+      ? profile.id
+      : null;
   const tz = profile?.timezone ?? 'Asia/Kolkata';
 
   useEffect(() => {

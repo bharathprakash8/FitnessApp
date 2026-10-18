@@ -79,7 +79,7 @@ serveJson(async (req) => {
       .from('profiles')
       .select('id, timezone, full_name')
       .in('id', withDevice)
-      .eq('role', 'client')
+      .in('role', ['client', 'trainer'])
       .eq('is_active', true)
       .not('onboarded_at', 'is', null),
     db.from('reminder_settings').select('*').in('client_id', withDevice),

@@ -81,7 +81,9 @@ function todayIn(timeZone: string): string {
 serveJson(async (req) => {
   const db = adminClient();
   const caller = await requireCaller(req, db);
-  if (caller.role !== 'client') throw new HttpError(403, 'Only clients can log meals', 'forbidden');
+  if (caller.role !== 'client' && caller.role !== 'trainer') {
+    throw new HttpError(403, 'Only clients and trainers can log meals', 'forbidden');
+  }
 
   let raw: unknown;
   try {

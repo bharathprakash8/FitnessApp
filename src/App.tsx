@@ -21,6 +21,7 @@ import { OnboardingPage } from './features/onboarding/OnboardingPage';
 import { MePage } from './features/profile/MePage';
 import { MyDetailsPage } from './features/profile/MyDetailsPage';
 import { TodayPage } from './features/today/TodayPage';
+import { MyTargetsPage } from './features/trainer/MyTargetsPage';
 import { TrainerClientPage } from './features/trainer/TrainerClientPage';
 import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
 import { ExerciseLibraryPage } from './features/workouts/ExerciseLibraryPage';
@@ -44,6 +45,7 @@ const KNOWN_PATHS = [
   '/trainer/plans/:id',
   '/trainer/exercises',
   '/trainer/me',
+  '/trainer/my-targets',
   '/onboarding',
   '/today',
   '/food',
@@ -72,11 +74,13 @@ function RootRedirect() {
   return known ? null : <HomeRedirect />;
 }
 
-const guarded = (role: Role, page: ReactElement, onboarding = false) => (
+const guarded = (role: Role | Role[], page: ReactElement, onboarding = false) => (
   <RequireRole role={role} onboarding={onboarding}>
     {page}
   </RequireRole>
 );
+
+const SELF: Role[] = ['client', 'trainer'];
 
 export function App() {
   return (
@@ -106,22 +110,23 @@ export function App() {
               element={guarded('trainer', <ExerciseLibraryPage />)}
             />
             <Route path="/trainer/me" element={guarded('trainer', <MePage />)} />
+            <Route path="/trainer/my-targets" element={guarded('trainer', <MyTargetsPage />)} />
 
-            {/* Client */}
-            <Route path="/onboarding" element={guarded('client', <OnboardingPage />, true)} />
-            <Route path="/today" element={guarded('client', <TodayPage />)} />
-            <Route path="/food" element={guarded('client', <FoodPage />)} />
-            <Route path="/food/new/:mode" element={guarded('client', <LogMealPage />)} />
-            <Route path="/food/meal/:id" element={guarded('client', <EditMealPage />)} />
-            <Route path="/workouts" element={guarded('client', <WorkoutsPage />)} />
-            <Route path="/workouts/day/:dayId" element={guarded('client', <WorkoutDayPage />)} />
-            <Route path="/workouts/history" element={guarded('client', <WorkoutHistoryPage />)} />
-            <Route path="/workouts/mine/:id" element={guarded('client', <MyWorkoutEditorPage />)} />
-            <Route path="/workouts/self/:id" element={guarded('client', <SelfWorkoutPage />)} />
-            <Route path="/me" element={guarded('client', <MePage />)} />
-            <Route path="/me/details" element={guarded('client', <MyDetailsPage />)} />
-            <Route path="/me/health" element={guarded('client', <HealthSyncPage />)} />
-            <Route path="/me/notifications" element={guarded('client', <NotificationsPage />)} />
+            {/* Client – and trainers for their own fitness ("My fitness") */}
+            <Route path="/onboarding" element={guarded(SELF, <OnboardingPage />, true)} />
+            <Route path="/today" element={guarded(SELF, <TodayPage />)} />
+            <Route path="/food" element={guarded(SELF, <FoodPage />)} />
+            <Route path="/food/new/:mode" element={guarded(SELF, <LogMealPage />)} />
+            <Route path="/food/meal/:id" element={guarded(SELF, <EditMealPage />)} />
+            <Route path="/workouts" element={guarded(SELF, <WorkoutsPage />)} />
+            <Route path="/workouts/day/:dayId" element={guarded(SELF, <WorkoutDayPage />)} />
+            <Route path="/workouts/history" element={guarded(SELF, <WorkoutHistoryPage />)} />
+            <Route path="/workouts/mine/:id" element={guarded(SELF, <MyWorkoutEditorPage />)} />
+            <Route path="/workouts/self/:id" element={guarded(SELF, <SelfWorkoutPage />)} />
+            <Route path="/me" element={guarded(SELF, <MePage />)} />
+            <Route path="/me/details" element={guarded(SELF, <MyDetailsPage />)} />
+            <Route path="/me/health" element={guarded(SELF, <HealthSyncPage />)} />
+            <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
           <PushAutoRegister />

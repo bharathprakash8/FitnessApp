@@ -4,6 +4,7 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardSubtitle,
+  IonCardTitle,
   IonContent,
   IonFooter,
   IonHeader,
@@ -15,7 +16,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import { camera } from 'ionicons/icons';
+import { barbell, camera, flag, restaurant } from 'ionicons/icons';
 
 import { AppTabBar } from '../../components/AppTabBar';
 import { CLIENT_TABS } from '../../components/tabs';
@@ -29,6 +30,7 @@ import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
 import { TodayWorkoutCard } from '../workouts/TodayWorkoutCard';
+import './today.css';
 
 function greeting(timeZone = DEFAULT_TIMEZONE): string {
   const h = Number(
@@ -39,9 +41,19 @@ function greeting(timeZone = DEFAULT_TIMEZONE): string {
   return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
 }
 
-/** Client home: food vs targets, calories burnt and net balance, today's workout. */
+/**
+ * Client home: food vs targets, calories burnt and net balance, today's workout.
+ * Trainers see the same page as "My fitness" for their own training.
+ */
 export function TodayPage() {
   const { profile } = useAuth();
+  if (profile?.role === 'trainer' && !profile.onboarded_at) return <TrainerSetup />;
+  return <Today />;
+}
+
+function Today() {
+  const { profile } = useAuth();
+  const isTrainer = profile?.role === 'trainer';
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const targets = useTargets(profile?.id);
   const meals = useMealsOn(profile?.id, todayIn(tz));
@@ -54,7 +66,7 @@ export function TodayPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Today</IonTitle>
+          <IonTitle>{isTrainer ? 'My fitness' : 'Today'}</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
@@ -73,6 +85,22 @@ export function TodayPage() {
             {greeting(tz)}
             {firstName ? `, ${firstName}` : ''}!
           </h2>
+          {isTrainer && (
+            <div className="today-links">
+              <IonButton fill="outline" size="small" routerLink="/food">
+                <IonIcon slot="start" icon={restaurant} />
+                Food log
+              </IonButton>
+              <IonButton fill="outline" size="small" routerLink="/workouts">
+                <IonIcon slot="start" icon={barbell} />
+                Workouts
+              </IonButton>
+              <IonButton fill="outline" size="small" routerLink="/trainer/my-targets">
+                <IonIcon slot="start" icon={flag} />
+                My targets
+              </IonButton>
+            </div>
+          )}
           {targets.isPending || meals.isPending ? (
             <div className="ion-text-center">
               <IonSpinner name="crescent" />
@@ -103,12 +131,50 @@ export function TodayPage() {
                 <TargetsCard
                   target={null}
                   upcoming={upcomingTarget(targets.data, tz)}
-                  emptyText={`${trainerName} hasn't set your targets yet.`}
+                  emptyText={
+                    isTrainer
+                      ? 'Set your targets with “My targets” above.'
+                      : `${trainerName} hasn't set your targets yet.`
+                  }
                 />
               )}
             </>
           )}
           {profile && <TodayWorkoutCard profile={profile} />}
+        </div>
+      </IonContent>
+      <IonFooter>
+        <AppTabBar tabs={CLIENT_TABS} selected="today" />
+      </IonFooter>
+    </IonPage>
+  );
+}
+
+/** A trainer who hasn't set up "My fitness" yet. */
+function TrainerSetup() {
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonTitle>My fitness</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="ion-padding">
+        <div style={{ maxWidth: 520, margin: '0 auto' }}>
+          <IonCard style={{ marginInline: 0 }}>
+            <IonCardHeader>
+              <IonCardTitle>Track your own fitness</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <p>
+                Log your meals (photo or text), workouts and calories burnt – just like your
+                clients. Only you and the admin can see it.
+              </p>
+              <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/onboarding">
+                Set up My fitness (2 minutes)
+              </IonButton>
+            </IonCardContent>
+          </IonCard>
         </div>
       </IonContent>
       <IonFooter>
