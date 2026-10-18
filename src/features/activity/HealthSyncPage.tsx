@@ -296,13 +296,12 @@ function IPhoneSection() {
             ) : (
               'Install the “FitCoach Sync” shortcut (ask your trainer for the link)'
             )}
-            . When it asks, paste the <strong>sync code</strong> and the <strong>address</strong>.
+            . When it asks, paste your <strong>sync code</strong> from above.
           </li>
           <li>Run it once by hand. Allow it to read Health data when iPhone asks.</li>
           <li>
             Open <strong>Shortcuts → Automation → +</strong> → <strong>Time of Day</strong> → 22:00,
-            Daily → <strong>Run Immediately</strong> → choose “FitCoach Sync”. Add a second one at
-            07:00 for the previous day.
+            Daily → <strong>Run Immediately</strong> → choose “FitCoach Sync”.
           </li>
         </ol>
       </IonCardContent>

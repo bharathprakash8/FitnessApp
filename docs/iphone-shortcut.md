@@ -52,7 +52,8 @@ yesterday" and set `days_ago` to `1`.
 2. Open the shared iCloud link → **Add Shortcut** → paste the code when asked.
 3. Run it once by hand and **Allow** Health access.
 4. Shortcuts → **Automation → + → Time of Day** 22:00, Daily, **Run Immediately** → FitCoach Sync.
-   Add 07:00 → FitCoach Sync (yesterday).
+
+Shared link: https://www.icloud.com/shortcuts/502ebc485a414436a83d36174f9f57b2
 
 ## Notes
 

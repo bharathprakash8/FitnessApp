@@ -3,7 +3,7 @@
  */
 
 /** iCloud link of the shared "FitCoach Sync" Shortcut (see docs/iphone-shortcut.md). */
-export const IPHONE_SHORTCUT_URL = '';
+export const IPHONE_SHORTCUT_URL = 'https://www.icloud.com/shortcuts/502ebc485a414436a83d36174f9f57b2';
 
 /** Where Android users download the app (Firebase App Distribution invite link). */
 export const ANDROID_APP_URL =
