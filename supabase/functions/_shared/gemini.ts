@@ -1,4 +1,7 @@
-// Minimal Gemini client (generateContent with JSON output). Key and model come from secrets.
+// Minimal Gemini client (generateContent with JSON output). Key and models come from secrets:
+//   GEMINI_API_KEY, GEMINI_MODEL (main model), GEMINI_FALLBACK_MODELS (optional, comma-
+//   separated backups). Each Google model has its own free daily quota, so when the main
+//   model's quota is used up the next model is tried automatically.
 import { adminClient } from './auth.ts';
 import { HttpError } from './http.ts';
 
@@ -7,12 +10,17 @@ const API = 'https://generativelanguage.googleapis.com/v1beta/models';
 export type Part = { text: string } | { inline_data: { mime_type: string; data: string } };
 
 /** Add one answer's token counts to the App health numbers (never fails the request). */
-async function recordTokens(feature: string, usage: Record<string, number> | undefined) {
+async function recordTokens(
+  feature: string,
+  model: string,
+  usage: Record<string, number> | undefined,
+) {
   try {
     const input = usage?.promptTokenCount ?? 0;
     const output = (usage?.candidatesTokenCount ?? 0) + (usage?.thoughtsTokenCount ?? 0);
     await adminClient().rpc('record_ai_tokens', {
       feat: feature,
+      model_name: model,
       input_t: input,
       output_t: output,
       total_t: usage?.totalTokenCount ?? input + output,
@@ -20,6 +28,29 @@ async function recordTokens(feature: string, usage: Record<string, number> | und
   } catch (err) {
     console.error('Could not record AI tokens:', err instanceof Error ? err.message : String(err));
   }
+}
+
+/** Models whose daily quota ran out, skipped until this time (per running server). */
+const exhaustedUntil = new Map<string, number>();
+
+function modelList(): string[] {
+  const main = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash';
+  const backups = (Deno.env.get('GEMINI_FALLBACK_MODELS') ?? '')
+    .split(',')
+    .map((m) => m.trim())
+    .filter(Boolean);
+  return [...new Set([main, ...backups])];
+}
+
+/** Which Google quota a 429 hit, e.g. "GenerateRequestsPerDayPerProjectPerModel-FreeTier=20". */
+async function quotaOf(res: Response): Promise<string> {
+  const err = await res.json().catch(() => null);
+  const violation = (err?.error?.details ?? [])
+    .flatMap(
+      (d: { violations?: { quotaId?: string; quotaValue?: string }[] }) => d.violations ?? [],
+    )
+    .at(0);
+  return violation ? `${violation.quotaId ?? '?'}=${violation.quotaValue ?? '?'}` : 'unknown';
 }
 
 export async function generateJson(opts: {
@@ -31,7 +62,6 @@ export async function generateJson(opts: {
   feature: string;
 }): Promise<unknown> {
   const key = Deno.env.get('GEMINI_API_KEY');
-  const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.8-flash';
   if (!key)
     throw new HttpError(
       503,
@@ -39,7 +69,7 @@ export async function generateJson(opts: {
       'ai_not_configured',
     );
 
-  const request = () =>
+  const request = (model: string) =>
     fetch(`${API}/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -55,35 +85,48 @@ export async function generateJson(opts: {
       signal: AbortSignal.timeout(45_000),
     });
 
-  let res: Response;
+  let res: Response | null = null;
+  let model = '';
+  let lastQuota = 'unknown';
+  const now = Date.now();
+  const models = modelList().filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
   try {
-    res = await request();
-    // Google's free tier allows only a few requests per second; when several people ask at
-    // the same moment, wait a little (randomised so they don't collide again) and retry once.
-    if (res.status === 429) {
-      await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
-      res = await request();
+    for (const m of models.length ? models : modelList()) {
+      model = m;
+      res = await request(m);
+      if (res.status === 429) {
+        lastQuota = await quotaOf(res);
+        if (/PerDay/i.test(lastQuota)) {
+          // Daily quota used up: go straight to the next model, skip this one for a while.
+          console.error('Gemini daily quota used up for', m, lastQuota);
+          exhaustedUntil.set(m, Date.now() + 30 * 60_000);
+          continue;
+        }
+        // Too many at this moment: wait a little (randomised) and retry once.
+        await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
+        res = await request(m);
+        if (res.status === 429) {
+          lastQuota = await quotaOf(res);
+          continue;
+        }
+      }
+      if (res.status === 404) {
+        // A backup model name that doesn't exist (any more): try the next one.
+        console.error('Gemini model not found:', m);
+        continue;
+      }
+      break;
     }
   } catch {
     throw new HttpError(504, 'The AI took too long. Please try again.', 'ai_timeout');
   }
 
-  if (res.status === 429) {
-    // Which Google quota was hit (e.g. requests per minute) – no secrets in here.
-    const err = await res.json().catch(() => null);
-    const violation = (err?.error?.details ?? [])
-      .flatMap(
-        (d: { violations?: { quotaId?: string; quotaValue?: string }[] }) => d.violations ?? [],
-      )
-      .at(0);
-    const quota = violation
-      ? `${violation.quotaId ?? '?'}=${violation.quotaValue ?? '?'}`
-      : 'unknown';
-    console.error('Gemini rate limited', quota);
+  if (!res || res.status === 429 || res.status === 404) {
+    console.error('Gemini: no model available', lastQuota);
     throw new HttpError(
       429,
       'The AI is busy right now. Try again in a minute, or enter the meal manually.',
-      `ai_rate_limited ${quota}`,
+      `ai_rate_limited ${lastQuota}`,
     );
   }
   if (!res.ok) {
@@ -112,7 +155,7 @@ export async function generateJson(opts: {
   }
 
   const body = await res.json();
-  await recordTokens(opts.feature, body?.usageMetadata);
+  await recordTokens(opts.feature, model, body?.usageMetadata);
   const text: string | undefined = body?.candidates?.[0]?.content?.parts
     ?.map((p: { text?: string }) => p.text ?? '')
     .join('');

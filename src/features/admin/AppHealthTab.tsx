@@ -39,6 +39,7 @@ interface Health {
     total_tokens: number;
   }[];
   ai_month: { calls: number; total_tokens: number };
+  ai_models_today?: { model: string; calls: number; total_tokens: number }[];
   ai_last_14_days: { day: string; calls: number; tokens: number }[];
   ai_top_users_today: { name: string; calls: number }[];
   ai_daily_request_limit: number | null;
@@ -196,6 +197,14 @@ export function AppHealthTab() {
             Tokens today: {num(aiToday.tokens)} · This month: {num(h.ai_month.calls)} requests,{' '}
             {num(Number(h.ai_month.total_tokens))} tokens
           </p>
+          {(h.ai_models_today ?? []).length > 0 && (
+            <p className="health-detail">
+              Answered by:{' '}
+              {h
+                .ai_models_today!.map((m) => `${m.model || 'main model'} ${num(Number(m.calls))}`)
+                .join(' · ')}
+            </p>
+          )}
           {h.ai_today.length > 0 && (
             <IonList lines="none" className="health-list">
               {h.ai_today.map((a) => (
@@ -229,8 +238,9 @@ export function AppHealthTab() {
           )}
           <LimitEditor current={limit} />
           <p className="health-detail">
-            Token counts are recorded from 19 Oct 2026. Google doesn't share the exact free quota
-            with apps – check it in Google AI Studio and set it above.
+            Token counts are recorded from 19 Oct 2026. Each Google model has its own free daily
+            quota; when the main one is used up, FitCoach switches to the backup models. Set the
+            limit above to the total of all their daily quotas (from Google AI Studio → Rate limit).
           </p>
         </IonCardContent>
       </IonCard>
@@ -319,7 +329,7 @@ function LimitEditor({ current }: { current: number }) {
     <div className="health-limit">
       <IonInput
         fill="outline"
-        label="Daily AI request limit (free tier)"
+        label="Daily AI request limit (all models together)"
         labelPlacement="stacked"
         type="number"
         inputmode="numeric"
