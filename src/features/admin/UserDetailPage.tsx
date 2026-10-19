@@ -38,6 +38,7 @@ import {
 import { QueryState } from './QueryState';
 import { RoleSegment } from './RoleSegment';
 import { TrainerSelect } from './TrainerSelect';
+import { downloadBlob, exportUserData } from './exportUser';
 import './admin.css';
 
 export function UserDetailPage() {
@@ -139,6 +140,45 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
       },
       'Saved',
     );
+  }
+
+  const [exporting, setExporting] = useState(false);
+  async function exportData() {
+    setExporting(true);
+    try {
+      const blob = await exportUserData(user.id);
+      const safe = (user.full_name || user.email).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      downloadBlob(blob, `fitcoach-data-${safe}-${new Date().toISOString().slice(0, 10)}.json`);
+    } catch {
+      void toast({ message: 'Could not export. Try again.', duration: 2500, color: 'danger' });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /** Privacy request: typed confirmation, then everything is deleted for good. */
+  function confirmPurge() {
+    void alert({
+      header: 'Delete everything?',
+      message: `This permanently deletes ${displayName(user)}, their account and ALL their data and photos. It cannot be undone. Consider exporting their data first. Type DELETE to confirm.`,
+      inputs: [{ name: 'confirm', placeholder: 'DELETE' }],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete everything',
+          role: 'destructive',
+          handler: (data: { confirm?: string }) => {
+            if ((data.confirm ?? '').trim().toUpperCase() !== 'DELETE') return false;
+            void run({ action: 'purge', user_id: user.id }, 'User and all data deleted').then(
+              (ok) => {
+                if (ok) router.push('/admin', 'back');
+              },
+            );
+            return true;
+          },
+        },
+      ],
+    });
   }
 
   function confirm(header: string, message: string, label: string, onYes: () => void) {
@@ -251,6 +291,14 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
         <IonButton fill="outline" expand="block" onClick={() => void copyInstructions()}>
           Copy login instructions
         </IonButton>
+        <IonButton
+          fill="outline"
+          expand="block"
+          disabled={exporting}
+          onClick={() => void exportData()}
+        >
+          {exporting ? 'Preparing…' : 'Export all their data (privacy request)'}
+        </IonButton>
         {!isMe &&
           (user.is_active ? (
             <IonButton
@@ -301,6 +349,17 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
             }
           >
             Delete user
+          </IonButton>
+        )}
+        {!isMe && (
+          <IonButton
+            fill="clear"
+            color="danger"
+            expand="block"
+            disabled={action.isPending}
+            onClick={confirmPurge}
+          >
+            Delete user and ALL their data
           </IonButton>
         )}
       </div>

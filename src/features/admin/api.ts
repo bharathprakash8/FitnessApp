@@ -61,7 +61,7 @@ export type AdminAction =
       trainer_id?: string;
     }
   | { action: 'assign'; client_id: string; trainer_id: string }
-  | { action: 'deactivate' | 'reactivate' | 'delete'; user_id: string };
+  | { action: 'deactivate' | 'reactivate' | 'delete' | 'purge'; user_id: string };
 
 /** Calls the admin-users Edge Function and turns its { error } into a readable Error. */
 async function callAdminUsers(body: AdminAction): Promise<AdminUser | { id: string }> {

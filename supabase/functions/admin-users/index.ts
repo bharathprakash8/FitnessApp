@@ -38,6 +38,8 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('deactivate'), user_id: id }),
   z.object({ action: z.literal('reactivate'), user_id: id }),
   z.object({ action: z.literal('delete'), user_id: id }),
+  // Privacy request: delete the person and everything about them (photos too).
+  z.object({ action: z.literal('purge'), user_id: id }),
 ]);
 
 type Admin = ReturnType<typeof adminClient>;
@@ -290,6 +292,55 @@ serveJson(async (req) => {
       const { error } = await db.auth.admin.deleteUser(body.user_id);
       if (error) throw error;
       return { id: body.user_id, deleted: true };
+    }
+    case 'purge': {
+      if (body.user_id === caller.id) {
+        throw new HttpError(409, "You can't delete yourself", 'self');
+      }
+      const target = await getProfile(db, body.user_id);
+      if (target.role === 'admin') await assertNotLastAdmin(db, body.user_id);
+      if (target.role === 'trainer' && (await trainerHasClients(db, body.user_id))) {
+        throw new HttpError(
+          409,
+          'This trainer still has clients. Move them to another trainer first.',
+          'trainer_has_clients',
+        );
+      }
+      // Photos are not removed by deleting the account.
+      let photos = 0;
+      for (const bucket of ['meal-photos', 'progress-photos']) {
+        const { data: days } = await db.storage.from(bucket).list(body.user_id, { limit: 1000 });
+        for (const entry of days ?? []) {
+          // meal-photos has a date folder level; progress-photos has files directly.
+          const isFolder = !entry.id;
+          const paths = isFolder
+            ? (
+                (
+                  await db.storage
+                    .from(bucket)
+                    .list(`${body.user_id}/${entry.name}`, { limit: 1000 })
+                ).data ?? []
+              ).map((f) => `${body.user_id}/${entry.name}/${f.name}`)
+            : [`${body.user_id}/${entry.name}`];
+          if (paths.length) {
+            await db.storage.from(bucket).remove(paths);
+            photos += paths.length;
+          }
+        }
+      }
+      // A trainer's own exercises may appear in clients' history: keep them, hidden, in the
+      // shared library so that history stays readable.
+      if (target.role === 'trainer') {
+        await db
+          .from('exercises')
+          .update({ trainer_id: null, is_archived: true })
+          .eq('trainer_id', body.user_id);
+      }
+      // Everything else belongs to the profile and is deleted with the account.
+      const { error } = await db.auth.admin.deleteUser(body.user_id);
+      if (error) throw error;
+      console.log('User purged (privacy request); photos removed:', photos);
+      return { id: body.user_id, purged: true, photos };
     }
   }
 });
