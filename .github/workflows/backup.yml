@@ -2,9 +2,8 @@
 # repository is public, so nothing readable may be uploaded. Restore: docs/backup-restore.md.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
-#   SUPABASE_DB_URL            database connection string (Session pooler, with password)
 #   BACKUP_PASSPHRASE          long passphrase that encrypts the backups – keep a copy safe!
-#   SUPABASE_SERVICE_ROLE_KEY  for downloading the photos (optional; photos skipped without it)
+#   SUPABASE_SERVICE_ROLE_KEY  reads all tables, login accounts and photos (server-side only)
 name: Weekly backup
 
 on:
@@ -20,29 +19,30 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Check secrets
-        env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
-        run: |
-          if [ -z "$DB_URL" ] || [ -z "$PASS" ]; then
-            echo "::error::Set SUPABASE_DB_URL and BACKUP_PASSPHRASE (see docs/backup-restore.md)."
-            exit 1
-          fi
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
           node-version: 22
 
-      - name: Dump roles, schema and data (Supabase CLI)
+      - name: Check secrets
         env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          mkdir -p backup
-          npx --yes supabase@latest db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
-          npx --yes supabase@latest db dump --db-url "$DB_URL" -f backup/schema.sql
-          npx --yes supabase@latest db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only
-          ls -la backup
+          if [ -z "$SERVICE_KEY" ] || [ -z "$PASS" ]; then
+            echo "::error::Set SUPABASE_SERVICE_ROLE_KEY and BACKUP_PASSPHRASE (see docs/backup-restore.md)."
+            exit 1
+          fi
+
+      - name: Export all tables and login accounts
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node scripts/backup-db.mjs db
+          # The database structure, so a restore has everything in one file.
+          cp -r supabase/migrations db/migrations
 
       - name: Encrypt
         env:
@@ -50,10 +50,9 @@ jobs:
         run: |
           STAMP=$(date -u +%Y-%m-%d)
           echo "STAMP=$STAMP" >> "$GITHUB_ENV"
-          tar -czf "fitcoach-db-$STAMP.tar.gz" -C backup .
-          printf '%s' "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
-            --symmetric --cipher-algo AES256 -o "fitcoach-db-$STAMP.tar.gz.gpg" "fitcoach-db-$STAMP.tar.gz"
-          rm -rf backup "fitcoach-db-$STAMP.tar.gz"
+          tar -czf "fitcoach-db-$STAMP.tar.gz" db
+          printf '%s' "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0             --symmetric --cipher-algo AES256 -o "fitcoach-db-$STAMP.tar.gz.gpg" "fitcoach-db-$STAMP.tar.gz"
+          rm -rf db "fitcoach-db-$STAMP.tar.gz"
           ls -la fitcoach-db-*.gpg
 
       - uses: actions/upload-artifact@v5
