@@ -15,7 +15,7 @@ The current Supabase project (`updctclaxbawgtrhtdor`, Mumbai) **is production** 
 - [ ] **Android app** – ask Claude to build a fresh APK from the latest code, install it on one
       Android phone and log in.
 - [ ] **iPhone** – open the web app, Add to Home Screen, log in, turn on notifications.
-- [ ] **Privacy** – Admin → a test user → _Export all their data_ downloads a file;
+- [x] **Privacy** (export and full delete tested 19 Oct) – Admin → a test user → _Export all their data_ downloads a file;
       _Delete user and ALL their data_ removes them (try it on a test user once).
 
 ## Adding a friend
