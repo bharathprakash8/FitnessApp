@@ -5,9 +5,9 @@ The current Supabase project (`updctclaxbawgtrhtdor`, Mumbai) **is production** 
 
 ## Before inviting everyone
 
-- [ ] **Backups set up** – the three GitHub secrets in `docs/backup-restore.md`, then one green
-      manual run of **Weekly backup**. Passphrase saved in your password manager.
-- [ ] **Keep-awake job** – GitHub → Actions → **Keep database awake** → Run workflow → green.
+- [x] **Backups set up** (19 Oct) – secrets set, first run decrypted and checked. Copy the
+      passphrase from `FitCoach-keysbackup-passphrase.txt` into your password manager.
+- [x] **Keep-awake job** – ran green on 19 Oct.
 - [ ] **Test accounts removed** – `node scripts/load-test.mjs cleanup`, then ask Claude to delete
       the `test-users` Edge Function and the `TEST_USERS_SECRET` secret.
 - [ ] **AI** – Admin → App health shows ✓ for all five models; the daily limit says 1060.

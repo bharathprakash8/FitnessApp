@@ -3,71 +3,47 @@
 A GitHub job (`.github/workflows/backup.yml`) runs **every Monday at 00:00 IST** and can also be
 started by hand (GitHub → Actions → **Weekly backup** → **Run workflow**).
 
-- **Database** (accounts, profiles, meals, workouts, sessions, summaries… everything):
-  kept **90 days**, file `fitcoach-db-YYYY-MM-DD.tar.gz.gpg`.
-- **Photos** (progress photos, and meal photos younger than 7 days): kept **35 days**, file
+- **Database** – every table (profiles, meals, workouts, sessions, summaries…), all login
+  accounts, and the database structure (`supabase/migrations`): kept **90 days**, file
+  `fitcoach-db-YYYY-MM-DD.tar.gz.gpg`.
+- **Photos** – progress photos and meal photos younger than 7 days: kept **35 days**, file
   `fitcoach-photos-YYYY-MM-DD.tar.gz.gpg`.
-- Both are **encrypted** with your backup passphrase before they are stored. This repository is
-  public, so nobody can read them without the passphrase. **Keep the passphrase safe** (for
-  example in a password manager) – without it the backups cannot be opened.
+- Both are **encrypted** (AES-256) before they are stored. This repository is public, so nobody
+  can open them without the passphrase.
 
-## One-time setup (GitHub secrets)
+## Setup (done 19 Oct 2026)
 
-Run these in a terminal in the FitnessApp folder. Each command **asks you to paste the value**
-(nothing is shown or saved in the project). Never paste them into chat.
+- GitHub secrets `SUPABASE_SERVICE_ROLE_KEY` (copied from the Supabase CLI straight into
+  GitHub, never displayed) and `BACKUP_PASSPHRASE`.
+- **The passphrase is in `C:\Users\Bharath\FitCoach-keys\backup-passphrase.txt`.** Copy it into
+  your password manager too – without it the backups cannot be opened.
+- First run checked on 19 Oct: decrypted, 27 tables, 17 login accounts, 7 photos.
 
-1. **Database address** – Supabase dashboard → your project → **Connect** (top) →
-   **Session pooler** → copy the URI. Replace `[YOUR-PASSWORD]` with the database password
-   (Project Settings → Database → _Reset database password_ if you don't have it).
-
-   ```
-   gh secret set SUPABASE_DB_URL
-   ```
-
-2. **Backup passphrase** – make up a long passphrase (5+ random words), save it in your password
-   manager first, then:
-
-   ```
-   gh secret set BACKUP_PASSPHRASE
-   ```
-
-3. **Photos (optional but recommended)** – Supabase dashboard → Project Settings → **API Keys** →
-   copy the **secret** key (`sb_secret_…`), then:
-
-   ```
-   gh secret set SUPABASE_SERVICE_ROLE_KEY
-   ```
-
-4. Test it: GitHub → **Actions** → **Weekly backup** → **Run workflow**. Both jobs should turn
-   green, and the run page lists the encrypted files under **Artifacts**.
+If the service key is ever changed in Supabase, ask Claude to update the GitHub secret.
 
 ## Restoring (only if something went badly wrong)
 
-You need: the backup file from the Actions run, your passphrase, and a terminal with
-`gpg`, `psql` (PostgreSQL 17 client) and the Supabase CLI. Ask Claude to do this with you – it
-overwrites data, so it is never done casually.
+Ask Claude to do this with you – it writes data, so it is never done casually. The outline:
 
-1. Download the artifact (GitHub → Actions → the run → Artifacts) and unzip it.
-2. Decrypt and unpack:
+1. Download the artifacts (GitHub → Actions → the run → **Artifacts**) and decrypt:
 
    ```
    gpg --decrypt fitcoach-db-YYYY-MM-DD.tar.gz.gpg > db.tar.gz
-   tar -xzf db.tar.gz        # gives roles.sql, schema.sql, data.sql
+   tar -xzf db.tar.gz
    ```
 
-3. Restore into a **new, empty** Supabase project (safest), using its Session pooler URI:
+   This gives `db/tables/*.json`, `db/auth-users.json`, `db/manifest.json` and
+   `db/migrations/`.
 
-   ```
-   psql --single-transaction --variable ON_ERROR_STOP=1 \
-     --file roles.sql --file schema.sql \
-     --command 'SET session_replication_role = replica' \
-     --file data.sql --dbname "<new project session pooler URI>"
-   ```
-
-4. Point the app at the new project (Vercel `VITE_SUPABASE_*` values, Edge Function secrets,
-   `supabase link`), deploy the Edge Functions, and check logins.
+2. In a **new, empty** Supabase project (safest): apply the structure with
+   `npx supabase link` + `npx supabase db push` (uses `db/migrations`).
+3. Recreate the login accounts with the same ids from `auth-users.json` (Auth admin API), then
+   load the tables from `db/tables/` in dependency order with the service key (profiles first,
+   then mappings, plans, logs…). Claude writes this script for the exact backup.
+4. Point the app at the project (Vercel `VITE_SUPABASE_*`, Edge Function secrets, deploy the
+   functions), check logins.
 5. Photos: decrypt `fitcoach-photos-…` the same way and upload the folders back into the
-   `progress-photos` / `meal-photos` buckets (Claude can script this).
+   `progress-photos` / `meal-photos` buckets.
 
 ## Keep-awake job
 
