@@ -6,7 +6,7 @@ The current Supabase project (`updctclaxbawgtrhtdor`, Mumbai) **is production** 
 ## Before inviting everyone
 
 - [x] **Backups set up** (19 Oct) – secrets set, first run decrypted and checked. Copy the
-      passphrase from `FitCoach-keysbackup-passphrase.txt` into your password manager.
+      passphrase from `FitCoach-keysackup-passphrase.txt` into your password manager.
 - [x] **Keep-awake job** – ran green on 19 Oct.
 - [ ] **Test accounts removed** – `node scripts/load-test.mjs cleanup`, then ask Claude to delete
       the `test-users` Edge Function and the `TEST_USERS_SECRET` secret.
