@@ -100,7 +100,7 @@ function TodayContent() {
         <IonRefresherContent />
       </IonRefresher>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <h2 style={{ marginTop: 4, marginBottom: 0 }}>
+        <h2 className="today-greeting">
           {greeting(tz)}
           {firstName ? `, ${firstName}` : ''}!
         </h2>

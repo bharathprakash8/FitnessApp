@@ -19,6 +19,9 @@ export function AppTabBar({ tabs, selected }: { tabs: TabDef[]; selected: string
         <IonTabButton
           key={t.tab}
           tab={t.tab}
+          // Ionic only marks the selected tab inside IonTabs; this bar stands alone.
+          className={t.tab === current ? 'fc-tab-active' : undefined}
+          aria-current={t.tab === current ? 'page' : undefined}
           onClick={(e) => {
             e.preventDefault();
             if (pathname !== t.path) router.push(t.path, 'root', 'replace');

@@ -6,7 +6,11 @@ export function DetailRow({ label, value }: { label: string; value: string | num
   return (
     <IonItem lines="inset">
       <IonLabel color="medium">{label}</IonLabel>
-      <IonNote slot="end" color={empty ? 'medium' : 'dark'} style={{ textAlign: 'right' }}>
+      <IonNote
+        slot="end"
+        color={empty ? 'medium' : 'dark'}
+        style={{ textAlign: 'right', fontSize: '0.95rem', fontWeight: 500 }}
+      >
         {empty ? '—' : value}
       </IonNote>
     </IonItem>

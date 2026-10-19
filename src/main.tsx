@@ -15,6 +15,7 @@ import '@ionic/react/css/text-alignment.css';
 import '@ionic/react/css/palettes/dark.system.css';
 import './theme/variables.css';
 import './theme/app.css';
+import './theme/design.css';
 
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
