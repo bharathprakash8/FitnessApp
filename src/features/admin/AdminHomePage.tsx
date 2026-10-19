@@ -14,6 +14,7 @@ import {
   IonSegmentButton,
   IonTitle,
   IonToolbar,
+  useIonRouter,
 } from '@ionic/react';
 import { add } from 'ionicons/icons';
 import { useState } from 'react';
@@ -30,6 +31,9 @@ type Tab = 'users' | 'assignments' | 'health';
 export function AdminHomePage() {
   const { signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('users');
+  // "Exercises" opens its own page; remount the segment so the current tab stays selected.
+  const [segmentKey, setSegmentKey] = useState(0);
+  const router = useIonRouter();
   const users = useAdminUsers();
 
   return (
@@ -39,12 +43,23 @@ export function AdminHomePage() {
           <IonTitle>Admin</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
-            <IonButton routerLink="/admin/exercises">Exercises</IonButton>
             <IonButton onClick={() => void signOut()}>Log out</IonButton>
           </IonButtons>
         </IonToolbar>
         <IonToolbar>
-          <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
+          <IonSegment
+            key={segmentKey}
+            scrollable
+            value={tab}
+            onIonChange={(e) => {
+              if (e.detail.value === 'exercises') {
+                router.push('/admin/exercises');
+                setSegmentKey((k) => k + 1);
+              } else {
+                setTab(e.detail.value as Tab);
+              }
+            }}
+          >
             <IonSegmentButton value="users">
               <IonLabel>Users</IonLabel>
             </IonSegmentButton>
@@ -53,6 +68,9 @@ export function AdminHomePage() {
             </IonSegmentButton>
             <IonSegmentButton value="health">
               <IonLabel>App health</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="exercises">
+              <IonLabel>Exercises</IonLabel>
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
