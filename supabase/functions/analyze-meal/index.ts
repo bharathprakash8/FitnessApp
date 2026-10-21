@@ -4,7 +4,7 @@ import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { z } from 'npm:zod@3';
 
 import { adminClient, requireCaller } from '../_shared/auth.ts';
-import { generateJson, type Part } from '../_shared/gemini.ts';
+import { generateJson, lastTimings, type Part } from '../_shared/gemini.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 
 const DAILY_CAP = 15;
@@ -186,5 +186,6 @@ serveJson(async (req) => {
     follow_up_question: followUp || null,
     follow_up_options: followUp ? result.data.follow_up_options : [],
     remaining_today: Math.max(0, DAILY_CAP - mainUsed),
+    ai_timing: lastTimings, // which models were tried and how long each took
   };
 });

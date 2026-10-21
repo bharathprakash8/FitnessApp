@@ -30,6 +30,9 @@ async function recordTokens(
   }
 }
 
+/** How long each model took on the last call, e.g. "gemini-x 503 9.1s". For diagnosing speed. */
+export let lastTimings: string[] = [];
+
 /** Models whose daily quota ran out (or that are overloaded), skipped until this time (per running server). */
 const exhaustedUntil = new Map<string, number>();
 
@@ -69,6 +72,7 @@ export async function generateJson(opts: {
       'ai_not_configured',
     );
 
+  let thinking = true; // switched off if a model doesn't accept the setting
   const request = (model: string) =>
     fetch(`${API}/${model}:generateContent`, {
       method: 'POST',
@@ -80,6 +84,9 @@ export async function generateJson(opts: {
           temperature: opts.temperature ?? 0.2,
           responseMimeType: 'application/json',
           responseSchema: opts.schema,
+          // Little step-by-step "thinking": food estimates don't need it and it was
+          // making answers take 20+ seconds.
+          ...(thinking ? { thinkingConfig: { thinkingLevel: 'low' } } : {}),
         },
       }),
       signal: AbortSignal.timeout(45_000),
@@ -90,10 +97,20 @@ export async function generateJson(opts: {
   let lastQuota = 'unknown';
   const now = Date.now();
   const models = modelList().filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
+  lastTimings = [];
   try {
     for (const m of models.length ? models : modelList()) {
       model = m;
+      const t0 = Date.now();
       res = await request(m);
+      if (res.status === 400 && thinking) {
+        const msg = await res.clone().text();
+        if (/thinking/i.test(msg)) {
+          thinking = false;
+          res = await request(m);
+        }
+      }
+      lastTimings.push(`${m} ${res.status} ${((Date.now() - t0) / 1000).toFixed(1)}s`);
       if (res.status === 429) {
         lastQuota = await quotaOf(res);
         if (/PerDay/i.test(lastQuota)) {
