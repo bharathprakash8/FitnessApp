@@ -53,10 +53,11 @@ const trim = (n: number) => Number(n.toFixed(2)).toString();
 
 /** "40 kg × 8", "12 reps", "1.5 min" */
 export function formatSet(
-  log: Pick<WorkoutLog, 'reps' | 'weight_kg' | 'duration_min'>,
+  log: Pick<WorkoutLog, 'reps' | 'weight_kg' | 'duration_min'> & { machine_kcal?: number | null },
   type: string,
 ) {
-  if (type === 'timed') return `${trim(log.duration_min ?? 0)} min`;
+  if (type === 'timed')
+    return `${trim(log.duration_min ?? 0)} min${log.machine_kcal != null ? ` (${log.machine_kcal} kcal)` : ''}`;
   if (type === 'bodyweight') return `${log.reps ?? 0} reps`;
   return `${trim(log.weight_kg ?? 0)} kg × ${log.reps ?? 0}`;
 }
@@ -149,6 +150,7 @@ export function groupByDate(logs: LogWithExercise[]) {
         name: sets[0]!.exercises.name,
         type: sets[0]!.exercises.log_type,
         self: sets[0]!.source === 'self',
+        byTrainer: sets.some((x) => x.logged_by != null && x.logged_by !== x.client_id),
         sets: sets.sort((a, b) => a.set_number - b.set_number),
       })),
     };
@@ -170,7 +172,9 @@ export type ExerciseSlot = Pick<
 
 /** Where logged sets belong: a plan day, or the client's own ("self") training. */
 export type LogTarget =
-  { source: 'plan'; planDayId: string } | { source: 'self'; selfWorkoutId: string | null };
+  | { source: 'plan'; planDayId: string }
+  | { source: 'self'; selfWorkoutId: string | null }
+  | { source: 'trainer' }; // logged by the trainer for the client, outside the plan
 
 export function sortSelfWorkout(w: SelfWorkoutFull): SelfWorkoutFull {
   return {

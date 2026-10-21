@@ -115,3 +115,6 @@
   color: var(--ion-color-tertiary-contrast);
   background: var(--ion-color-tertiary);
 }
+.workout-machine-kcal {
+  margin-top: 10px;
+}

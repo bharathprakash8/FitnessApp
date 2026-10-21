@@ -1,4 +1,5 @@
 import {
+  IonButton,
   IonCard,
   IonCardContent,
   IonCardHeader,
@@ -10,6 +11,9 @@ import {
   IonText,
   useIonToast,
 } from '@ionic/react';
+
+import { add } from 'ionicons/icons';
+import { IonIcon } from '@ionic/react';
 
 import { formatDate } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
@@ -124,6 +128,10 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
           </IonCardContent>
         </IonCard>
       )}
+      <IonButton expand="block" routerLink={`/trainer/clients/${client.id}/log`}>
+        <IonIcon slot="start" icon={add} />
+        Log a workout for them
+      </IonButton>
       <h3>Logged workouts</h3>
       <WorkoutHistoryList
         logs={logs.data ?? []}

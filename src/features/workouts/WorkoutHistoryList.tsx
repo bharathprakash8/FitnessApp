@@ -32,6 +32,7 @@ export function WorkoutHistoryList({
               <p key={ex.key} style={{ margin: '0 0 6px' }}>
                 <strong>{ex.name}</strong>
                 {ex.self && <span className="workout-self-tag">Self</span>}
+                {ex.byTrainer && <span className="workout-self-tag">Logged by trainer</span>}
                 <br />
                 <span className="workout-muted">
                   {ex.sets.map((set) => formatSet(set, ex.type)).join(' · ')}

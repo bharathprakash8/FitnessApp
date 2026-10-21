@@ -49,6 +49,7 @@ export type Database = {
           source: string
           steps: number | null
           updated_at: string
+          worn_hours: number[] | null
         }
         Insert: {
           active_calories?: number | null
@@ -59,6 +60,7 @@ export type Database = {
           source: string
           steps?: number | null
           updated_at?: string
+          worn_hours?: number[] | null
         }
         Update: {
           active_calories?: number | null
@@ -69,6 +71,7 @@ export type Database = {
           source?: string
           steps?: number | null
           updated_at?: string
+          worn_hours?: number[] | null
         }
         Relationships: [
           {
@@ -86,6 +89,7 @@ export type Database = {
           day: string
           feature: string
           input_tokens: number
+          model: string
           output_tokens: number
           total_tokens: number
         }
@@ -94,6 +98,7 @@ export type Database = {
           day: string
           feature: string
           input_tokens?: number
+          model?: string
           output_tokens?: number
           total_tokens?: number
         }
@@ -102,6 +107,7 @@ export type Database = {
           day?: string
           feature?: string
           input_tokens?: number
+          model?: string
           output_tokens?: number
           total_tokens?: number
         }
@@ -1187,6 +1193,9 @@ export type Database = {
           duration_min: number | null
           exercise_id: string
           id: string
+          logged_by: string | null
+          machine_kcal: number | null
+          performed_at: string | null
           performed_on: string
           plan_day_id: string | null
           reps: number | null
@@ -1201,6 +1210,9 @@ export type Database = {
           duration_min?: number | null
           exercise_id: string
           id?: string
+          logged_by?: string | null
+          machine_kcal?: number | null
+          performed_at?: string | null
           performed_on?: string
           plan_day_id?: string | null
           reps?: number | null
@@ -1215,6 +1227,9 @@ export type Database = {
           duration_min?: number | null
           exercise_id?: string
           id?: string
+          logged_by?: string | null
+          machine_kcal?: number | null
+          performed_at?: string | null
           performed_on?: string
           plan_day_id?: string | null
           reps?: number | null
@@ -1236,6 +1251,13 @@ export type Database = {
             columns: ["exercise_id"]
             isOneToOne: false
             referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_logs_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1317,12 +1339,14 @@ export type Database = {
           name: string
         }[]
       }
+      ping: { Args: never; Returns: string }
       plan_of_day: { Args: { day: string }; Returns: string }
       plan_owner: { Args: { plan: string }; Returns: string }
       record_ai_tokens: {
         Args: {
           feat: string
           input_t: number
+          model_name: string
           output_t: number
           total_t: number
         }

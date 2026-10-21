@@ -5,7 +5,9 @@ import type { TablesInsert } from '../../lib/database.types';
 import { isAndroidApp } from '../../lib/platform';
 import { upsertActivity } from './api';
 
-const READ: HealthDataType[] = ['calories', 'totalCalories', 'steps', 'sleep'];
+// Heart rate is only used to tell in which hours a watch/band was worn (no duplicates with
+// logged workouts); it is never stored.
+const READ: HealthDataType[] = ['calories', 'totalCalories', 'steps', 'sleep', 'heartRate'];
 const LAST_SYNC_KEY = 'fitcoach.healthConnect.lastSync';
 const SYNC_DAYS = 7;
 
@@ -57,6 +59,40 @@ async function dailySums(dataType: HealthDataType, start: Date, end: Date, timeZ
   return out;
 }
 
+const localHour = (iso: string, timeZone: string) =>
+  Number(
+    new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(
+      new Date(iso),
+    ),
+  );
+
+/**
+ * Per local day, the hours (0–23) that have heart-rate readings = the watch/band was worn.
+ * null when heart rate can't be read (then we can't tell, see resolveBurn).
+ */
+async function wornHours(start: Date, end: Date, timeZone: string) {
+  const out = new Map<string, Set<number>>();
+  try {
+    const { samples } = await Health.queryAggregated({
+      dataType: 'heartRate',
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      bucket: 'hour',
+      aggregation: 'average',
+    });
+    for (const s of samples) {
+      if (!(Number(s.value) > 0)) continue;
+      const day = localDate(s.startDate, timeZone);
+      const set = out.get(day) ?? new Set<number>();
+      set.add(localHour(s.startDate, timeZone));
+      out.set(day, set);
+    }
+  } catch {
+    return null; // heart-rate permission refused
+  }
+  return out;
+}
+
 /**
  * Read the last 7 days and upsert them. Days without calorie data are skipped so a manual
  * entry is never overwritten by an empty reading.
@@ -66,10 +102,11 @@ export async function syncHealthConnect(clientId: string, timeZone: string): Pro
   const start = new Date(end.getTime() - SYNC_DAYS * 86400000);
   start.setHours(0, 0, 0, 0);
 
-  const [active, total, steps] = await Promise.all([
+  const [active, total, steps, worn] = await Promise.all([
     dailySums('calories', start, end, timeZone),
     dailySums('totalCalories', start, end, timeZone),
     dailySums('steps', start, end, timeZone),
+    wornHours(start, end, timeZone),
   ]);
 
   // Sleep counts towards the day you wake up.
@@ -108,6 +145,7 @@ export async function syncHealthConnect(clientId: string, timeZone: string): Pro
       resting_calories: resting === null ? null : Math.round(resting),
       steps: steps.has(day) ? Math.round(steps.get(day)!) : null,
       sleep_minutes: sleep.has(day) ? Math.min(1440, Math.round(sleep.get(day)!)) : null,
+      worn_hours: worn ? [...(worn.get(day) ?? [])].sort((x, y) => x - y) : null,
       source: 'health_connect',
     });
   }

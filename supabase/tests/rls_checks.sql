@@ -393,16 +393,54 @@ begin
   raise exception 'FAIL: trainer assigned a plan to another trainer''s client';
 end $$;
 
+-- Trainers may log workouts for their own clients (21 Oct 2026); only theirs, and only
+-- what they logged can they change. "Logged by" is stamped by the database.
 do $$
+declare
+  t1 uuid := '00000000-0000-4000-a000-0000000000f1';
+  c1 uuid := '00000000-0000-4000-a000-0000000000c1';
+  logger uuid;
+  n int;
 begin
+  insert into public.workout_logs (client_id, exercise_id, set_number, reps, source, logged_by)
+  values (c1, '00000000-0000-4000-b000-0000000000e1', 9, 5, 'trainer', c1)
+  returning logged_by into logger;
+  if logger is distinct from t1 then
+    raise exception 'FAIL: logged_by was not stamped as the trainer';
+  end if;
   begin
-    insert into public.workout_logs (client_id, exercise_id, set_number, reps)
-    values ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-b000-0000000000e1', 9, 5);
-  exception when others then
-    return;
+    insert into public.workout_logs (client_id, exercise_id, set_number, reps, source)
+    values ('00000000-0000-4000-a000-0000000000c2', '00000000-0000-4000-b000-0000000000e1', 9, 5, 'trainer');
+    raise exception 'FAIL: trainer logged a workout for another trainer''s client';
+  exception when insufficient_privilege then null;
   end;
-  raise exception 'FAIL: trainer logged a workout for a client';
+  begin
+    insert into public.workout_logs (client_id, exercise_id, set_number, reps, source)
+    values (c1, '00000000-0000-4000-b000-0000000000e1', 9, 5, 'self');
+    raise exception 'FAIL: trainer logged a "self" workout for a client';
+  exception when insufficient_privilege then null;
+  end;
+  -- the client's own sets are not the trainer's to change
+  update public.workout_logs set reps = 99
+  where client_id = c1 and logged_by is distinct from t1;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: trainer changed sets the client logged'; end if;
 end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  delete from public.workout_logs
+  where logged_by = '00000000-0000-4000-a000-0000000000f1';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client deleted a set their trainer logged'; end if;
+  if (select count(*) from public.workout_logs where logged_by = '00000000-0000-4000-a000-0000000000f1') <> 1 then
+    raise exception 'FAIL: client cannot see the set their trainer logged';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
 
 -- ---------------------------------------------------------------------------
 -- Milestone 3: meal logs, ai_usage, meal-photos storage

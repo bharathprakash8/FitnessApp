@@ -27,7 +27,8 @@ import './workouts.css';
 
 /**
  * One exercise in a workout: what to do, last time's numbers as a guide, today's sets and a
- * set logger. Used for plan days, self workouts and quick logs.
+ * set logger. Used for plan days, self workouts and quick logs – by the client, or by their
+ * trainer for them (clientId + startedAt).
  */
 export function ExerciseLogCard({
   slot: pe,
@@ -35,22 +36,33 @@ export function ExerciseLogCard({
   today,
   logs,
   onLogged,
+  clientId,
+  startedAt,
 }: {
   slot: ExerciseSlot;
   target: LogTarget;
+  /** The day the sets belong to (the client's local date). */
   today: string;
+  /** Whose workout this is (default: the signed-in person). */
+  clientId?: string;
+  /** When the workout was done, if not now (trainer logging afterwards). */
+  startedAt?: Date;
   /** All of this person's logs for this exercise. */
   logs: LogWithExercise[];
   onLogged: () => void;
 }) {
   // Today's sets count only for this workout; "last time" uses every log of the exercise.
   const mine = (l: LogWithExercise) =>
-    target.source === 'plan'
-      ? l.source === 'plan'
-      : l.source === 'self' && l.self_workout_id === target.selfWorkoutId;
+    target.source === 'self'
+      ? l.source === 'self' && l.self_workout_id === target.selfWorkoutId
+      : l.source === target.source;
   const { profile } = useAuth();
-  const logSet = useLogSet(profile?.id);
-  const deleteLog = useDeleteLog(profile?.id);
+  const owner = clientId ?? profile?.id;
+  const logSet = useLogSet(owner);
+  const deleteLog = useDeleteLog(owner);
+  // Each person can remove only the sets they logged (sets waiting offline have no logger yet).
+  const canDelete = (l: LogWithExercise) =>
+    'offline' in l || (l.logged_by ?? l.client_id) === profile?.id;
   const [toast] = useIonToast();
   const [showCues, setShowCues] = useState(false);
   const type = pe.exercises.log_type as LogType;
@@ -70,17 +82,28 @@ export function ExerciseLogCard({
   const [kg, setKg] = useState('');
   const [reps, setReps] = useState('');
   const [mins, setMins] = useState('');
+  const [machineKcal, setMachineKcal] = useState('');
   const kgValue = kg || (guide?.weight_kg?.toString() ?? '');
   const repsValue = reps || (guide?.reps?.toString() ?? '');
   const minsValue = mins || (guide?.duration_min?.toString() ?? '');
 
   async function log() {
     const n = (v: string) => (v.trim() === '' ? NaN : Number(v.replace(',', '.')));
+    const minutes = type === 'timed' ? n(minsValue) : 0;
+    // Saved as the time the set ended – used to check whether a watch was worn then.
+    const performedAt = startedAt
+      ? new Date(startedAt.getTime() + (Number.isFinite(minutes) ? minutes : 0) * 60000)
+      : new Date();
+    const kcal = machineKcal.trim() === '' ? null : Math.round(n(machineKcal));
     const row = {
       performed_on: today,
+      performed_at: performedAt.toISOString(),
+      machine_kcal: type === 'timed' ? kcal : null,
       ...(target.source === 'plan'
         ? { source: 'plan' as const, plan_day_id: target.planDayId }
-        : { source: 'self' as const, self_workout_id: target.selfWorkoutId }),
+        : target.source === 'self'
+          ? { source: 'self' as const, self_workout_id: target.selfWorkoutId }
+          : { source: 'trainer' as const }),
       exercise_id: pe.exercise_id,
       set_number: nextSetNumber,
       reps: type === 'timed' ? null : Math.round(n(repsValue)),
@@ -90,12 +113,13 @@ export function ExerciseLogCard({
     const bad =
       (type !== 'timed' && !(row.reps! >= 0 && row.reps! <= 500)) ||
       (type === 'weights' && !(row.weight_kg! >= 0 && row.weight_kg! <= 1000)) ||
-      (type === 'timed' && !(row.duration_min! > 0 && row.duration_min! <= 600));
+      (type === 'timed' && !(row.duration_min! > 0 && row.duration_min! <= 600)) ||
+      (row.machine_kcal !== null && !(row.machine_kcal >= 0 && row.machine_kcal <= 3000));
     if (bad) {
       void toast({
         message:
           type === 'timed'
-            ? 'Enter the minutes'
+            ? 'Enter the minutes (and machine kcal 0–3,000 if you add it)'
             : 'Enter the reps' + (type === 'weights' ? ' and kg' : ''),
         duration: 2000,
         color: 'warning',
@@ -115,6 +139,7 @@ export function ExerciseLogCard({
       setKg('');
       setReps('');
       setMins('');
+      setMachineKcal('');
       onLogged();
     } catch {
       void toast({
@@ -171,17 +196,22 @@ export function ExerciseLogCard({
               <li key={s.id}>
                 <span>
                   Set {s.set_number}: <strong>{formatSet(s, type)}</strong>
+                  {s.logged_by && s.logged_by !== s.client_id && owner === profile?.id && (
+                    <span className="workout-muted"> · by trainer</span>
+                  )}
                   {'offline' in s && <span className="offline-badge"> waiting to sync</span>}
                 </span>
-                <IonButton
-                  fill="clear"
-                  size="small"
-                  color="medium"
-                  aria-label={`Delete set ${s.set_number}`}
-                  onClick={() => deleteLog.mutate(s.id)}
-                >
-                  <IonIcon icon={closeCircleOutline} />
-                </IonButton>
+                {canDelete(s) && (
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    color="medium"
+                    aria-label={`Delete set ${s.set_number}`}
+                    onClick={() => deleteLog.mutate(s.id)}
+                  >
+                    <IonIcon icon={closeCircleOutline} />
+                  </IonButton>
+                )}
               </li>
             ))}
           </ul>
@@ -225,6 +255,19 @@ export function ExerciseLogCard({
             Log set {nextSetNumber}
           </IonButton>
         </div>
+        {type === 'timed' && (
+          <IonInput
+            className="workout-machine-kcal"
+            fill="outline"
+            label="Machine kcal (optional)"
+            labelPlacement="stacked"
+            type="number"
+            inputmode="numeric"
+            placeholder="From the machine or app"
+            value={machineKcal}
+            onIonInput={(e) => setMachineKcal(String(e.detail.value ?? ''))}
+          />
+        )}
       </IonCardContent>
     </IonCard>
   );

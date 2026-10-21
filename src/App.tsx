@@ -28,6 +28,7 @@ import { SessionDetailPage } from './features/sessions/SessionDetailPage';
 import { SessionEditorPage } from './features/sessions/SessionEditorPage';
 import { SessionsPage } from './features/sessions/SessionsPage';
 import { TodayPage } from './features/today/TodayPage';
+import { LogClientWorkoutPage } from './features/trainer/LogClientWorkoutPage';
 import { MyTargetsPage } from './features/trainer/MyTargetsPage';
 import { TrainerClientPage } from './features/trainer/TrainerClientPage';
 import { TrainerClientsPage } from './features/trainer/TrainerClientsPage';
@@ -48,6 +49,7 @@ const KNOWN_PATHS = [
   '/admin/exercises',
   '/trainer',
   '/trainer/clients/:id',
+  '/trainer/clients/:id/log',
   '/trainer/plans',
   '/trainer/plans/:id',
   '/trainer/exercises',
@@ -119,6 +121,10 @@ export function App() {
             <Route
               path="/trainer/clients/:id"
               element={guarded('trainer', <TrainerClientPage />)}
+            />
+            <Route
+              path="/trainer/clients/:id/log"
+              element={guarded('trainer', <LogClientWorkoutPage />)}
             />
             <Route path="/trainer/plans" element={guarded('trainer', <PlansPage />)} />
             <Route path="/trainer/plans/:id" element={guarded('trainer', <PlanEditorPage />)} />

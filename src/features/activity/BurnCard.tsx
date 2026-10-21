@@ -103,6 +103,17 @@ export function BurnCard({
               {burn.restingEstimated ? ' (estimated)' : ''}
             </div>
             <div className="burn-muted">{burn.activeSource}</div>
+            {burn.workoutAdded > 0 && burn.hasDeviceData && (
+              <div className="burn-muted">
+                +{burn.workoutAdded.toLocaleString('en-IN')} kcal from workouts logged while no
+                watch was worn
+              </div>
+            )}
+            {burn.countedByWatch.length > 0 && (
+              <div className="burn-muted">
+                Already counted by the watch: {burn.countedByWatch.join(', ')}
+              </div>
+            )}
           </div>
           <div className="burn-net">
             <div className={net > 0 ? 'burn-big surplus' : 'burn-big deficit'}>
