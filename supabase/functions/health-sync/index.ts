@@ -13,9 +13,11 @@ import { HttpError, serveJson } from '../_shared/http.ts';
 const DAILY_LIMIT = 40; // 2 automatic runs × today + yesterday, plus "Sync now" taps
 
 // Shortcuts often send numbers as text, sometimes with decimals or commas.
+// Empty / null (no samples that day) counts as 0.
 const amount = (max: number) =>
   z
-    .union([z.number(), z.string()])
+    .union([z.number(), z.string(), z.null()])
+    .transform((v) => v ?? '')
     .transform((v) => Number(String(v).replace(/,/g, '').trim()))
     .refine((n) => Number.isFinite(n) && n >= 0 && n <= max, 'Number out of range')
     .transform((n) => Math.round(n));
@@ -31,10 +33,11 @@ const Body = z.object({
   steps: amount(200000).optional(),
   sleep_minutes: amount(1440).optional(),
   worn_hours: z
-    .union([z.array(z.union([z.number(), z.string()])), z.string()])
+    .union([z.array(z.union([z.number(), z.string()])), z.string(), z.null()])
     .optional()
     .transform((v) => {
       if (v === undefined) return undefined;
+      if (v === null) return [];
       const parts = Array.isArray(v) ? v : v.split(/[^0-9]+/);
       const hours = parts
         .map((x) => String(x).trim())
