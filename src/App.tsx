@@ -40,6 +40,8 @@ import { SelfWorkoutPage } from './features/workouts/SelfWorkoutPage';
 import { WorkoutDayPage } from './features/workouts/WorkoutDayPage';
 import { WorkoutHistoryPage } from './features/workouts/WorkoutHistoryPage';
 import { WorkoutsPage } from './features/workouts/WorkoutsPage';
+import { StatsPage } from './features/stats/StatsPage';
+import { MealIdeasPage } from './features/mealIdeas/MealIdeasPage';
 
 const KNOWN_PATHS = [
   '/login',
@@ -68,7 +70,9 @@ const KNOWN_PATHS = [
   '/food',
   '/food/new/:mode',
   '/food/meal/:id',
+  '/food/ideas',
   '/workouts',
+  '/stats',
   '/workouts/day/:dayId',
   '/workouts/history',
   '/workouts/mine/:id',
@@ -154,11 +158,13 @@ export function App() {
             <Route path="/food" element={guarded(SELF, <FoodPage />)} />
             <Route path="/food/new/:mode" element={guarded(SELF, <LogMealPage />)} />
             <Route path="/food/meal/:id" element={guarded(SELF, <EditMealPage />)} />
+            <Route path="/food/ideas" element={guarded('client', <MealIdeasPage />)} />
             <Route path="/workouts" element={guarded(SELF, <WorkoutsPage />)} />
             <Route path="/workouts/day/:dayId" element={guarded(SELF, <WorkoutDayPage />)} />
             <Route path="/workouts/history" element={guarded(SELF, <WorkoutHistoryPage />)} />
             <Route path="/workouts/mine/:id" element={guarded(SELF, <MyWorkoutEditorPage />)} />
             <Route path="/workouts/self/:id" element={guarded(SELF, <SelfWorkoutPage />)} />
+            <Route path="/stats" element={guarded(SELF, <StatsPage />)} />
             <Route path="/me" element={guarded(SELF, <MePage />)} />
             <Route path="/me/details" element={guarded(SELF, <MyDetailsPage />)} />
             <Route path="/me/health" element={guarded(SELF, <HealthSyncPage />)} />

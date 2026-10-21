@@ -27,7 +27,7 @@ interface Props {
 
 const num = (v: string) => (v.trim() === '' ? NaN : Number(v.replace(',', '.')));
 
-/** Date of birth, sex, height, weight, goal, diet, injuries – for onboarding and "Edit my details". */
+/** Date of birth, sex, height, weight, goal, diet, injuries, foods to avoid – for onboarding and "Edit my details". */
 export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubmit }: Props) {
   const [dob, setDob] = useState(profile.date_of_birth ?? '');
   const [sex, setSex] = useState(profile.sex ?? '');
@@ -37,6 +37,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
   const [goalOther, setGoalOther] = useState(profile.goal_other ?? '');
   const [diet, setDiet] = useState(profile.diet_preference ?? '');
   const [injuries, setInjuries] = useState(profile.injuries ?? '');
+  const [avoid, setAvoid] = useState(profile.foods_to_avoid ?? '');
   const [error, setError] = useState<string | null>(null);
 
   const today = todayIn(profile.timezone);
@@ -69,6 +70,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
       goal_other: goal === 'other' ? goalOther.trim() : null,
       diet_preference: diet,
       injuries: injuries.trim() || null,
+      foods_to_avoid: avoid.trim().slice(0, 300) || null,
     });
   }
 
@@ -169,6 +171,16 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         maxlength={1000}
         value={injuries}
         onIonInput={(e) => setInjuries(String(e.detail.value ?? ''))}
+      />
+
+      <IonTextarea
+        fill="outline"
+        label="Foods to avoid – allergies or dislikes (optional)"
+        labelPlacement="floating"
+        autoGrow
+        maxlength={300}
+        value={avoid}
+        onIonInput={(e) => setAvoid(String(e.detail.value ?? ''))}
       />
 
       {error && (

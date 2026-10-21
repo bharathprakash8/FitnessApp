@@ -1,0 +1,67 @@
+.ideas-day ion-card-content {
+  padding-top: 0;
+}
+.ideas-meal {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-areas:
+    'name dish'
+    'name nums';
+  gap: 0 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--fc-border);
+  padding: 8px 0;
+  color: inherit;
+  font: inherit;
+}
+.ideas-meal:first-child {
+  border-top: 0;
+}
+.ideas-meal.editable {
+  cursor: pointer;
+}
+.ideas-meal-name {
+  grid-area: name;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fc-muted);
+  padding-top: 2px;
+}
+.ideas-dish {
+  grid-area: dish;
+  font-weight: 600;
+}
+.ideas-portion {
+  font-weight: 400;
+  color: var(--fc-muted);
+}
+.ideas-nums {
+  grid-area: nums;
+  font-size: 0.8rem;
+  color: var(--fc-muted);
+}
+.ideas-flag {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 196, 9, 0.15);
+  font-size: 0.85rem;
+}
+.ideas-note {
+  background: var(--fc-primary-soft);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+.ideas-muted {
+  color: var(--fc-muted);
+  font-size: 0.85rem;
+}
+.ideas-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}

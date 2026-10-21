@@ -82,6 +82,7 @@ export interface ClientDetails {
   goal_other: string | null;
   diet_preference: string;
   injuries: string | null;
+  foods_to_avoid: string | null;
 }
 
 /**
@@ -117,6 +118,7 @@ export function useSaveClientDetails(profile: Profile | null) {
         goal_other: details.goal === 'other' ? details.goal_other : null,
         diet_preference: details.diet_preference,
         injuries: details.injuries,
+        foods_to_avoid: details.foods_to_avoid,
       };
       if (finishOnboarding) changes.onboarded_at = new Date().toISOString();
       const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id);

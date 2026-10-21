@@ -32,6 +32,8 @@ async function recordTokens(
 
 /** How long each model took on the last call, e.g. "gemini-x 503 9.1s". For diagnosing speed. */
 export let lastTimings: string[] = [];
+/** Token counts of the last answer (for measuring). */
+export let lastUsage: Record<string, number> | undefined;
 
 /** Models whose daily quota ran out (or that are overloaded), skipped until this time (per running server). */
 const exhaustedUntil = new Map<string, number>();
@@ -196,6 +198,7 @@ export async function generateJson(opts: {
   }
 
   const body = await res.json();
+  lastUsage = body?.usageMetadata;
   await recordTokens(opts.feature, model, body?.usageMetadata);
   const text: string | undefined = body?.candidates?.[0]?.content?.parts
     ?.map((p: { text?: string }) => p.text ?? '')

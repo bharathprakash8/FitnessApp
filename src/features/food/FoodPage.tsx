@@ -24,6 +24,7 @@ import { DEFAULT_TIMEZONE, formatDate, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { currentTarget, useTargets } from '../targets/api';
 import { useMealsOn } from './api';
+import { useMealPlans } from '../mealIdeas/api';
 import { DayProgress } from './DayProgress';
 import { MealList } from './MealList';
 import { mealTotals, shiftDate } from './model';
@@ -32,6 +33,8 @@ import './food.css';
 /** Client: a day's meals, totals vs target, and the three ways to log food. */
 export function FoodPage() {
   const { profile } = useAuth();
+  const ideas = useMealPlans(profile?.role === 'client' ? profile.id : undefined);
+  const sharedIdeas = ideas.data?.find((p) => p.status === 'shared');
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const today = todayIn(tz);
   const [day, setDay] = useState(today);
@@ -57,6 +60,11 @@ export function FoodPage() {
           <IonRefresherContent />
         </IonRefresher>
         <div className="food-page">
+          {sharedIdeas && (
+            <IonButton expand="block" fill="outline" routerLink="/food/ideas">
+              🥗 Food ideas for your week from your trainer
+            </IonButton>
+          )}
           <div className="food-day-switch">
             <IonButton
               fill="clear"

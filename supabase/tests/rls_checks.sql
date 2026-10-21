@@ -1039,6 +1039,84 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Stats insights, meal plans (food ideas) and foods to avoid (21 Oct 2026)
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.stats_insights (client_id, made_on, insights, focus) values
+  ('00000000-0000-4000-a000-0000000000c1', '2026-01-05', '["a"]', 'f'),
+  ('00000000-0000-4000-a000-0000000000c2', '2026-01-05', '["b"]', 'g');
+insert into public.meal_plans (id, client_id, trainer_id, starts_on, days, status) values
+  ('00000000-0000-4000-b000-0000000000e1', '00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-a000-0000000000f1', '2026-01-05', '[]', 'draft'),
+  ('00000000-0000-4000-b000-0000000000e2', '00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-a000-0000000000f1', '2026-01-12', '[]', 'shared');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.stats_insights) <> 1 then
+    raise exception 'FAIL: client sees other people''s insights (or not their own)';
+  end if;
+  begin
+    insert into public.stats_insights (client_id, made_on) values ('00000000-0000-4000-a000-0000000000c1', '2026-01-06');
+    raise exception 'FAIL: client wrote insights directly';
+  exception when insufficient_privilege then null;
+  end;
+  if (select count(*) from public.meal_plans) <> 1 then
+    raise exception 'FAIL: client sees a draft meal plan (or not the shared one)';
+  end if;
+  update public.meal_plans set note = 'mine';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client edited a meal plan'; end if;
+  perform public.set_foods_to_avoid('00000000-0000-4000-a000-0000000000c1', 'peanuts');
+  if (select foods_to_avoid from public.profiles where id = '00000000-0000-4000-a000-0000000000c1') <> 'peanuts' then
+    raise exception 'FAIL: client cannot set own foods to avoid';
+  end if;
+  begin
+    perform public.set_foods_to_avoid('00000000-0000-4000-a000-0000000000c2', 'x');
+    raise exception 'FAIL: client set another client''s foods to avoid';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if exists (select 1 from public.stats_insights where client_id = '00000000-0000-4000-a000-0000000000c1')
+     or exists (select 1 from public.meal_plans) then
+    raise exception 'FAIL: trainer T2 sees T1''s client insights or meal plans';
+  end if;
+  begin
+    perform public.set_foods_to_avoid('00000000-0000-4000-a000-0000000000c1', 'x');
+    raise exception 'FAIL: T2 set foods to avoid for T1''s client';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.meal_plans) <> 2 or (select count(*) from public.stats_insights) <> 1 then
+    raise exception 'FAIL: trainer does not see their client''s plans / insights';
+  end if;
+  update public.meal_plans set days = '[{"day":1,"meals":[]}]' where id = '00000000-0000-4000-b000-0000000000e1';
+  get diagnostics n = row_count;
+  if n <> 1 or not (select edited from public.meal_plans where id = '00000000-0000-4000-b000-0000000000e1') then
+    raise exception 'FAIL: trainer edit of a meal plan not saved or not marked edited';
+  end if;
+  begin
+    update public.meal_plans set status = 'shared' where id = '00000000-0000-4000-b000-0000000000e1';
+    raise exception 'FAIL: trainer shared a meal plan directly (must go through the function)';
+  exception when insufficient_privilege then null;
+  end;
+  perform public.set_foods_to_avoid('00000000-0000-4000-a000-0000000000c1', 'mushrooms');
+  if (select foods_to_avoid from public.profiles where id = '00000000-0000-4000-a000-0000000000c1') <> 'mushrooms' then
+    raise exception 'FAIL: trainer cannot set their client''s foods to avoid';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Milestone 10: water (habits_daily) and progress photos
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);

@@ -155,11 +155,17 @@ ion-tab-bar {
 ion-tab-button {
   --color: var(--fc-muted);
   --color-selected: var(--ion-color-primary-shade);
+  --padding-start: 0;
+  --padding-end: 0;
   font-weight: 600;
+  /* five tabs must fit a 375 px phone */
+  min-width: 0;
+  max-width: none;
+  flex: 1 1 0;
 }
 
 ion-tab-button ion-icon {
-  padding: 3px 14px;
+  padding: 3px 12px;
   border-radius: 14px;
   transition: background-color 0.15s ease;
 }

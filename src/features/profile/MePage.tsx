@@ -170,10 +170,16 @@ function ClientDetails({ profile }: { profile: Profile }) {
         <DetailRow label="Goal" value={goalText(profile.goal, profile.goal_other)} />
         <DetailRow label="Diet" value={label(DIET_LABELS, profile.diet_preference)} />
         <DetailRow label="Injuries" value={profile.injuries ?? ''} />
+        <DetailRow label="Foods to avoid" value={profile.foods_to_avoid ?? ''} />
       </IonList>
       <IonButton expand="block" fill="outline" routerLink="/me/details">
         Edit my details
       </IonButton>
+      {!isClient && (
+        <IonButton expand="block" fill="outline" routerLink="/stats">
+          My stats and insights
+        </IonButton>
+      )}
       <IonButton expand="block" fill="outline" routerLink="/me/progress">
         Progress: weight, photos and charts
       </IonButton>

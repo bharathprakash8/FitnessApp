@@ -32,11 +32,22 @@ import { ClientRemindersTab } from './ClientRemindersTab';
 import { ProgressView } from '../progress/ProgressView';
 import { ClientSummaryTab } from './ClientSummaryTab';
 import { ClientWorkoutsTab } from './ClientWorkoutsTab';
+import { ClientMealIdeasTab } from '../mealIdeas/ClientMealIdeasTab';
+import { StatsView } from '../stats/StatsView';
 import { LastSync } from '../activity/LastSync';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
-type Tab = 'overview' | 'progress' | 'summary' | 'targets' | 'food' | 'workouts' | 'reminders';
+type Tab =
+  | 'overview'
+  | 'stats'
+  | 'progress'
+  | 'summary'
+  | 'targets'
+  | 'food'
+  | 'ideas'
+  | 'workouts'
+  | 'reminders';
 
 export function TrainerClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +77,9 @@ export function TrainerClientPage() {
             <IonSegmentButton value="overview">
               <IonLabel>Overview</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="stats">
+              <IonLabel>Stats</IonLabel>
+            </IonSegmentButton>
             <IonSegmentButton value="progress">
               <IonLabel>Progress</IonLabel>
             </IonSegmentButton>
@@ -77,6 +91,9 @@ export function TrainerClientPage() {
             </IonSegmentButton>
             <IonSegmentButton value="food">
               <IonLabel>Food</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="ideas">
+              <IonLabel>Meal ideas</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="workouts">
               <IonLabel>Workouts</IonLabel>
@@ -100,6 +117,10 @@ export function TrainerClientPage() {
             </IonText>
           ) : tab === 'overview' ? (
             <Overview client={client.data} />
+          ) : tab === 'stats' ? (
+            <StatsView person={client.data} />
+          ) : tab === 'ideas' ? (
+            <ClientMealIdeasTab client={client.data} />
           ) : tab === 'progress' ? (
             <ProgressView person={client.data} editable={false} />
           ) : tab === 'summary' ? (

@@ -4,6 +4,7 @@ import {
   clipboard,
   fitness,
   people,
+  statsChart,
   person,
   restaurant,
   today,
@@ -20,6 +21,7 @@ export const CLIENT_TABS: TabDef[] = [
   { tab: 'today', path: '/today', label: 'Today', icon: today },
   { tab: 'food', path: '/food', label: 'Food', icon: restaurant },
   { tab: 'workouts', path: '/workouts', label: 'Workouts', icon: barbell },
+  { tab: 'stats', path: '/stats', label: 'Stats', icon: statsChart },
   { tab: 'me', path: '/me', label: 'Me', icon: person },
 ];
 

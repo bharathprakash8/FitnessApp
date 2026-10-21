@@ -405,6 +405,72 @@ export type Database = {
           },
         ]
       }
+      meal_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          days: Json
+          edited: boolean
+          id: string
+          model: string | null
+          note: string | null
+          shared_at: string | null
+          starts_on: string
+          status: string
+          target_kcal: number | null
+          target_protein_g: number | null
+          trainer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          days?: Json
+          edited?: boolean
+          id?: string
+          model?: string | null
+          note?: string | null
+          shared_at?: string | null
+          starts_on: string
+          status?: string
+          target_kcal?: number | null
+          target_protein_g?: number | null
+          trainer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          days?: Json
+          edited?: boolean
+          id?: string
+          model?: string | null
+          note?: string | null
+          shared_at?: string | null
+          starts_on?: string
+          status?: string
+          target_kcal?: number | null
+          target_protein_g?: number | null
+          trainer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plans_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       measurements: {
         Row: {
           client_id: string
@@ -621,6 +687,7 @@ export type Database = {
           date_of_birth: string | null
           diet_preference: string | null
           email: string
+          foods_to_avoid: string | null
           full_name: string | null
           goal: string | null
           goal_other: string | null
@@ -642,6 +709,7 @@ export type Database = {
           date_of_birth?: string | null
           diet_preference?: string | null
           email: string
+          foods_to_avoid?: string | null
           full_name?: string | null
           goal?: string | null
           goal_other?: string | null
@@ -663,6 +731,7 @@ export type Database = {
           date_of_birth?: string | null
           diet_preference?: string | null
           email?: string
+          foods_to_avoid?: string | null
           full_name?: string | null
           goal?: string | null
           goal_other?: string | null
@@ -1039,6 +1108,47 @@ export type Database = {
           },
         ]
       }
+      stats_insights: {
+        Row: {
+          client_id: string
+          created_at: string
+          focus: string
+          id: string
+          insights: Json
+          made_on: string
+          model: string | null
+          period_days: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          focus?: string
+          id?: string
+          insights?: Json
+          made_on: string
+          model?: string | null
+          period_days?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          focus?: string
+          id?: string
+          insights?: Json
+          made_on?: string
+          model?: string | null
+          period_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stats_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       targets: {
         Row: {
           calories: number
@@ -1354,6 +1464,10 @@ export type Database = {
       }
       self_workout_owner: { Args: { w: string }; Returns: string }
       session_owner: { Args: { s: string }; Returns: string }
+      set_foods_to_avoid: {
+        Args: { foods: string; person: string }
+        Returns: undefined
+      }
       tracks_self: { Args: never; Returns: boolean }
       trainer_dashboard: {
         Args: never
