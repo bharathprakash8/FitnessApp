@@ -78,3 +78,26 @@
   color: var(--ion-color-primary-shade);
   cursor: pointer;
 }
+.health-help {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 196, 9, 0.12);
+}
+.health-help summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+.health-help ol {
+  padding-left: 18px;
+  margin: 8px 0;
+}
+.health-help-small {
+  font-size: 0.85rem;
+  color: var(--fc-muted);
+}
+.health-help-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

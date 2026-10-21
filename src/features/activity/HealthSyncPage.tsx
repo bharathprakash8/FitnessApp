@@ -10,6 +10,7 @@ import {
   IonHeader,
   IonPage,
   IonSpinner,
+  IonText,
   IonTitle,
   IonToolbar,
   useIonAlert,
@@ -33,15 +34,10 @@ import {
   type HcState,
 } from './healthConnect';
 import { LastSync } from './LastSync';
+import { HealthAccessHelp } from './HealthAccessHelp';
+import { rememberConnect, useIphoneSyncStuck } from './syncStuck';
+import { SHORTCUT_RUN_URL, shortcutConnectUrl } from './shortcut';
 import './activity.css';
-
-// The Shortcut must be named exactly "FitCoach Sync" (see docs/iphone-shortcut.md).
-const SHORTCUT_NAME = encodeURIComponent('FitCoach Sync');
-/** Runs the Shortcut now (it reads the saved connection code itself). */
-export const SHORTCUT_RUN_URL = `shortcuts://run-shortcut?name=${SHORTCUT_NAME}`;
-/** Runs the Shortcut with a new connection code, which it saves for later runs. */
-const shortcutConnectUrl = (code: string) =>
-  `shortcuts://run-shortcut?name=${SHORTCUT_NAME}&input=text&text=${encodeURIComponent(code)}`;
 
 /** Client: connect Health Connect (Android app) or set up the iPhone Shortcut. */
 export function HealthSyncPage() {
@@ -211,6 +207,7 @@ function IPhoneSection() {
   const [token, setToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const hasToken = Boolean(profile?.health_sync_token_hash);
+  const stuck = useIphoneSyncStuck(profile?.id, hasToken);
 
   async function generate() {
     if (!profile) return;
@@ -223,6 +220,7 @@ function IPhoneSection() {
         .eq('id', profile.id);
       if (error) throw error;
       setToken(t);
+      rememberConnect();
       await qc.invalidateQueries({ queryKey: profileKey(profile.id) });
     } catch {
       void toast({
@@ -269,6 +267,14 @@ function IPhoneSection() {
       </IonCardHeader>
       <IonCardContent>
         {profile && <LastSync clientId={profile.id} />}
+        {stuck && (
+          <IonText color="warning">
+            <p>
+              <strong>Nothing has arrived from the Shortcut yet.</strong> Usually Health access is
+              off – see the help under step 2.
+            </p>
+          </IonText>
+        )}
         {hasToken && !token && (
           <IonButton expand="block" href={SHORTCUT_RUN_URL}>
             Sync now
@@ -296,7 +302,8 @@ function IPhoneSection() {
           <li>
             <strong>Connect.</strong> Come back here and tap Connect, then{' '}
             <strong>Finish in Shortcuts</strong>. The first time, iPhone asks to allow Health data
-            and sending to FitCoach – tap <strong>Allow</strong> each time.
+            (tap <strong>Turn On All</strong> → <strong>Allow</strong>) and sending to FitCoach (tap{' '}
+            <strong>Always Allow</strong>).
             {token ? (
               <>
                 <IonButton expand="block" href={shortcutConnectUrl(token)}>
@@ -324,6 +331,7 @@ function IPhoneSection() {
                 {hasToken ? 'Connect again' : 'Connect'}
               </IonButton>
             )}
+            <HealthAccessHelp open={stuck} />
           </li>
           <li>
             <strong>Sync automatically.</strong> Apple doesn’t let apps do this step, so it takes a

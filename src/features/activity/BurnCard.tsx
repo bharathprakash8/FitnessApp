@@ -17,7 +17,8 @@ import { useLatestWeight } from '../profile/api';
 import { useWorkoutLogs } from '../workouts/api';
 import { useActivityDay, useSaveManualActivity } from './api';
 import { dayFraction, formatSleep, resolveBurn } from './model';
-import { SHORTCUT_RUN_URL } from './HealthSyncPage';
+import { useIphoneSyncStuck } from './syncStuck';
+import { SHORTCUT_RUN_URL } from './shortcut';
 import { LastSync } from './LastSync';
 import './activity.css';
 
@@ -43,6 +44,10 @@ export function BurnCard({
   const logs = useWorkoutLogs(client.id);
   const weight = useLatestWeight(client.id);
   const saveManual = useSaveManualActivity(client.id);
+  const iphoneStuck = useIphoneSyncStuck(
+    editable && isIOSWeb ? client.id : undefined,
+    Boolean(client.health_sync_token_hash),
+  );
   const [toast] = useIonToast();
   const [manual, setManual] = useState('');
 
@@ -134,6 +139,11 @@ export function BurnCard({
         )}
 
         <LastSync clientId={client.id} className="burn-muted burn-last-sync" />
+        {iphoneStuck && (
+          <IonButton size="small" color="warning" routerLink="/me/health">
+            Sync not working? Fix it
+          </IonButton>
+        )}
         {editable && isIOSWeb && client.health_sync_token_hash && (
           <IonButton size="small" fill="outline" href={SHORTCUT_RUN_URL}>
             Sync now
