@@ -30,7 +30,7 @@ async function recordTokens(
   }
 }
 
-/** Models whose daily quota ran out, skipped until this time (per running server). */
+/** Models whose daily quota ran out (or that are overloaded), skipped until this time (per running server). */
 const exhaustedUntil = new Map<string, number>();
 
 function modelList(): string[] {
@@ -110,6 +110,14 @@ export async function generateJson(opts: {
           continue;
         }
       }
+      if (res.status === 503 || res.status === 500) {
+        // Google says the model is overloaded ("high demand"): use the next model now and
+        // leave this one alone for a couple of minutes.
+        console.error('Gemini model busy:', m, res.status);
+        lastQuota = `busy_${res.status}`;
+        exhaustedUntil.set(m, Date.now() + 2 * 60_000);
+        continue;
+      }
       if (res.status === 404) {
         // A backup model name that doesn't exist (any more): try the next one.
         console.error('Gemini model not found:', m);
@@ -121,7 +129,7 @@ export async function generateJson(opts: {
     throw new HttpError(504, 'The AI took too long. Please try again.', 'ai_timeout');
   }
 
-  if (!res || res.status === 429 || res.status === 404) {
+  if (!res || [429, 404, 500, 503].includes(res.status)) {
     console.error('Gemini: no model available', lastQuota);
     throw new HttpError(
       429,
