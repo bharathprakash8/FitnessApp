@@ -25,6 +25,10 @@ import './food.css';
 
 const FACTORS = [0.5, 1, 1.5, 2];
 
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+const hourLabel = (h: number) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+const pad = (n: number) => String(n).padStart(2, '0');
+
 interface Row {
   item: MealItem;
   factor: number;
@@ -76,10 +80,16 @@ export function MealEditor({
   const [mealType, setMealType] = useState<MealType>(initialMealType);
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
-  // iPhone's date/time wheels don't always tell the app about a change, so on Save the
-  // values are read straight from the fields.
+  // iPhone's date wheel doesn't always tell the app about a change, so on Save the date
+  // is read straight from the field.
   const dateRef = useRef<HTMLIonInputElement>(null);
-  const timeRef = useRef<HTMLIonInputElement>(null);
+  // Time uses two dropdowns (hour, minutes) instead of iPhone's own time wheel, which
+  // sometimes doesn't open after the camera has been used.
+  const hour = Number(time.slice(0, 2)) || 0;
+  const minute = Number(time.slice(3, 5)) || 0;
+  const minuteOptions = [...new Set([...Array.from({ length: 12 }, (_, i) => i * 5), minute])].sort(
+    (a, b) => a - b,
+  );
   const [edited, setEdited] = useState(false);
   const [freeAnswer, setFreeAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +111,6 @@ export function MealEditor({
 
   async function save() {
     const fieldDate = (await dateRef.current?.getInputElement())?.value || date;
-    const fieldTime = (await timeRef.current?.getInputElement())?.value || time;
     const clean = items
       .map((it) => ({ ...it, name: it.name.trim(), portion: it.portion.trim() }))
       .filter((it) => it.name || it.calories);
@@ -114,7 +123,7 @@ export function MealEditor({
       items: clean,
       mealType,
       date: fieldDate,
-      time: fieldTime.slice(0, 5) || '12:00',
+      time: time.slice(0, 5) || '12:00',
       edited,
     });
   }
@@ -270,8 +279,6 @@ export function MealEditor({
             </IonSelectOption>
           ))}
         </IonSelect>
-        {/* iPhone's date/time wheels may report the value only when they close, so listen
-            to both input and change. */}
         <IonInput
           fill="outline"
           ref={dateRef}
@@ -283,16 +290,38 @@ export function MealEditor({
           onIonInput={(e) => setDate(String(e.detail.value ?? ''))}
           onIonChange={(e) => setDate(String(e.detail.value ?? ''))}
         />
-        <IonInput
-          fill="outline"
-          ref={timeRef}
-          label="Time"
-          labelPlacement="stacked"
-          type="time"
-          value={time}
-          onIonInput={(e) => setTime(String(e.detail.value ?? ''))}
-          onIonChange={(e) => setTime(String(e.detail.value ?? ''))}
-        />
+        <div className="food-time">
+          <IonSelect
+            fill="outline"
+            label="Time"
+            labelPlacement="stacked"
+            interface="action-sheet"
+            interfaceOptions={{ header: 'Hour' }}
+            value={hour}
+            onIonChange={(e) => setTime(`${pad(Number(e.detail.value))}:${pad(minute)}`)}
+          >
+            {HOURS.map((h) => (
+              <IonSelectOption key={h} value={h}>
+                {hourLabel(h)}
+              </IonSelectOption>
+            ))}
+          </IonSelect>
+          <IonSelect
+            fill="outline"
+            label="Minutes"
+            labelPlacement="stacked"
+            interface="action-sheet"
+            interfaceOptions={{ header: 'Minutes' }}
+            value={minute}
+            onIonChange={(e) => setTime(`${pad(hour)}:${pad(Number(e.detail.value))}`)}
+          >
+            {minuteOptions.map((m) => (
+              <IonSelectOption key={m} value={m}>
+                {pad(m)}
+              </IonSelectOption>
+            ))}
+          </IonSelect>
+        </div>
       </div>
 
       {error && (

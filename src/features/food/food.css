@@ -168,13 +168,16 @@
   background: var(--ion-color-warning);
 }
 
-/* Meal type on its own line; date and time share the next one (never wider than the phone). */
+/* Meal + date on one line, hour + minutes on the next (never wider than the phone). */
 .food-when {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 12px;
 }
-.food-when > ion-select {
+.food-time {
   grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
 }
