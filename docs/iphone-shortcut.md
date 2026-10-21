@@ -83,6 +83,19 @@ Sleep is left out of version 2 (it isn't used in calories). Add it back later if
 `IPHONE_SHORTCUT_URL` and redeploy). In the Shortcut's ⓘ, **Import Questions** must be
 **empty** (version 1 asked for the code there).
 
+### Pitfalls found while building it (21 Oct 2026)
+
+- The health actions must read **"Find All Health Samples where…"**. If they read **"Filter
+  _Health Samples_ where…"** (input set to a variable), the second round filters the first
+  round's results and yesterday comes back as zeros. Fix: tap the input → **Clear Variable**,
+  then re-link Calculate Statistics / Repeat with Each to the action right above.
+- In Find All Health Samples the types are called **Active Energy** / **Resting Energy**
+  (the Filter version says Active/Resting Calories).
+- Empty variables: the server treats empty/null as 0, and ignores a day with no data at all
+  (so a broken run can't overwrite real numbers with zeros).
+
+Shared link (version 2): https://www.icloud.com/shortcuts/e1eb30a21bd14e10a5f6ec49b3b40b11
+
 ## What each person does (shown in the app: Me → Health sync)
 
 1. **Get "FitCoach Sync"** → Add Shortcut (delete an older one first).
