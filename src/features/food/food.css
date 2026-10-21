@@ -167,3 +167,14 @@
 .macro-bar > div.over {
   background: var(--ion-color-warning);
 }
+
+/* Meal type on its own line; date and time share the next one (never wider than the phone). */
+.food-when {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.food-when > ion-select {
+  grid-column: 1 / -1;
+}

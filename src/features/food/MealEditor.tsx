@@ -10,7 +10,7 @@ import {
   IonText,
 } from '@ionic/react';
 import { add, closeOutline } from 'ionicons/icons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
   MEAL_LABELS,
@@ -76,6 +76,10 @@ export function MealEditor({
   const [mealType, setMealType] = useState<MealType>(initialMealType);
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
+  // iPhone's date/time wheels don't always tell the app about a change, so on Save the
+  // values are read straight from the fields.
+  const dateRef = useRef<HTMLIonInputElement>(null);
+  const timeRef = useRef<HTMLIonInputElement>(null);
   const [edited, setEdited] = useState(false);
   const [freeAnswer, setFreeAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -95,15 +99,24 @@ export function MealEditor({
     setEdited(true);
   }
 
-  function save() {
+  async function save() {
+    const fieldDate = (await dateRef.current?.getInputElement())?.value || date;
+    const fieldTime = (await timeRef.current?.getInputElement())?.value || time;
     const clean = items
       .map((it) => ({ ...it, name: it.name.trim(), portion: it.portion.trim() }))
       .filter((it) => it.name || it.calories);
     if (clean.length === 0) return setError('Add at least one food item.');
     if (clean.some((it) => !it.name)) return setError('Every item needs a name.');
-    if (!date || date > maxDate) return setError('Please pick a date that is not in the future.');
+    if (!fieldDate || fieldDate > maxDate)
+      return setError('Please pick a date that is not in the future.');
     setError(null);
-    onSave({ items: clean, mealType, date, time: time || '12:00', edited });
+    onSave({
+      items: clean,
+      mealType,
+      date: fieldDate,
+      time: fieldTime.slice(0, 5) || '12:00',
+      edited,
+    });
   }
 
   const num = (v: unknown) => {
@@ -242,10 +255,7 @@ export function MealEditor({
         </span>
       </div>
 
-      <div
-        className="food-grid"
-        style={{ gridTemplateColumns: '1.2fr 1fr 0.8fr', marginBottom: 12 }}
-      >
+      <div className="food-when">
         <IonSelect
           fill="outline"
           label="Meal"
@@ -260,22 +270,28 @@ export function MealEditor({
             </IonSelectOption>
           ))}
         </IonSelect>
+        {/* iPhone's date/time wheels may report the value only when they close, so listen
+            to both input and change. */}
         <IonInput
           fill="outline"
+          ref={dateRef}
           label="Date"
           labelPlacement="stacked"
           type="date"
           max={maxDate}
           value={date}
           onIonInput={(e) => setDate(String(e.detail.value ?? ''))}
+          onIonChange={(e) => setDate(String(e.detail.value ?? ''))}
         />
         <IonInput
           fill="outline"
+          ref={timeRef}
           label="Time"
           labelPlacement="stacked"
           type="time"
           value={time}
           onIonInput={(e) => setTime(String(e.detail.value ?? ''))}
+          onIonChange={(e) => setTime(String(e.detail.value ?? ''))}
         />
       </div>
 
@@ -284,7 +300,7 @@ export function MealEditor({
           <p>{error}</p>
         </IonText>
       )}
-      <IonButton expand="block" size="large" disabled={busy} onClick={save}>
+      <IonButton expand="block" size="large" disabled={busy} onClick={() => void save()}>
         {busy ? 'Saving…' : saveLabel}
       </IonButton>
     </div>
