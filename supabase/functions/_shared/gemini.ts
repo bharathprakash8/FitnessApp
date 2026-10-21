@@ -63,6 +63,8 @@ export async function generateJson(opts: {
   temperature?: number;
   /** Label for App health (e.g. 'meal-photo', 'weekly-summary'). */
   feature: string;
+  /** Give up on one model after this long and try the next (default 20 s). */
+  timeoutMs?: number;
 }): Promise<unknown> {
   const key = Deno.env.get('GEMINI_API_KEY');
   if (!key)
@@ -73,7 +75,8 @@ export async function generateJson(opts: {
     );
 
   let thinking = true; // switched off if a model doesn't accept the setting
-  const request = (model: string) =>
+  // One attempt at one model; null when it took too long (then the next model is tried).
+  const request = (model: string): Promise<Response | null> =>
     fetch(`${API}/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -89,8 +92,8 @@ export async function generateJson(opts: {
           ...(thinking ? { thinkingConfig: { thinkingLevel: 'low' } } : {}),
         },
       }),
-      signal: AbortSignal.timeout(45_000),
-    });
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 20_000),
+    }).catch(() => null);
 
   let res: Response | null = null;
   let model = '';
@@ -98,16 +101,28 @@ export async function generateJson(opts: {
   const now = Date.now();
   const models = modelList().filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
   lastTimings = [];
+  const started = Date.now();
   try {
     for (const m of models.length ? models : modelList()) {
+      // Stay well inside the server's time limit: don't start another model after 60 s.
+      if (Date.now() - started > 60_000) break;
       model = m;
       const t0 = Date.now();
       res = await request(m);
+      if (!res) {
+        // Too slow (usually many people at once): leave it for a minute, try the next one.
+        lastTimings.push(`${m} timeout ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+        console.error('Gemini model too slow:', m);
+        lastQuota = 'timeout';
+        exhaustedUntil.set(m, Date.now() + 60_000);
+        continue;
+      }
       if (res.status === 400 && thinking) {
         const msg = await res.clone().text();
         if (/thinking/i.test(msg)) {
           thinking = false;
           res = await request(m);
+          if (!res) continue;
         }
       }
       lastTimings.push(`${m} ${res.status} ${((Date.now() - t0) / 1000).toFixed(1)}s`);
@@ -122,6 +137,7 @@ export async function generateJson(opts: {
         // Too many at this moment: wait a little (randomised) and retry once.
         await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500));
         res = await request(m);
+        if (!res) continue;
         if (res.status === 429) {
           lastQuota = await quotaOf(res);
           continue;
