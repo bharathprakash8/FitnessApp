@@ -10,7 +10,7 @@ import { z } from 'npm:zod@3';
 import { adminClient } from '../_shared/auth.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 
-const DAILY_LIMIT = 40; // 3 automatic runs × today + yesterday, plus "Sync now"
+const DAILY_LIMIT = 40; // 2 automatic runs × today + yesterday, plus "Sync now" taps
 
 // Shortcuts often send numbers as text, sometimes with decimals or commas.
 const amount = (max: number) =>
@@ -37,7 +37,9 @@ const Body = z.object({
       if (v === undefined) return undefined;
       const parts = Array.isArray(v) ? v : v.split(/[^0-9]+/);
       const hours = parts
-        .map((x) => Number(String(x).trim()))
+        .map((x) => String(x).trim())
+        .filter((x) => x !== '') // "" = no heart-rate data = no watch that day
+        .map(Number)
         .filter((n) => String(n) !== 'NaN' && Number.isInteger(n) && n >= 0 && n <= 23);
       return [...new Set(hours)].sort((a, b) => a - b);
     }),

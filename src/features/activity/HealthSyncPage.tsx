@@ -10,7 +10,6 @@ import {
   IonHeader,
   IonPage,
   IonSpinner,
-  IonText,
   IonTitle,
   IonToolbar,
   useIonAlert,
@@ -36,7 +35,13 @@ import {
 import { LastSync } from './LastSync';
 import './activity.css';
 
-const SYNC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/health-sync`;
+// The Shortcut must be named exactly "FitCoach Sync" (see docs/iphone-shortcut.md).
+const SHORTCUT_NAME = encodeURIComponent('FitCoach Sync');
+/** Runs the Shortcut now (it reads the saved connection code itself). */
+export const SHORTCUT_RUN_URL = `shortcuts://run-shortcut?name=${SHORTCUT_NAME}`;
+/** Runs the Shortcut with a new connection code, which it saves for later runs. */
+const shortcutConnectUrl = (code: string) =>
+  `shortcuts://run-shortcut?name=${SHORTCUT_NAME}&input=text&text=${encodeURIComponent(code)}`;
 
 /** Client: connect Health Connect (Android app) or set up the iPhone Shortcut. */
 export function HealthSyncPage() {
@@ -234,11 +239,12 @@ function IPhoneSection() {
   function confirmNew() {
     if (!hasToken) return void generate();
     void alert({
-      header: 'Create a new sync code?',
-      message: 'The old code stops working. You will need to paste the new one into your Shortcut.',
+      header: 'Connect again?',
+      message:
+        'This makes a new connection code; the old one stops working. Use it after changing phones or reinstalling the Shortcut.',
       buttons: [
         { text: 'Cancel', role: 'cancel' },
-        { text: 'Create new code', handler: () => void generate() },
+        { text: 'Connect again', handler: () => void generate() },
       ],
     });
   }
@@ -263,52 +269,71 @@ function IPhoneSection() {
       </IonCardHeader>
       <IonCardContent>
         {profile && <LastSync clientId={profile.id} />}
-        <p>
-          An Apple Shortcut sends your Apple Health numbers to FitCoach every night. You set it up
-          once (about 3 minutes).
-        </p>
-        {token ? (
-          <>
-            <IonText color="warning">
-              <p>
-                <strong>Copy your sync code now – it is shown only once.</strong>
-              </p>
-            </IonText>
-            <p className="health-code">{token}</p>
-            <IonButton expand="block" onClick={() => void copy(token, 'Sync code')}>
-              Copy sync code
-            </IonButton>
-            <p style={{ marginTop: 12 }}>Sync address:</p>
-            <p className="health-code">{SYNC_URL}</p>
-            <IonButton expand="block" fill="outline" onClick={() => void copy(SYNC_URL, 'Address')}>
-              Copy address
-            </IonButton>
-          </>
-        ) : (
-          <IonButton expand="block" disabled={busy} onClick={confirmNew}>
-            {hasToken ? 'Create a new sync code' : 'Set up iPhone sync'}
+        {hasToken && !token && (
+          <IonButton expand="block" href={SHORTCUT_RUN_URL}>
+            Sync now
           </IonButton>
         )}
-        {hasToken && !token && (
-          <p className="burn-muted">
-            Sync is set up. Create a new code only if you changed phones or lost the Shortcut.
-          </p>
-        )}
+        <p>
+          An Apple Shortcut sends your Apple Health numbers (and, if you wear an Apple Watch, the
+          hours you wore it) to FitCoach. Set it up once – about 2 minutes.
+        </p>
+
         <ol className="health-steps">
           <li>
-            {IPHONE_SHORTCUT_URL ? (
-              <a href={IPHONE_SHORTCUT_URL} target="_blank" rel="noopener">
-                Install the “FitCoach Sync” shortcut
-              </a>
-            ) : (
-              'Install the “FitCoach Sync” shortcut (ask your trainer for the link)'
-            )}
-            . When it asks, paste your <strong>sync code</strong> from above.
+            <strong>Get the Shortcut.</strong> Tap the button, then <strong>Add Shortcut</strong>.
+            If you already have an older “FitCoach Sync”, delete it first (press and hold → Delete).
+            <IonButton
+              expand="block"
+              fill="outline"
+              href={IPHONE_SHORTCUT_URL}
+              target="_blank"
+              rel="noopener"
+            >
+              Get “FitCoach Sync”
+            </IonButton>
           </li>
-          <li>Run it once by hand. Allow it to read Health data when iPhone asks.</li>
           <li>
-            Open <strong>Shortcuts → Automation → +</strong> → <strong>Time of Day</strong> → 22:00,
-            Daily → <strong>Run Immediately</strong> → choose “FitCoach Sync”.
+            <strong>Connect.</strong> Come back here and tap Connect, then{' '}
+            <strong>Finish in Shortcuts</strong>. The first time, iPhone asks to allow Health data
+            and sending to FitCoach – tap <strong>Allow</strong> each time.
+            {token ? (
+              <>
+                <IonButton expand="block" href={shortcutConnectUrl(token)}>
+                  Finish in Shortcuts
+                </IonButton>
+                <details className="health-manual">
+                  <summary>Shortcut didn’t open?</summary>
+                  <p>
+                    Copy this code, open the Shortcuts app, run “FitCoach Sync” and paste it when
+                    asked.
+                  </p>
+                  <p className="health-code">{token}</p>
+                  <IonButton size="small" fill="outline" onClick={() => void copy(token, 'Code')}>
+                    Copy code
+                  </IonButton>
+                </details>
+              </>
+            ) : (
+              <IonButton
+                expand="block"
+                fill={hasToken ? 'outline' : 'solid'}
+                disabled={busy}
+                onClick={confirmNew}
+              >
+                {hasToken ? 'Connect again' : 'Connect'}
+              </IonButton>
+            )}
+          </li>
+          <li>
+            <strong>Sync automatically.</strong> Apple doesn’t let apps do this step, so it takes a
+            few taps, once: open Shortcuts → <strong>Automation</strong> → <strong>+</strong> →{' '}
+            <strong>Time of Day</strong> → set <strong>10:00 PM</strong>, Daily →{' '}
+            <strong>Run Immediately</strong> → Next → choose <strong>FitCoach Sync</strong>. Then do
+            the same again for <strong>7:00 AM</strong> (it catches the end of the previous day).
+            <IonButton expand="block" fill="outline" href="shortcuts://">
+              Open Shortcuts
+            </IonButton>
           </li>
         </ol>
       </IonCardContent>

@@ -68,3 +68,13 @@
 .burn-last-sync {
   margin: 8px 0 0;
 }
+.health-steps li ion-button {
+  margin-top: 8px;
+}
+.health-manual {
+  margin-top: 8px;
+}
+.health-manual summary {
+  color: var(--ion-color-primary-shade);
+  cursor: pointer;
+}
