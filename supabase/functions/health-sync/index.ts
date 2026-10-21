@@ -112,6 +112,17 @@ serveJson(async (req) => {
     throw new HttpError(429, 'Too many syncs today – try again tomorrow', 'rate_limited');
   }
 
+  // Nothing at all for the day (Shortcut found no samples) – don't overwrite real data with 0s.
+  if (
+    b.active_calories === 0 &&
+    !b.resting_calories &&
+    !b.steps &&
+    !b.sleep_minutes &&
+    !b.worn_hours?.length
+  ) {
+    return { saved: null, skipped: date, reason: 'No Apple Health data for this day' };
+  }
+
   const row = {
     client_id: profile.id,
     activity_date: date,
