@@ -17,6 +17,7 @@ import { useLatestWeight } from '../profile/api';
 import { useWorkoutLogs } from '../workouts/api';
 import { useActivityDay, useSaveManualActivity } from './api';
 import { dayFraction, formatSleep, resolveBurn } from './model';
+import { LastSync } from './LastSync';
 import './activity.css';
 
 /**
@@ -130,6 +131,8 @@ export function BurnCard({
             {burn.sleepMinutes !== null ? `Sleep ${formatSleep(burn.sleepMinutes)}` : ''}
           </p>
         )}
+
+        <LastSync clientId={client.id} className="burn-muted burn-last-sync" />
 
         {editable && !burn.hasDeviceData && (
           <div className="burn-manual">

@@ -92,3 +92,24 @@ export function useSaveManualActivity(clientId: string | undefined) {
       result === 'saved' ? qc.invalidateQueries({ queryKey: ['activity'] }) : undefined,
   });
 }
+
+/** When this person's phone (Apple Health / Health Connect) last sent activity, or null. */
+export function useLastSync(clientId: string | undefined) {
+  return useQuery({
+    queryKey: ['activity', 'last-sync', clientId], // refreshed with every activity change
+    refetchOnWindowFocus: true, // e.g. back from the Shortcuts app
+    enabled: Boolean(clientId),
+    queryFn: async (): Promise<{ at: string; source: string } | null> => {
+      const { data, error } = await supabase
+        .from('activity_daily')
+        .select('updated_at, source')
+        .eq('client_id', clientId!)
+        .in('source', ['apple_shortcut', 'health_connect'])
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? { at: data.updated_at, source: data.source } : null;
+    },
+  });
+}

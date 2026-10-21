@@ -33,6 +33,7 @@ import {
   syncHealthConnect,
   type HcState,
 } from './healthConnect';
+import { LastSync } from './LastSync';
 import './activity.css';
 
 const SYNC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/health-sync`;
@@ -261,6 +262,7 @@ function IPhoneSection() {
         <IonCardTitle>iPhone (Apple Health)</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
+        {profile && <LastSync clientId={profile.id} />}
         <p>
           An Apple Shortcut sends your Apple Health numbers to FitCoach every night. You set it up
           once (about 3 minutes).

@@ -32,6 +32,7 @@ import { ClientRemindersTab } from './ClientRemindersTab';
 import { ProgressView } from '../progress/ProgressView';
 import { ClientSummaryTab } from './ClientSummaryTab';
 import { ClientWorkoutsTab } from './ClientWorkoutsTab';
+import { LastSync } from '../activity/LastSync';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
 
@@ -133,6 +134,7 @@ function Overview({ client }: { client: Profile }) {
           </p>
         </IonText>
       )}
+      <LastSync clientId={client.id} className="trainer-note" />
       <TargetsCard
         target={currentTarget(targets.data, client.timezone)}
         upcoming={upcomingTarget(targets.data, client.timezone)}
