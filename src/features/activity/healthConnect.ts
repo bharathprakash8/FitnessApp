@@ -40,6 +40,14 @@ export function lastHealthSync(): Date | null {
   }
 }
 
+/** A readable message from whatever the plugin or the server threw. */
+export function errorText(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === 'object' && 'message' in e)
+    return String((e as { message: unknown }).message);
+  return String(e);
+}
+
 const localDate = (iso: string, timeZone: string) =>
   new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(iso));
 
@@ -102,12 +110,23 @@ export async function syncHealthConnect(clientId: string, timeZone: string): Pro
   const start = new Date(end.getTime() - SYNC_DAYS * 86400000);
   start.setHours(0, 0, 0, 0);
 
-  const [active, total, steps, worn] = await Promise.all([
-    dailySums('calories', start, end, timeZone),
-    dailySums('totalCalories', start, end, timeZone),
-    dailySums('steps', start, end, timeZone),
-    wornHours(start, end, timeZone),
-  ]);
+  // Each reading on its own: one refused or unsupported type must not stop the rest.
+  const problems: string[] = [];
+  const safeSums = async (type: HealthDataType) => {
+    try {
+      return await dailySums(type, start, end, timeZone);
+    } catch (e) {
+      problems.push(`${type}: ${errorText(e)}`);
+      return new Map<string, number>();
+    }
+  };
+  const active = await safeSums('calories');
+  const total = await safeSums('totalCalories');
+  const steps = await safeSums('steps');
+  const worn = await wornHours(start, end, timeZone);
+  if (problems.length === 3) {
+    throw new Error(`Health Connect refused the readings – ${problems.join('; ')}`);
+  }
 
   // Sleep counts towards the day you wake up.
   const sleep = new Map<string, number>();
@@ -149,7 +168,11 @@ export async function syncHealthConnect(clientId: string, timeZone: string): Pro
       source: 'health_connect',
     });
   }
-  await upsertActivity(rows);
+  try {
+    await upsertActivity(rows);
+  } catch (e) {
+    throw new Error(`Couldn't save to FitCoach – ${errorText(e)}`, { cause: e });
+  }
   try {
     localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
   } catch {

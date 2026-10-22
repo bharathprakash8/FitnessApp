@@ -30,6 +30,7 @@ import {
   healthConnectState,
   lastHealthSync,
   openHealthConnectSettings,
+  errorText,
   syncHealthConnect,
   type HcState,
 } from './healthConnect';
@@ -84,8 +85,22 @@ function AndroidSection() {
 
   useEffect(refresh, [refresh]);
 
+  // The real reason a sync failed, shown on the page (so it can be reported).
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const failed = (e: unknown) => {
+    const text = navigator.onLine ? errorText(e) : 'No internet connection';
+    setSyncError(text);
+    void toast({
+      message: `Sync failed: ${text}`,
+      duration: 4000,
+      color: 'danger',
+      position: 'top',
+    });
+  };
+
   async function connect() {
     setBusy(true);
+    setSyncError(null);
     try {
       const ok = await connectHealthConnect();
       if (ok && profile) {
@@ -104,13 +119,8 @@ function AndroidSection() {
           position: 'top',
         });
       }
-    } catch {
-      void toast({
-        message: 'Could not connect to Health Connect',
-        duration: 2500,
-        color: 'danger',
-        position: 'top',
-      });
+    } catch (e) {
+      failed(e);
     } finally {
       setBusy(false);
       refresh();
@@ -120,17 +130,13 @@ function AndroidSection() {
   async function syncNow() {
     if (!profile) return;
     setBusy(true);
+    setSyncError(null);
     try {
       const days = await syncHealthConnect(profile.id, profile.timezone);
       await qc.invalidateQueries({ queryKey: ['activity'] });
       void toast({ message: `${days} day(s) synced`, duration: 1500, position: 'top' });
-    } catch {
-      void toast({
-        message: 'Sync failed – check your internet',
-        duration: 2500,
-        color: 'danger',
-        position: 'top',
-      });
+    } catch (e) {
+      failed(e);
     } finally {
       setBusy(false);
     }
@@ -172,14 +178,25 @@ function AndroidSection() {
         ) : (
           <>
             <p>
-              Allow FitCoach to <strong>read</strong> active calories, total calories, steps and
-              sleep. Your fitness app or watch (e.g. Google Fit, Samsung Health, Fitbit) must also
-              share its data with Health Connect.
+              Allow FitCoach to <strong>read</strong> active calories, total calories, steps, sleep
+              and heart rate (only used to see when a watch was worn). Your fitness app or watch
+              (e.g. Google Fit, Samsung Health, Fitbit) must also share its data with Health
+              Connect.
             </p>
             <IonButton expand="block" disabled={busy} onClick={() => void connect()}>
               {busy ? 'Connecting…' : 'Connect Health Connect'}
             </IonButton>
           </>
+        )}
+        {syncError && (
+          <IonText color="danger">
+            <p className="health-error">
+              <strong>Sync failed:</strong> {syncError}
+              <br />
+              Check Manage permissions (allow all), then Sync now. If it keeps failing, send a
+              screenshot of this message to your trainer.
+            </p>
+          </IonText>
         )}
       </IonCardContent>
     </IonCard>
