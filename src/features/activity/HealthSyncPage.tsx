@@ -98,6 +98,19 @@ function AndroidSection() {
     });
   };
 
+  const [noData, setNoData] = useState(false);
+  function reportDays(days: number) {
+    setNoData(days === 0);
+    void toast({
+      message:
+        days === 0
+          ? 'Connected – but Health Connect has no activity yet (see below)'
+          : `${days} day${days === 1 ? '' : 's'} synced`,
+      duration: days === 0 ? 3500 : 1500,
+      position: 'top',
+    });
+  }
+
   async function connect() {
     setBusy(true);
     setSyncError(null);
@@ -106,11 +119,7 @@ function AndroidSection() {
       if (ok && profile) {
         const days = await syncHealthConnect(profile.id, profile.timezone);
         await qc.invalidateQueries({ queryKey: ['activity'] });
-        void toast({
-          message: `Connected – ${days} day(s) synced`,
-          duration: 2000,
-          position: 'top',
-        });
+        reportDays(days);
       } else {
         void toast({
           message: 'FitCoach needs at least "Active calories burned" to show your burn.',
@@ -134,7 +143,7 @@ function AndroidSection() {
     try {
       const days = await syncHealthConnect(profile.id, profile.timezone);
       await qc.invalidateQueries({ queryKey: ['activity'] });
-      void toast({ message: `${days} day(s) synced`, duration: 1500, position: 'top' });
+      reportDays(days);
     } catch (e) {
       failed(e);
     } finally {
@@ -187,6 +196,16 @@ function AndroidSection() {
               {busy ? 'Connecting…' : 'Connect Health Connect'}
             </IonButton>
           </>
+        )}
+        {noData && !syncError && (
+          <IonText color="warning">
+            <p className="health-error">
+              <strong>No activity in Health Connect yet.</strong> Health Connect only stores data –
+              an app has to record it. Install <strong>Google Fit</strong> (or your watch or band's
+              app), turn on activity tracking and its <strong>Health Connect</strong> sharing, then
+              tap Sync now. Until then FitCoach estimates your burn.
+            </p>
+          </IonText>
         )}
         {syncError && (
           <IonText color="danger">
