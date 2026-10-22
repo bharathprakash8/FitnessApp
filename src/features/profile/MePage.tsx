@@ -18,6 +18,7 @@ import { useState, type FormEvent } from 'react';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
+import { AppVersion } from '../../components/AppVersion';
 import { CLIENT_TABS, TRAINER_TABS } from '../../components/tabs';
 import { DetailRow } from '../../components/DetailRow';
 import { ageFrom, formatDate } from '../../lib/dates';
@@ -74,6 +75,7 @@ export function MePage() {
           >
             Log out
           </IonButton>
+          <AppVersion />
         </div>
       </IonContent>
       <IonFooter>

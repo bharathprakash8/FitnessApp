@@ -7,6 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registered in main.tsx – web only. In the Android app the old cached screens would
+      // keep running after an APK update (the APK already contains every screen).
+      injectRegister: false,
       // Our own service worker (src/sw.ts): app-shell caching + push notifications.
       strategies: 'injectManifest',
       srcDir: 'src',

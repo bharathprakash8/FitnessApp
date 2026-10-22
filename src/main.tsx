@@ -17,12 +17,25 @@ import './theme/variables.css';
 import './theme/app.css';
 import './theme/design.css';
 
+import { registerSW } from 'virtual:pwa-register';
+
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { flushQueue, onSynced, startAutoSync } from './lib/offlineQueue';
+import { isAndroidApp } from './lib/platform';
 import { persistOptions, queryClient } from './lib/queryClient';
 
 setupIonicReact();
+
+if (isAndroidApp) {
+  // Older APKs registered the web app's offline cache; remove it so updates show at once.
+  void navigator.serviceWorker?.getRegistrations().then(async (regs) => {
+    await Promise.all(regs.map((r) => r.unregister()));
+    if (regs.length && navigator.serviceWorker.controller) window.location.reload();
+  });
+} else {
+  registerSW({ immediate: true });
+}
 
 // Saves made offline are sent when the connection is back; then the screens refresh.
 onSynced(() => void queryClient.invalidateQueries());

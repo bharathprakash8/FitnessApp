@@ -209,3 +209,10 @@ h2 {
     background: #26312c;
   }
 }
+
+.app-version {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--fc-muted);
+  margin-top: 16px;
+}
