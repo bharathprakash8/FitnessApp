@@ -24,9 +24,10 @@ import { useAuth } from '../auth/useAuth';
 import { useAdminUsers } from './api';
 import { AppHealthTab } from './AppHealthTab';
 import { AssignmentsView } from './AssignmentsView';
+import { ProblemsTab } from './ProblemsTab';
 import { UsersList } from './UsersList';
 
-type Tab = 'users' | 'assignments' | 'health';
+type Tab = 'users' | 'problems' | 'assignments' | 'health';
 
 export function AdminHomePage() {
   const { signOut } = useAuth();
@@ -63,6 +64,9 @@ export function AdminHomePage() {
             <IonSegmentButton value="users">
               <IonLabel>Users</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="problems">
+              <IonLabel>Problems</IonLabel>
+            </IonSegmentButton>
             <IonSegmentButton value="assignments">
               <IonLabel>Assignments</IonLabel>
             </IonSegmentButton>
@@ -86,6 +90,8 @@ export function AdminHomePage() {
 
         {tab === 'users' ? (
           <UsersList query={users} />
+        ) : tab === 'problems' ? (
+          <ProblemsTab users={users.data ?? []} />
         ) : tab === 'assignments' ? (
           <AssignmentsView query={users} />
         ) : (

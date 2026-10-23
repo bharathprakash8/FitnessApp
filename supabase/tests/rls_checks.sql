@@ -1117,6 +1117,62 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Support tools: problem log, client info, admin log-in list, diagnostics (23 Oct 2026)
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.impersonation_log (admin_id, user_id) values
+  ('00000000-0000-4000-a000-00000000000a', '00000000-0000-4000-a000-0000000000c1');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  insert into public.app_errors (user_id, kind, message) values ('00000000-0000-4000-a000-0000000000c1', 'api', 'test');
+  begin
+    insert into public.app_errors (user_id, kind, message) values ('00000000-0000-4000-a000-0000000000c2', 'api', 'fake');
+    raise exception 'FAIL: client logged an error as someone else';
+  exception when insufficient_privilege then null;
+  end;
+  if (select count(*) from public.app_errors) <> 0 then
+    raise exception 'FAIL: client can read the problem log';
+  end if;
+  if (select count(*) from public.impersonation_log) <> 0 then
+    raise exception 'FAIL: client can see admin log-ins';
+  end if;
+  perform public.touch_client_info('9.9', 'android', 'test phone');
+  begin
+    perform public.admin_user_diagnostics('00000000-0000-4000-a000-0000000000c1');
+    raise exception 'FAIL: client can run admin diagnostics';
+  exception when insufficient_privilege then null;
+  end;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select count(*) from public.app_errors) <> 0 or (select count(*) from public.impersonation_log) <> 0 then
+    raise exception 'FAIL: trainer can read the problem log or admin log-ins';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);
+do $$
+declare n int; d jsonb;
+begin
+  if (select count(*) from public.app_errors where message = 'test') <> 1 then
+    raise exception 'FAIL: admin does not see the logged error';
+  end if;
+  update public.app_errors set resolved = true, resolved_at = now() where message = 'test';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: admin cannot resolve an error'; end if;
+  d := public.admin_user_diagnostics('00000000-0000-4000-a000-0000000000c1');
+  if d->>'app_version' <> '9.9' or jsonb_array_length(d->'admin_logins') <> 1 then
+    raise exception 'FAIL: diagnostics missing app version or admin log-ins: %', d;
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Milestone 10: water (habits_daily) and progress photos
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);

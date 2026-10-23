@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import type { Json, TablesInsert, TablesUpdate } from '../../lib/database.types';
 import { enqueue, isNetworkError, useQueuedItems } from '../../lib/offlineQueue';
+import { logError } from '../../lib/errorLog';
 import { supabase } from '../../lib/supabase';
 import type { MealItem, MealLog, MealType } from './model';
 
@@ -133,8 +134,13 @@ export async function analyzeMeal(input: {
       const payload = (await (error.context as Response).json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
+      void logError('ai', payload?.error?.message ?? 'analyze-meal failed', {
+        code: (payload?.error as { code?: string } | undefined)?.code,
+        input: input.photo_path ? 'photo' : input.follow_up ? 'follow-up' : 'text',
+      });
       throw new Error(payload?.error?.message ?? 'The AI could not read this meal.');
     }
+    void logError('ai', error, { input: input.photo_path ? 'photo' : 'text' });
     throw new Error('Could not reach the server. Check your connection and try again.');
   }
   return (data as { data: Analysis }).data;

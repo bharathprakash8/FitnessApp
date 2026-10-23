@@ -35,6 +35,8 @@ import {
   type HcState,
 } from './healthConnect';
 import { LastSync } from './LastSync';
+import { logError } from '../../lib/errorLog';
+import { impersonatedName, isImpersonating } from '../../lib/impersonation';
 import { HealthAccessHelp } from './HealthAccessHelp';
 import { rememberConnect, useIphoneSyncStuck } from './syncStuck';
 import { SHORTCUT_RUN_URL, shortcutConnectUrl } from './shortcut';
@@ -62,7 +64,17 @@ export function HealthSyncPage() {
             FitCoach reads <strong>calories burnt, steps and sleep</strong> from your phone so your
             trainer can see your full picture. It never writes to your health data.
           </p>
-          {isAndroidApp ? <AndroidSection /> : <IPhoneSection />}
+          {isImpersonating() ? (
+            <p className="health-error">
+              You're logged in as {impersonatedName()}. Health sync uses the phone's own health
+              data, so connecting or syncing is switched off here – it would send your data to their
+              account.
+            </p>
+          ) : isAndroidApp ? (
+            <AndroidSection />
+          ) : (
+            <IPhoneSection />
+          )}
           <p className="burn-muted">
             No phone data? You can always type your active calories on the Today screen.{' '}
             <a href="/privacy.html" target="_blank" rel="noopener">
@@ -90,6 +102,7 @@ function AndroidSection() {
   const failed = (e: unknown) => {
     const text = navigator.onLine ? errorText(e) : 'No internet connection';
     setSyncError(text);
+    void logError('sync', e, { where: 'health-connect' });
     void toast({
       message: `Sync failed: ${text}`,
       duration: 4000,
@@ -208,12 +221,17 @@ function AndroidSection() {
           </IonText>
         )}
         {syncError && (
+          <IonButton size="small" fill="outline" routerLink="/me/report">
+            Report a problem
+          </IonButton>
+        )}
+        {syncError && (
           <IonText color="danger">
             <p className="health-error">
               <strong>Sync failed:</strong> {syncError}
               <br />
-              Check Manage permissions (allow all), then Sync now. If it keeps failing, send a
-              screenshot of this message to your trainer.
+              Check Manage permissions (allow all), then Sync now. If it keeps failing, tap Report a
+              problem below.
             </p>
           </IonText>
         )}

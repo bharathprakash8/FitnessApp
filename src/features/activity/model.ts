@@ -16,6 +16,14 @@ function metFor(log: LogWithExercise): number {
   const type = log.exercises.log_type;
   if (type === 'weights') return 5;
   if (type === 'bodyweight') return 4;
+  if (log.exercises.muscle_group === 'Yoga') {
+    // Sun salutations are brisk; holding poses, breathing and relaxation are light.
+    return /surya|sun salutation/i.test(log.exercises.name)
+      ? 3.8
+      : /anulom|breath|shavasana|relax/i.test(log.exercises.name)
+        ? 1.3
+        : 2.5;
+  }
   return log.exercises.muscle_group === 'Cardio' ? 7 : 3.5;
 }
 

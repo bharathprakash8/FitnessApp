@@ -1,5 +1,6 @@
 // Turning push notifications on/off for this device and registering its FCM token.
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { isImpersonating } from '../../lib/impersonation';
 import { PushNotifications } from '@capacitor/push-notifications';
 
 import { firebaseApp, firebaseConfigured, VAPID_KEY } from '../../lib/firebase';
@@ -62,6 +63,9 @@ function rememberedToken(): string | null {
 }
 
 async function saveToken(token: string, platform: 'web' | 'android') {
+  // Admin logged in as someone: never link this device to their account (their
+  // notifications would come to the admin's phone).
+  if (isImpersonating()) return;
   const { error } = await supabase.rpc('claim_push_token', { t: token, p: platform });
   if (error) throw error;
   rememberToken(token);
@@ -105,6 +109,9 @@ async function webToken(): Promise<string> {
 
 /** Ask for permission (must be called from a tap) and register this device. */
 export async function enablePush(): Promise<PushPermission> {
+  if (isImpersonating()) {
+    throw new Error("Notifications can't be turned on while you're logged in as someone else.");
+  }
   if (isAndroidApp) {
     const { receive } = await PushNotifications.requestPermissions();
     if (receive !== 'granted') return receive === 'denied' ? 'denied' : 'prompt';

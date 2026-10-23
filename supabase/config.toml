@@ -461,3 +461,6 @@ verify_jwt = false
 
 [functions.coach-ai]
 verify_jwt = false
+
+[functions.support]
+verify_jwt = false

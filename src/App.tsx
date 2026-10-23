@@ -3,6 +3,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import type { ReactElement } from 'react';
 import { Route, matchPath, useLocation } from 'react-router-dom';
 
+import { ImpersonationBar } from './components/ImpersonationBar';
 import { StuckPageRescue } from './components/StuckPageRescue';
 import { HealthAutoSync } from './features/activity/HealthAutoSync';
 import { HealthSyncPage } from './features/activity/HealthSyncPage';
@@ -41,6 +42,7 @@ import { WorkoutDayPage } from './features/workouts/WorkoutDayPage';
 import { WorkoutHistoryPage } from './features/workouts/WorkoutHistoryPage';
 import { WorkoutsPage } from './features/workouts/WorkoutsPage';
 import { StatsPage } from './features/stats/StatsPage';
+import { ReportProblemPage } from './features/support/ReportProblemPage';
 import { MealIdeasPage } from './features/mealIdeas/MealIdeasPage';
 
 const KNOWN_PATHS = [
@@ -81,6 +83,7 @@ const KNOWN_PATHS = [
   '/me/details',
   '/me/health',
   '/me/notifications',
+  '/me/report',
 ];
 
 /**
@@ -173,9 +176,11 @@ export function App() {
             <Route path="/me/progress" element={guarded(SELF, <ProgressPage />)} />
             <Route path="/me/progress/new" element={guarded(SELF, <AddMeasurementPage />)} />
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
+            <Route path="/me/report" element={guarded(SELF, <ReportProblemPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
           <StuckPageRescue />
+          <ImpersonationBar />
           <PushAutoRegister />
         </IonReactRouter>
       </AuthProvider>

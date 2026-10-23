@@ -1,11 +1,22 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-client';
 import { del, get, set } from 'idb-keyval';
 
 const WEEK = 7 * 24 * 60 * 60_000;
 
+// Failed loads and saves go to the problem log (lib/errorLog.ts – imported lazily to keep
+// this file free of the Supabase client at start-up).
+const report = (kind: 'api', e: unknown, key: unknown) =>
+  void import('./errorLog').then((m) =>
+    m.logError(kind, e, { key: JSON.stringify(key).slice(0, 300) }),
+  );
+
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: (e, q) => report('api', e, q.queryKey) }),
+  mutationCache: new MutationCache({
+    onError: (e, _v, _c, m) => report('api', e, m.options.mutationKey ?? 'save'),
+  }),
   defaultOptions: {
     queries: {
       staleTime: 60_000,

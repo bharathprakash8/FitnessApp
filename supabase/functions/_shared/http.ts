@@ -1,4 +1,5 @@
 // CORS and JSON helpers shared by all Edge Functions.
+import { recordServerProblem } from './problems.ts';
 
 // Comma-separated list in the APP_ORIGINS secret; localhost is always allowed for development.
 const allowedOrigins = new Set(
@@ -58,10 +59,17 @@ export async function handleJson(
     return json(req, 200, { data });
   } catch (err) {
     if (err instanceof HttpError) {
+      // Server faults and AI trouble go to the admin's problem list; everyday refusals
+      // (limits, permissions, bad input) don't.
+      if (err.status >= 500 || err.code.startsWith('ai_')) {
+        await recordServerProblem(req, err.status, err.code, err.message);
+      }
       return json(req, err.status, { error: { code: err.code, message: err.message } });
     }
     // Log without request bodies or secrets.
-    console.error('Unhandled error:', err instanceof Error ? err.message : String(err));
+    const text = err instanceof Error ? err.message : String(err);
+    console.error('Unhandled error:', text);
+    await recordServerProblem(req, 500, 'internal', text);
     return json(req, 500, { error: { code: 'internal', message: 'Something went wrong' } });
   }
 }

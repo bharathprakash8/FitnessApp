@@ -145,6 +145,62 @@ export type Database = {
           },
         ]
       }
+      app_errors: {
+        Row: {
+          app_version: string | null
+          created_at: string
+          details: Json
+          device: string | null
+          id: string
+          kind: string
+          message: string
+          platform: string | null
+          resolved: boolean
+          resolved_at: string | null
+          screen: string | null
+          screenshot_path: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string
+          details?: Json
+          device?: string | null
+          id?: string
+          kind: string
+          message: string
+          platform?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          screen?: string | null
+          screenshot_path?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string
+          details?: Json
+          device?: string | null
+          id?: string
+          kind?: string
+          message?: string
+          platform?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          screen?: string | null
+          screenshot_path?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_errors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           key: string
@@ -296,6 +352,42 @@ export type Database = {
           {
             foreignKeyName: "habits_daily_client_id_fkey"
             columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      impersonation_log: {
+        Row: {
+          admin_id: string | null
+          id: string
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          id?: string
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          id?: string
+          started_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impersonation_log_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impersonation_log_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -696,6 +788,10 @@ export type Database = {
           id: string
           injuries: string | null
           is_active: boolean
+          last_app_version: string | null
+          last_device: string | null
+          last_platform: string | null
+          last_seen_at: string | null
           onboarded_at: string | null
           phone: string | null
           role: string
@@ -718,6 +814,10 @@ export type Database = {
           id: string
           injuries?: string | null
           is_active?: boolean
+          last_app_version?: string | null
+          last_device?: string | null
+          last_platform?: string | null
+          last_seen_at?: string | null
           onboarded_at?: string | null
           phone?: string | null
           role?: string
@@ -740,6 +840,10 @@ export type Database = {
           id?: string
           injuries?: string | null
           is_active?: boolean
+          last_app_version?: string | null
+          last_device?: string | null
+          last_platform?: string | null
+          last_seen_at?: string | null
           onboarded_at?: string | null
           phone?: string | null
           role?: string
@@ -1427,6 +1531,7 @@ export type Database = {
     }
     Functions: {
       admin_app_health: { Args: never; Returns: Json }
+      admin_user_diagnostics: { Args: { uid: string }; Returns: Json }
       app_role: { Args: never; Returns: string }
       bump_ai_usage: {
         Args: { day: string; feat: string; uid: string }
@@ -1466,6 +1571,10 @@ export type Database = {
       session_owner: { Args: { s: string }; Returns: string }
       set_foods_to_avoid: {
         Args: { foods: string; person: string }
+        Returns: undefined
+      }
+      touch_client_info: {
+        Args: { app_version: string; device: string; platform: string }
         Returns: undefined
       }
       tracks_self: { Args: never; Returns: boolean }

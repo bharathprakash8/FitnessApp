@@ -216,3 +216,31 @@ h2 {
   color: var(--fc-muted);
   margin-top: 16px;
 }
+
+/* Admin logged in as someone else (components/ImpersonationBar.tsx) */
+.impersonation-bar {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  bottom: calc(70px + env(safe-area-inset-bottom));
+  z-index: 30000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #e8590c;
+  color: #fff;
+  font-size: 0.85rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.impersonation-bar button {
+  background: #fff;
+  color: #c2410c;
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}

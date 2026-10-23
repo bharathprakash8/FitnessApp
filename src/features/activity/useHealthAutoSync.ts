@@ -2,6 +2,7 @@ import { App } from '@capacitor/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+import { isImpersonating } from '../../lib/impersonation';
 import { isAndroidApp } from '../../lib/platform';
 import type { Profile } from '../auth/roles';
 import { healthConnectState, syncHealthConnect } from './healthConnect';
@@ -17,7 +18,8 @@ export function useHealthAutoSync(profile: Profile | null) {
   const tz = profile?.timezone ?? 'Asia/Kolkata';
 
   useEffect(() => {
-    if (!isAndroidApp || !clientId) return;
+    // Admin logged in as someone: this phone's health data isn't theirs.
+    if (!isAndroidApp || !clientId || isImpersonating()) return;
     let busy = false;
     const run = async () => {
       if (busy) return;

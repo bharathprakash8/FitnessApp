@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
+import { logError } from '../lib/errorLog';
+
 const RELOAD_KEY = 'fitcoach-reloaded-after-error';
 
 /**
@@ -16,6 +18,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('FitCoach crashed', error, info.componentStack);
+    void logError('crash', error, { component: info.componentStack?.slice(0, 2000) });
     const staleCode = /dynamically imported module|Importing a module script failed|chunk/i.test(
       error.message,
     );
@@ -40,6 +43,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
           Reload
         </button>
         <a href="/">Go to the home screen</a>
+        <a href="/me/report">Report this problem</a>
         <p className="crash-detail">{this.state.error.message}</p>
       </div>
     );

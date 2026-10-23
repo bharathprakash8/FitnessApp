@@ -69,8 +69,16 @@ export function MePage() {
           <IonButton
             expand="block"
             fill="outline"
+            style={{ marginTop: 24 }}
+            routerLink="/me/report"
+          >
+            Report a problem
+          </IonButton>
+          <IonButton
+            expand="block"
+            fill="outline"
             color="medium"
-            style={{ marginTop: 32 }}
+            style={{ marginTop: 16 }}
             onClick={() => void signOut()}
           >
             Log out

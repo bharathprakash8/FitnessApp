@@ -22,10 +22,15 @@ import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { flushQueue, onSynced, startAutoSync } from './lib/offlineQueue';
+import { logError } from './lib/errorLog';
 import { isAndroidApp } from './lib/platform';
 import { persistOptions, queryClient } from './lib/queryClient';
 
 setupIonicReact();
+
+// Anything that slips through is still recorded in the problem log.
+window.addEventListener('error', (e) => void logError('js', e.error ?? e.message));
+window.addEventListener('unhandledrejection', (e) => void logError('js', e.reason));
 
 if (isAndroidApp) {
   // Older APKs registered the web app's offline cache; remove it so updates show at once.

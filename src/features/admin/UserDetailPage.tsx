@@ -36,6 +36,7 @@ import {
   type AdminUser,
 } from './api';
 import { QueryState } from './QueryState';
+import { UserSupport } from './UserSupport';
 import { RoleSegment } from './RoleSegment';
 import { TrainerSelect } from './TrainerSelect';
 import { downloadBlob, exportUserData } from './exportUser';
@@ -65,11 +66,14 @@ export function UserDetailPage() {
           {(all) =>
             user ? (
               // key: reset the form when switching users or after a save refreshes the data
-              <UserEditor
-                key={`${user.id}:${user.role}:${user.trainer_id}`}
-                user={user}
-                all={all}
-              />
+              <>
+                <UserSupport user={user} all={all} />
+                <UserEditor
+                  key={`${user.id}:${user.role}:${user.trainer_id}`}
+                  user={user}
+                  all={all}
+                />
+              </>
             ) : (
               <IonText color="medium">
                 <p className="ion-text-center">This user no longer exists.</p>

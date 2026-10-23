@@ -1,5 +1,9 @@
 // admin-users: everything the Admin console does to users. Admin callers only.
-// POST { action: 'create' | 'update' | 'assign' | 'deactivate' | 'reactivate' | 'delete', ... }
+// POST { action: 'create' | 'update' | 'assign' | 'deactivate' | 'reactivate' | 'delete' |
+//        'purge' | 'impersonate', ... }
+// impersonate: a session for an active client/trainer so the admin can use the app as them
+// (never another admin). Recorded in impersonation_log (admin-only); the person isn't told.
+import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
 import { adminClient, requireAdmin } from '../_shared/auth.ts';
@@ -40,6 +44,8 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('delete'), user_id: id }),
   // Privacy request: delete the person and everything about them (photos too).
   z.object({ action: z.literal('purge'), user_id: id }),
+  // Admin support: log in as this person.
+  z.object({ action: z.literal('impersonate'), user_id: id }),
 ]);
 
 type Admin = ReturnType<typeof adminClient>;
@@ -292,6 +298,36 @@ serveJson(async (req) => {
       const { error } = await db.auth.admin.deleteUser(body.user_id);
       if (error) throw error;
       return { id: body.user_id, deleted: true };
+    }
+    case 'impersonate': {
+      const target = await getProfile(db, body.user_id);
+      if (target.role === 'admin') {
+        throw new HttpError(403, "You can't log in as another admin", 'forbidden');
+      }
+      if (!target.is_active) {
+        throw new HttpError(409, 'This account is deactivated – reactivate it first', 'inactive');
+      }
+      const { data: link, error: linkErr } = await db.auth.admin.generateLink({
+        type: 'magiclink',
+        email: target.email,
+      });
+      if (linkErr) throw linkErr;
+      const anon = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data: s, error: vErr } = await anon.auth.verifyOtp({
+        token_hash: link.properties.hashed_token,
+        type: 'magiclink',
+      });
+      if (vErr || !s.session) throw vErr ?? new Error('No session');
+      const { error: logErr } = await db
+        .from('impersonation_log')
+        .insert({ admin_id: caller.id, user_id: target.id });
+      if (logErr) throw logErr;
+      return {
+        access_token: s.session.access_token,
+        refresh_token: s.session.refresh_token,
+      };
     }
     case 'purge': {
       if (body.user_id === caller.id) {

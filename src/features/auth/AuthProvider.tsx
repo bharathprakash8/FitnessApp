@@ -2,6 +2,8 @@ import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { clearPersistedCache } from '../../lib/queryClient';
+import { touchClientInfo } from '../../lib/errorLog';
+import { forgetImpersonation, isImpersonating, stopImpersonation } from '../../lib/impersonation';
 import { supabase } from '../../lib/supabase';
 import { useProfile } from './api';
 import { AuthContext, type AuthState, type AuthStatus } from './authContext';
@@ -28,7 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const userId = session?.user.id;
   const profileQuery = useProfile(userId);
 
+  // Which app version this person uses – for the admin's Diagnostics page.
+  useEffect(() => {
+    if (userId) void touchClientInfo();
+  }, [userId]);
+
   const signOut = useCallback(async () => {
+    // Logged in as someone else: go back to the admin account. (A normal sign-out would end
+    // that person's sessions on their own phone too.)
+    if (isImpersonating()) {
+      const back = await stopImpersonation();
+      window.location.href = back ? '/admin' : '/login';
+      return;
+    }
+    forgetImpersonation();
     await supabase.auth.signOut();
     // Also forgets the data kept on this phone for offline use.
     await clearPersistedCache();
