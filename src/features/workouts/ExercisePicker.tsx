@@ -15,6 +15,7 @@ import { useState } from 'react';
 
 import { useExercises } from './api';
 import type { Exercise } from './model';
+import { useT } from '../../i18n/i18n';
 
 /** Modal list of exercises to add to a plan day. */
 export function ExercisePicker({
@@ -32,6 +33,7 @@ export function ExercisePicker({
   onPick: (exercise: Exercise) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const exercises = useExercises();
   const [search, setSearch] = useState('');
   const term = search.trim().toLowerCase();
@@ -46,16 +48,16 @@ export function ExercisePicker({
     <IonModal isOpen={isOpen} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Add exercise</IonTitle>
+          <IonTitle>{t('Add exercise')}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={onClose}>Close</IonButton>
+            <IonButton onClick={onClose}>{t('Close')}</IonButton>
           </IonButtons>
         </IonToolbar>
         <IonToolbar>
           <IonSearchbar
             value={search}
             onIonInput={(e) => setSearch(String(e.detail.value ?? ''))}
-            placeholder="Search exercises"
+            placeholder={t('Search exercises')}
             debounce={100}
           />
         </IonToolbar>

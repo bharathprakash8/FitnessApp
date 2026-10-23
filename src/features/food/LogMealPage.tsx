@@ -27,11 +27,13 @@ import { analyzeMeal, itemsJson, uploadMealPhoto, useSaveMeal, type Analysis } f
 import { MealEditor, type MealEditorValues } from './MealEditor';
 import { localToIso, mealTypeForHour, nowIn, totalsOf, type MealSource } from './model';
 import './food.css';
+import { useT } from '../../i18n/i18n';
 
 type Stage = 'input' | 'working' | 'review';
 
 /** Log a meal: photo → AI estimate, text → AI estimate, or manual entry. */
 export function LogMealPage() {
+  const tx = useT();
   const { mode } = useParams<{ mode: string }>();
   const source: MealSource = mode === 'text' ? 'text' : mode === 'manual' ? 'manual' : 'photo';
   const { search } = useLocation();
@@ -153,7 +155,7 @@ export function LogMealPage() {
       router.push('/food', 'back');
     } catch {
       void toast({
-        message: "Couldn't save the meal – check your internet and try again.",
+        message: tx("Couldn't save the meal – check your internet and try again."),
         duration: 3000,
         color: 'danger',
         position: 'top',
@@ -183,21 +185,23 @@ export function LogMealPage() {
           {!online && source !== 'manual' && stage === 'input' && (
             <div className="offline-note">
               <p>
-                You're offline. Photo and text estimates need the internet – you can enter the meal
-                yourself now and it will sync later.
+                {tx(
+                  "You're offline. Photo and text estimates need the internet – you can enter the meal yourself now and it will sync later.",
+                )}
               </p>
               <IonButton size="small" routerLink="/food/new/manual" routerDirection="forward">
-                Enter manually
+                {tx('Enter manually')}
               </IonButton>
             </div>
           )}
-          {preview && <img src={preview} alt="Your meal" className="food-preview" />}
+          {preview && <img src={preview} alt={tx('Your meal')} className="food-preview" />}
 
           {stage === 'input' && source === 'photo' && (
             <>
               <p className="food-muted">
-                Photograph only your food, from above, with everything on the plate visible. Photos
-                are deleted after 7 days.
+                {tx(
+                  'Photograph only your food, from above, with everything on the plate visible. Photos are deleted after 7 days.',
+                )}
               </p>
               <input
                 ref={cameraInput}
@@ -216,7 +220,7 @@ export function LogMealPage() {
               />
               <IonButton expand="block" size="large" onClick={() => cameraInput.current?.click()}>
                 <IonIcon slot="start" icon={camera} />
-                Take photo
+                {tx('Take photo')}
               </IonButton>
               <IonButton
                 expand="block"
@@ -224,7 +228,7 @@ export function LogMealPage() {
                 onClick={() => galleryInput.current?.click()}
               >
                 <IonIcon slot="start" icon={images} />
-                Choose from gallery
+                {tx('Choose from gallery')}
               </IonButton>
             </>
           )}
@@ -233,9 +237,9 @@ export function LogMealPage() {
             <>
               <IonTextarea
                 fill="outline"
-                label="What did you eat?"
+                label={tx('What did you eat?')}
                 labelPlacement="floating"
-                placeholder="e.g. 2 chapati, 1 bowl dal, bhindi sabzi, curd"
+                placeholder={tx('e.g. 2 chapati, 1 bowl dal, bhindi sabzi, curd')}
                 autoGrow
                 rows={3}
                 maxlength={1000}
@@ -248,7 +252,7 @@ export function LogMealPage() {
                 style={{ marginTop: 12 }}
                 onClick={() => void onText()}
               >
-                Estimate calories
+                {tx('Estimate calories')}
               </IonButton>
             </>
           )}
@@ -266,7 +270,7 @@ export function LogMealPage() {
                 <p>{error}</p>
               </IonText>
               <IonButton expand="block" fill="clear" onClick={() => setStage('review')}>
-                Enter it manually instead
+                {tx('Enter it manually instead')}
               </IonButton>
             </>
           )}
@@ -275,7 +279,7 @@ export function LogMealPage() {
             <>
               {analysis && analysis.items.length === 0 && (
                 <IonText color="warning">
-                  <p>No food was recognised. Add the items yourself below.</p>
+                  <p>{tx('No food was recognised. Add the items yourself below.')}</p>
                 </IonText>
               )}
               <MealEditor
@@ -302,7 +306,7 @@ export function LogMealPage() {
               />
               {analysis && (
                 <p className="food-muted ion-text-center">
-                  {analysis.remaining_today} AI estimates left today
+                  {analysis.remaining_today} {tx('AI estimates left today')}
                 </p>
               )}
             </>

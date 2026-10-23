@@ -19,12 +19,14 @@ import { useAcceptConsent, useMyTrainer, useSaveClientDetails } from '../profile
 import { ClientDetailsForm } from '../profile/ClientDetailsForm';
 import { CONSENT_VERSION, consentSections } from './consent';
 import './onboarding.css';
+import { useT } from '../../i18n/i18n';
 
 type Step = 'welcome' | 'consent' | 'details';
 const STEPS: Step[] = ['welcome', 'consent', 'details'];
 
 /** First login for a client: welcome → consent (required) → profile quiz. */
 export function OnboardingPage() {
+  const t = useT();
   const { profile, signOut } = useAuth();
   const trainer = useMyTrainer(profile?.id);
   const acceptConsent = useAcceptConsent(profile, CONSENT_VERSION);
@@ -47,15 +49,15 @@ export function OnboardingPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Welcome to FitCoach</IonTitle>
+          <IonTitle>{t('Welcome to FitCoach')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
             {isTrainer ? (
               <IonButton routerLink="/trainer" routerDirection="root">
-                Not now
+                {t('Not now')}
               </IonButton>
             ) : (
-              <IonButton onClick={() => void signOut()}>Log out</IonButton>
+              <IonButton onClick={() => void signOut()}>{t('Log out')}</IonButton>
             )}
           </IonButtons>
         </IonToolbar>
@@ -67,22 +69,27 @@ export function OnboardingPage() {
           {step === 'welcome' && (
             <>
               <img src="/icon.svg" alt="" className="onboarding-logo" />
-              <h1>Hi{firstName ? ` ${firstName}` : ''}! 👋</h1>
+              <h1>
+                {t('Hi')}
+                {firstName ? ` ${firstName}` : ''}! 👋
+              </h1>
               <p>
                 {isTrainer
-                  ? 'Set up My fitness to log your own meals, workouts and activity, just like your clients do.'
+                  ? t(
+                      'Set up My fitness to log your own meals, workouts and activity, just like your clients do.',
+                    )
                   : `${trainerName === 'your trainer' ? 'Your trainer' : trainerName} will plan your workouts and food targets here, and you'll log your meals, workouts and activity.`}
               </p>
-              <p>It takes about 2 minutes to get started.</p>
+              <p>{t('It takes about 2 minutes to get started.')}</p>
               <IonButton expand="block" size="large" onClick={() => setStep('consent')}>
-                Let's start
+                {t("Let's start")}
               </IonButton>
             </>
           )}
 
           {step === 'consent' && (
             <>
-              <h2>Your privacy and health</h2>
+              <h2>{t('Your privacy and health')}</h2>
               {consentSections(profile.role).map((s) => (
                 <section key={s.title}>
                   <h3>{s.title}</h3>
@@ -100,7 +107,7 @@ export function OnboardingPage() {
                 onIonChange={(e) => setAgreed(e.detail.checked)}
                 className="onboarding-agree"
               >
-                I have read this and I agree
+                {t('I have read this and I agree')}
               </IonCheckbox>
               <IonButton
                 expand="block"
@@ -113,12 +120,12 @@ export function OnboardingPage() {
                     .catch(() => fail('Could not save. Check your connection and try again.'))
                 }
               >
-                {acceptConsent.isPending ? 'Saving…' : 'I agree – continue'}
+                {acceptConsent.isPending ? t('Saving…') : t('I agree – continue')}
               </IonButton>
               <IonText color="medium">
                 <p className="onboarding-small">
-                  If you don't agree, you can't use the app yet. Talk to {trainerName} or the admin
-                  if you have questions.
+                  {t("If you don't agree, you can't use the app yet. Talk to")} {trainerName}{' '}
+                  {t('or the admin if you have questions.')}
                 </p>
               </IonText>
             </>
@@ -126,10 +133,10 @@ export function OnboardingPage() {
 
           {step === 'details' && (
             <>
-              <h2>About you</h2>
+              <h2>{t('About you')}</h2>
               <p>
                 {isTrainer
-                  ? 'This is used to estimate your calories and calories burnt.'
+                  ? t('This is used to estimate your calories and calories burnt.')
                   : `This helps ${trainerName} plan the right targets for you.`}
               </p>
               <ClientDetailsForm

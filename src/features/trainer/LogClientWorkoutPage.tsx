@@ -35,6 +35,7 @@ import { ExercisePicker } from '../workouts/ExercisePicker';
 import type { Exercise, ExerciseSlot } from '../workouts/model';
 import { cachedClient } from './api';
 import './trainer.css';
+import { useT } from '../../i18n/i18n';
 
 const OTHER = 'other';
 
@@ -63,6 +64,7 @@ const quickSlot = (ex: Exercise): ExerciseSlot => ({
  * with the client's watch.
  */
 export function LogClientWorkoutPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const { profile: me } = useAuth();
   const qc = useQueryClient();
@@ -115,7 +117,7 @@ export function LogClientWorkoutPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref={`/trainer/clients/${id}`} />
           </IonButtons>
-          <IonTitle>Log workout</IonTitle>
+          <IonTitle>{t('Log workout')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -132,12 +134,13 @@ export function LogClientWorkoutPage() {
             <IonCard className="trainer-card">
               <IonCardContent>
                 <p className="trainer-note" style={{ marginTop: 0 }}>
-                  For <strong>{name}</strong>. Shown to them as “Logged by trainer”.
+                  {t('For')} <strong>{name}</strong>
+                  {t('. Shown to them as “Logged by trainer”.')}
                 </p>
                 <IonInput
                   fill="outline"
                   type="datetime-local"
-                  label="When did the workout start?"
+                  label={t('When did the workout start?')}
                   labelPlacement="stacked"
                   value={when}
                   max={localInputValue(new Date())}
@@ -145,9 +148,11 @@ export function LogClientWorkoutPage() {
                 />
                 {validTime && (
                   <p className="trainer-note">
-                    Counts for {formatDate(day, tz)}
-                    {browserTz !== tz ? ` (their time zone, ${tz})` : ''}. If they wore a watch
-                    then, the watch’s calories are used and this isn’t counted twice.
+                    {t('Counts for')} {formatDate(day, tz)}
+                    {browserTz !== tz ? ` (their time zone, ${tz})` : ''}
+                    {t(
+                      '. If they wore a watch then, the watch’s calories are used and this isn’t counted twice.',
+                    )}
                   </p>
                 )}
                 <IonSegment
@@ -156,16 +161,16 @@ export function LogClientWorkoutPage() {
                   style={{ marginTop: 8 }}
                 >
                   <IonSegmentButton value="plan" disabled={planDays.length === 0}>
-                    <IonLabel>Their plan</IonLabel>
+                    <IonLabel>{t('Their plan')}</IonLabel>
                   </IonSegmentButton>
                   <IonSegmentButton value={OTHER}>
-                    <IonLabel>Other</IonLabel>
+                    <IonLabel>{t('Other')}</IonLabel>
                   </IonSegmentButton>
                 </IonSegment>
                 {planDay && (
                   <IonSelect
                     fill="outline"
-                    label="Plan day"
+                    label={t('Plan day')}
                     labelPlacement="stacked"
                     interface="action-sheet"
                     value={choice}
@@ -174,7 +179,7 @@ export function LogClientWorkoutPage() {
                   >
                     {planDays.map((d) => (
                       <IonSelectOption key={d.id} value={d.id}>
-                        Day {d.day_index}: {d.title}
+                        {t('Day')} {d.day_index}: {d.title}
                       </IonSelectOption>
                     ))}
                   </IonSelect>
@@ -184,13 +189,13 @@ export function LogClientWorkoutPage() {
 
             {!validTime || isFuture(startedAt) ? (
               <IonText color="warning">
-                <p>Pick a time that isn’t in the future.</p>
+                <p>{t('Pick a time that isn’t in the future.')}</p>
               </IonText>
             ) : (
               <>
                 {!planDay && slots.length === 0 && (
                   <IonText color="medium">
-                    <p>Add the exercises they did and log the sets.</p>
+                    <p>{t('Add the exercises they did and log the sets.')}</p>
                   </IonText>
                 )}
                 {slots.map((slot) => (
@@ -210,11 +215,11 @@ export function LogClientWorkoutPage() {
                 {!planDay && (
                   <IonButton expand="block" fill="outline" onClick={() => setPicking(true)}>
                     <IonIcon slot="start" icon={add} />
-                    Add exercise
+                    {t('Add exercise')}
                   </IonButton>
                 )}
                 <IonButton expand="block" onClick={() => router.goBack()}>
-                  Done
+                  {t('Done')}
                 </IonButton>
               </>
             )}

@@ -1,9 +1,11 @@
+import { useT } from '../i18n/i18n';
 import { IonItem, IonLabel, IonList, IonSkeletonText } from '@ionic/react';
 
 /** Grey placeholder rows while a list loads – feels faster than a spinner. */
 export function ListSkeleton({ rows = 4, avatar = false }: { rows?: number; avatar?: boolean }) {
+  const t = useT();
   return (
-    <IonList aria-busy="true" aria-label="Loading">
+    <IonList aria-busy="true" aria-label={t('Loading')}>
       {Array.from({ length: rows }, (_, i) => (
         <IonItem key={i} lines="full">
           {avatar && (

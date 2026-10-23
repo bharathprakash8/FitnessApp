@@ -29,9 +29,11 @@ import { DayProgress } from './DayProgress';
 import { MealList } from './MealList';
 import { mealTotals, shiftDate } from './model';
 import './food.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: a day's meals, totals vs target, and the three ways to log food. */
 export function FoodPage() {
+  const t = useT();
   const { profile } = useAuth();
   const ideas = useMealPlans(profile?.role === 'client' ? profile.id : undefined);
   const sharedIdeas = ideas.data?.find((p) => p.status === 'shared');
@@ -45,7 +47,7 @@ export function FoodPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Food</IonTitle>
+          <IonTitle>{t('Food')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -62,21 +64,21 @@ export function FoodPage() {
         <div className="food-page">
           {sharedIdeas && (
             <IonButton expand="block" fill="outline" routerLink="/food/ideas">
-              🥗 Food ideas for your week from your trainer
+              {t('🥗 Food ideas for your week from your trainer')}
             </IonButton>
           )}
           <div className="food-day-switch">
             <IonButton
               fill="clear"
-              aria-label="Previous day"
+              aria-label={t('Previous day')}
               onClick={() => setDay(shiftDate(day, -1))}
             >
               <IonIcon icon={chevronBack} />
             </IonButton>
-            <strong>{day === today ? 'Today' : formatDate(day)}</strong>
+            <strong>{day === today ? t('Today') : formatDate(day)}</strong>
             <IonButton
               fill="clear"
-              aria-label="Next day"
+              aria-label={t('Next day')}
               disabled={day >= today}
               onClick={() => setDay(shiftDate(day, 1))}
             >
@@ -96,15 +98,15 @@ export function FoodPage() {
           <div className="food-add">
             <IonButton routerLink={`/food/new/photo?day=${day}`}>
               <IonIcon slot="start" icon={camera} />
-              Photo
+              {t('Photo')}
             </IonButton>
             <IonButton fill="outline" routerLink={`/food/new/text?day=${day}`}>
               <IonIcon slot="start" icon={text} />
-              Type
+              {t('Type')}
             </IonButton>
             <IonButton fill="outline" routerLink={`/food/new/manual?day=${day}`}>
               <IonIcon slot="start" icon={create} />
-              Manual
+              {t('Manual')}
             </IonButton>
           </div>
 
@@ -117,7 +119,7 @@ export function FoodPage() {
               meals={meals.data ?? []}
               timeZone={tz}
               linkTo={(m) => `/food/meal/${m.id}`}
-              emptyText="Nothing logged for this day yet."
+              emptyText={t('Nothing logged for this day yet.')}
             />
           )}
         </div>

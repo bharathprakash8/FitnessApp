@@ -2,7 +2,7 @@ import { IonButton, IonIcon, IonSpinner, useIonAlert, useIonToast } from '@ionic
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { cloudOfflineOutline, refreshOutline } from 'ionicons/icons';
 import { useState } from 'react';
-import { tr } from '../i18n/i18n';
+import { tr, useT } from '../i18n/i18n';
 
 import { useAuth } from '../features/auth/useAuth';
 import { useOnline } from '../lib/network';
@@ -14,6 +14,7 @@ import './RefreshButton.css';
  * reloads the data on screen.
  */
 export function RefreshButton() {
+  const t = useT();
   const qc = useQueryClient();
   const online = useOnline();
   const fetching = useIsFetching() > 0;
@@ -23,7 +24,7 @@ export function RefreshButton() {
   async function refresh() {
     if (!online) {
       void toast({
-        message: "You're offline – showing the last saved data.",
+        message: t("You're offline – showing the last saved data."),
         duration: 2500,
         position: 'top',
       });
@@ -103,11 +104,7 @@ export function SyncStatusBar() {
     );
   }
   if (waiting > 0) {
-    return (
-      <div className="sync-bar">
-        {tr('Syncing {n} saved entries…', { n: waiting })}
-      </div>
-    );
+    return <div className="sync-bar">{tr('Syncing {n} saved entries…', { n: waiting })}</div>;
   }
   return null;
 }

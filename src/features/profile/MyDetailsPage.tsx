@@ -16,9 +16,11 @@ import { useAuth } from '../auth/useAuth';
 import { useLatestWeight, useSaveClientDetails } from './api';
 import { ClientDetailsForm } from './ClientDetailsForm';
 import './profile.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: edit the answers given during onboarding. */
 export function MyDetailsPage() {
+  const t = useT();
   const { profile } = useAuth();
   const weight = useLatestWeight(profile?.id);
   const save = useSaveClientDetails(profile);
@@ -32,7 +34,7 @@ export function MyDetailsPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me" />
           </IonButtons>
-          <IonTitle>My details</IonTitle>
+          <IonTitle>{t('My details')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -56,12 +58,12 @@ export function MyDetailsPage() {
                 save
                   .mutateAsync({ details, previousWeight: weight.data?.weight_kg ?? null })
                   .then(() => {
-                    void toast({ message: 'Saved', duration: 1500, position: 'top' });
+                    void toast({ message: t('Saved'), duration: 1500, position: 'top' });
                     router.goBack();
                   })
                   .catch(() =>
                     toast({
-                      message: 'Could not save. Try again.',
+                      message: t('Could not save. Try again.'),
                       duration: 3000,
                       color: 'danger',
                       position: 'top',

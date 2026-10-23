@@ -1,5 +1,6 @@
 import { IonButton } from '@ionic/react';
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../../i18n/i18n';
 
 /** Short beep and vibration when rest is over (both optional – fail quietly). */
 function alertDone() {
@@ -37,6 +38,7 @@ export function RestTimer({
   startedAt: number;
   onClose: () => void;
 }) {
+  const tx = useT();
   const [now, setNow] = useState(() => Date.now());
   const beeped = useRef(false);
   const left = Math.max(0, Math.ceil((startedAt + seconds * 1000 - now) / 1000));
@@ -59,9 +61,9 @@ export function RestTimer({
 
   return (
     <div className={`rest-timer${left === 0 ? ' done' : ''}`} role="timer" aria-live="polite">
-      <span>{left === 0 ? 'Rest over – next set!' : `Rest ${mm}:${ss}`}</span>
+      <span>{left === 0 ? tx('Rest over – next set!') : `Rest ${mm}:${ss}`}</span>
       <IonButton size="small" fill="clear" onClick={onClose}>
-        {left === 0 ? 'Close' : 'Skip'}
+        {left === 0 ? tx('Close') : tx('Skip')}
       </IonButton>
     </div>
   );

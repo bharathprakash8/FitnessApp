@@ -25,9 +25,11 @@ import {
   type WeeklySummary,
 } from '../summaries/api';
 import './trainer.css';
+import { useT } from '../../i18n/i18n';
 
 /** Trainer → client → Summary: weekly AI summaries to edit and share. */
 export function ClientSummaryTab({ client }: { client: Profile }) {
+  const t = useT();
   const summaries = useSummaries(client.id);
   const generate = useGenerateSummary(client.id);
   const [toast] = useIonToast();
@@ -35,8 +37,10 @@ export function ClientSummaryTab({ client }: { client: Profile }) {
   return (
     <>
       <p className="trainer-note" style={{ marginBottom: 12 }}>
-        Every Monday morning FitCoach drafts a summary of last week. Read it, edit if you like, then
-        share it with {client.full_name?.split(' ')[0] || 'your client'}.
+        {t(
+          'Every Monday morning FitCoach drafts a summary of last week. Read it, edit if you like, then share it with',
+        )}{' '}
+        {client.full_name?.split(' ')[0] || t('your client')}.
       </p>
       <IonButton
         expand="block"
@@ -55,7 +59,9 @@ export function ClientSummaryTab({ client }: { client: Profile }) {
         }
       >
         <IonIcon slot="start" icon={sparkles} />
-        {generate.isPending ? 'Writing the summary…' : 'Create summary of the last 7 days now'}
+        {generate.isPending
+          ? t('Writing the summary…')
+          : t('Create summary of the last 7 days now')}
       </IonButton>
 
       {summaries.isPending ? (
@@ -64,7 +70,7 @@ export function ClientSummaryTab({ client }: { client: Profile }) {
         </div>
       ) : (summaries.data ?? []).length === 0 ? (
         <IonText color="medium">
-          <p className="ion-text-center">No summaries yet.</p>
+          <p className="ion-text-center">{t('No summaries yet.')}</p>
         </IonText>
       ) : (
         summaries.data!.map((s) => (
@@ -76,6 +82,7 @@ export function ClientSummaryTab({ client }: { client: Profile }) {
 }
 
 function SummaryCard({ s, clientId }: { s: WeeklySummary; clientId: string }) {
+  const t = useT();
   const save = useSaveSummaryText(clientId);
   const share = useShareSummary(clientId);
   const [toast] = useIonToast();
@@ -110,8 +117,8 @@ function SummaryCard({ s, clientId }: { s: WeeklySummary; clientId: string }) {
     <IonCard className="trainer-card">
       <IonCardHeader>
         <IonCardSubtitle>
-          {shared ? 'Shared with client' : 'Draft – only you can see it'}
-          {s.edited ? ' · edited' : ''}
+          {shared ? t('Shared with client') : t('Draft – only you can see it')}
+          {s.edited ? t(' · edited') : ''}
         </IonCardSubtitle>
         <IonCardTitle>{periodLabel(s)}</IonCardTitle>
       </IonCardHeader>
@@ -123,7 +130,7 @@ function SummaryCard({ s, clientId }: { s: WeeklySummary; clientId: string }) {
           maxlength={2000}
           value={text}
           readonly={shared}
-          aria-label="Summary text"
+          aria-label={t('Summary text')}
           onIonInput={(e) => setText(String(e.detail.value ?? ''))}
         />
         <div className="trainer-row" style={{ marginTop: 8 }}>
@@ -136,13 +143,13 @@ function SummaryCard({ s, clientId }: { s: WeeklySummary; clientId: string }) {
                   { id: s.id, text: text.trim() },
                   {
                     onSuccess: () =>
-                      void toast({ message: 'Saved', duration: 1200, position: 'top' }),
+                      void toast({ message: t('Saved'), duration: 1200, position: 'top' }),
                     onError: fail,
                   },
                 )
               }
             >
-              Save
+              {t('Save')}
             </IonButton>
           )}
           <IonButton
@@ -151,7 +158,7 @@ function SummaryCard({ s, clientId }: { s: WeeklySummary; clientId: string }) {
             disabled={share.isPending || save.isPending}
             onClick={() => void doShare(!shared)}
           >
-            {shared ? 'Take back' : 'Share with client'}
+            {shared ? t('Take back') : t('Share with client')}
           </IonButton>
         </div>
       </IonCardContent>

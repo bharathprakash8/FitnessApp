@@ -43,6 +43,7 @@ import {
   type SessionWithPeople,
 } from './api';
 import './sessions.css';
+import { useT } from '../../i18n/i18n';
 
 const DURATIONS = [15, 30, 45, 60, 75, 90, 120];
 
@@ -70,6 +71,7 @@ const isoWeekday = (date: string) => {
  * /trainer/sessions/:id/edit?scope=one|series – change one session, or this and later ones.
  */
 export function SessionEditorPage() {
+  const t = useT();
   const { id } = useParams<{ id?: string }>();
   const scope =
     new URLSearchParams(useLocation().search).get('scope') === 'series' ? 'series' : 'one';
@@ -87,7 +89,11 @@ export function SessionEditorPage() {
             <IonBackButton defaultHref="/trainer/sessions" />
           </IonButtons>
           <IonTitle>
-            {!id ? 'New session' : scope === 'series' ? 'Edit this and later' : 'Edit session'}
+            {!id
+              ? t('New session')
+              : scope === 'series'
+                ? t('Edit this and later')
+                : t('Edit session')}
           </IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -99,7 +105,7 @@ export function SessionEditorPage() {
             </div>
           ) : id && !session.data ? (
             <IonText color="medium">
-              <p className="ion-text-center">This session no longer exists.</p>
+              <p className="ion-text-center">{t('This session no longer exists.')}</p>
             </IonText>
           ) : (
             <Form
@@ -131,6 +137,7 @@ function Form({
   googleConnected: boolean;
   defaultZone: string;
 }) {
+  const t = useT();
   const router = useIonRouter();
   const [toast] = useIonToast();
   const create = useCreateSession();
@@ -208,7 +215,7 @@ function Form({
               }
             : {}),
         });
-        void toast({ message: 'Session updated', duration: 1500, position: 'top' });
+        void toast({ message: t('Session updated'), duration: 1500, position: 'top' });
         router.goBack();
       } else {
         const r = await create.mutateAsync({
@@ -236,7 +243,7 @@ function Form({
     <div className="sessions-form">
       <IonInput
         fill="outline"
-        label="Title"
+        label={t('Title')}
         labelPlacement="floating"
         maxlength={80}
         value={f.title}
@@ -249,10 +256,10 @@ function Form({
           onIonChange={(e) => set('type', e.detail.value as SessionInput['type'])}
         >
           <IonSegmentButton value="online">
-            <IonLabel>Online</IonLabel>
+            <IonLabel>{t('Online')}</IonLabel>
           </IonSegmentButton>
           <IonSegmentButton value="in_person">
-            <IonLabel>In person</IonLabel>
+            <IonLabel>{t('In person')}</IonLabel>
           </IonSegmentButton>
         </IonSegment>
       )}
@@ -261,22 +268,24 @@ function Form({
         !editing && googleConnected ? (
           <IonSelect
             fill="outline"
-            label="Video call"
+            label={t('Video call')}
             labelPlacement="stacked"
             interface="action-sheet"
             value={f.meet}
             onIonChange={(e) => set('meet', e.detail.value as SessionInput['meet'])}
           >
-            <IonSelectOption value="google">Google Meet – created automatically</IonSelectOption>
-            <IonSelectOption value="link">Paste my own link (Zoom, Meet…)</IonSelectOption>
+            <IonSelectOption value="google">
+              {t('Google Meet – created automatically')}
+            </IonSelectOption>
+            <IonSelectOption value="link">{t('Paste my own link (Zoom, Meet…)')}</IonSelectOption>
           </IonSelect>
         ) : null
       ) : (
         <IonInput
           fill="outline"
-          label="Place"
+          label={t('Place')}
           labelPlacement="floating"
-          placeholder="e.g. Gold's Gym, Indiranagar"
+          placeholder={t("e.g. Gold's Gym, Indiranagar")}
           maxlength={200}
           value={f.location ?? ''}
           onIonInput={(e) => set('location', String(e.detail.value ?? '') || null)}
@@ -286,11 +295,11 @@ function Form({
         (editing ? Boolean(existing?.meet_url) : !googleConnected || f.meet === 'link') && (
           <IonInput
             fill="outline"
-            label="Meeting link"
+            label={t('Meeting link')}
             labelPlacement="floating"
             type="url"
             inputmode="url"
-            placeholder="https://meet.google.com/…"
+            placeholder={t('https://meet.google.com/…')}
             value={f.meet_url ?? ''}
             onIonInput={(e) => set('meet_url', String(e.detail.value ?? '').trim() || null)}
           />
@@ -301,7 +310,7 @@ function Form({
           <div className="sessions-row">
             <IonInput
               fill="outline"
-              label={f.repeat === 'none' ? 'Date' : 'Starts on'}
+              label={f.repeat === 'none' ? t('Date') : t('Starts on')}
               labelPlacement="stacked"
               type="date"
               value={f.start_date}
@@ -316,7 +325,7 @@ function Form({
             />
             <IonInput
               fill="outline"
-              label="Time"
+              label={t('Time')}
               labelPlacement="stacked"
               type="time"
               value={f.start_time}
@@ -326,10 +335,10 @@ function Form({
           <div className="sessions-row">
             <IonSelect
               fill="outline"
-              label="Time zone"
+              label={t('Time zone')}
               labelPlacement="stacked"
               interface="action-sheet"
-              interfaceOptions={{ header: 'Time zone of this time' }}
+              interfaceOptions={{ header: t('Time zone of this time') }}
               value={f.time_zone}
               onIonChange={(e) => set('time_zone', String(e.detail.value))}
             >
@@ -341,7 +350,7 @@ function Form({
             </IonSelect>
             <IonSelect
               fill="outline"
-              label="Length"
+              label={t('Length')}
               labelPlacement="stacked"
               interface="action-sheet"
               value={f.duration_min}
@@ -351,13 +360,13 @@ function Form({
                 .sort((a, b) => a - b)
                 .map((d) => (
                   <IonSelectOption key={d} value={d}>
-                    {d} min
+                    {d} {t('min')}
                   </IonSelectOption>
                 ))}
             </IonSelect>
           </div>
           <p className="sessions-note" style={{ margin: 0 }}>
-            Clients see the time in their own time zone.
+            {t('Clients see the time in their own time zone.')}
           </p>
         </>
       )}
@@ -369,18 +378,18 @@ function Form({
             onIonChange={(e) => set('repeat', e.detail.value as SessionInput['repeat'])}
           >
             <IonSegmentButton value="none">
-              <IonLabel>Once</IonLabel>
+              <IonLabel>{t('Once')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="daily">
-              <IonLabel>Daily</IonLabel>
+              <IonLabel>{t('Daily')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="weekly">
-              <IonLabel>Weekly</IonLabel>
+              <IonLabel>{t('Weekly')}</IonLabel>
             </IonSegmentButton>
           </IonSegment>
           {f.repeat === 'weekly' && (
             <div>
-              <p className="sessions-label">On these days</p>
+              <p className="sessions-label">{t('On these days')}</p>
               {WEEKDAYS.map((w, i) => (
                 <IonChip
                   key={w}
@@ -397,19 +406,19 @@ function Form({
             <div className="sessions-row">
               <IonSelect
                 fill="outline"
-                label="Ends"
+                label={t('Ends')}
                 labelPlacement="stacked"
                 interface="action-sheet"
                 value={endBy}
                 onIonChange={(e) => setEndBy(e.detail.value as 'count' | 'date')}
               >
-                <IonSelectOption value="count">After a number of sessions</IonSelectOption>
-                <IonSelectOption value="date">On a date</IonSelectOption>
+                <IonSelectOption value="count">{t('After a number of sessions')}</IonSelectOption>
+                <IonSelectOption value="date">{t('On a date')}</IonSelectOption>
               </IonSelect>
               {endBy === 'count' ? (
                 <IonInput
                   fill="outline"
-                  label="Sessions (max 60)"
+                  label={t('Sessions (max 60)')}
                   labelPlacement="stacked"
                   type="number"
                   inputmode="numeric"
@@ -421,7 +430,7 @@ function Form({
               ) : (
                 <IonInput
                   fill="outline"
-                  label="Last date"
+                  label={t('Last date')}
                   labelPlacement="stacked"
                   type="date"
                   value={f.ends_on ?? ''}
@@ -435,7 +444,7 @@ function Form({
 
       <IonList inset style={{ margin: 0 }}>
         <IonListHeader>
-          <IonLabel>Clients</IonLabel>
+          <IonLabel>{t('Clients')}</IonLabel>
           {clients.length > 1 && (
             <IonButton
               size="small"
@@ -446,13 +455,13 @@ function Form({
                 )
               }
             >
-              {f.client_ids.length === clients.length ? 'None' : 'All'}
+              {f.client_ids.length === clients.length ? t('None') : t('All')}
             </IonButton>
           )}
         </IonListHeader>
         {clients.length === 0 && (
           <IonItem lines="none">
-            <IonLabel color="medium">You have no clients yet.</IonLabel>
+            <IonLabel color="medium">{t('You have no clients yet.')}</IonLabel>
           </IonItem>
         )}
         {clients.map((c) => (
@@ -475,19 +484,19 @@ function Form({
             onIonChange={(e) => set('send_invite', e.detail.checked)}
           >
             <IonLabel>
-              Send Google Calendar invites
-              <p className="sessions-note">From your Gmail, to each client's email</p>
+              {t('Send Google Calendar invites')}
+              <p className="sessions-note">{t("From your Gmail, to each client's email")}</p>
             </IonLabel>
           </IonToggle>
         ) : (
           <p className="sessions-note" style={{ margin: 0 }}>
-            Connect Google on the Sessions page to send calendar invites automatically.
+            {t('Connect Google on the Sessions page to send calendar invites automatically.')}
           </p>
         ))}
 
       <IonTextarea
         fill="outline"
-        label="Notes for clients (optional)"
+        label={t('Notes for clients (optional)')}
         labelPlacement="floating"
         autoGrow
         maxlength={1000}
@@ -496,7 +505,7 @@ function Form({
       />
 
       <IonButton expand="block" size="large" disabled={busy} onClick={() => void save()}>
-        {busy ? 'Saving…' : editing ? 'Save changes' : 'Schedule'}
+        {busy ? t('Saving…') : editing ? t('Save changes') : t('Schedule')}
       </IonButton>
     </div>
   );

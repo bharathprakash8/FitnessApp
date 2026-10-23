@@ -10,6 +10,7 @@ import {
 import { useState, type FormEvent } from 'react';
 
 import type { Exercise, LogType } from './model';
+import { useT } from '../../i18n/i18n';
 
 export interface ExerciseInput {
   name: string;
@@ -30,6 +31,7 @@ export function ExerciseForm({
   busy: boolean;
   onSubmit: (input: ExerciseInput) => void;
 }) {
+  const t = useT();
   const [name, setName] = useState(exercise?.name ?? '');
   const [muscle, setMuscle] = useState(exercise?.muscle_group ?? '');
   const [equipment, setEquipment] = useState(exercise?.equipment ?? '');
@@ -60,7 +62,7 @@ export function ExerciseForm({
     <form className="workout-form" onSubmit={submit} noValidate>
       <IonInput
         fill="outline"
-        label="Name"
+        label={t('Name')}
         labelPlacement="floating"
         maxlength={80}
         value={name}
@@ -69,7 +71,7 @@ export function ExerciseForm({
       <div className="workout-row">
         <IonInput
           fill="outline"
-          label="Muscle group"
+          label={t('Muscle group')}
           labelPlacement="floating"
           maxlength={40}
           value={muscle}
@@ -77,7 +79,7 @@ export function ExerciseForm({
         />
         <IonInput
           fill="outline"
-          label="Equipment"
+          label={t('Equipment')}
           labelPlacement="floating"
           maxlength={40}
           value={equipment}
@@ -86,33 +88,33 @@ export function ExerciseForm({
       </div>
       <div>
         <IonText color="medium">
-          <p className="workout-label">What the client logs</p>
+          <p className="workout-label">{t('What the client logs')}</p>
         </IonText>
         <IonSegment value={logType} onIonChange={(e) => setLogType(e.detail.value as LogType)}>
           <IonSegmentButton value="weights">
-            <IonLabel>kg × reps</IonLabel>
+            <IonLabel>{t('kg × reps')}</IonLabel>
           </IonSegmentButton>
           <IonSegmentButton value="bodyweight">
-            <IonLabel>Reps</IonLabel>
+            <IonLabel>{t('Reps')}</IonLabel>
           </IonSegmentButton>
           <IonSegmentButton value="timed">
-            <IonLabel>Minutes</IonLabel>
+            <IonLabel>{t('Minutes')}</IonLabel>
           </IonSegmentButton>
         </IonSegment>
       </div>
       <IonInput
         fill="outline"
-        label="Demo video link (optional)"
+        label={t('Demo video link (optional)')}
         labelPlacement="floating"
         type="url"
         inputmode="url"
-        placeholder="https://"
+        placeholder={t('https://')}
         value={demo}
         onIonInput={(e) => setDemo(String(e.detail.value ?? ''))}
       />
       <IonTextarea
         fill="outline"
-        label="Form cues"
+        label={t('Form cues')}
         labelPlacement="floating"
         autoGrow
         maxlength={1000}
@@ -125,7 +127,7 @@ export function ExerciseForm({
         </IonText>
       )}
       <IonButton type="submit" expand="block" disabled={busy}>
-        {busy ? 'Saving…' : 'Save exercise'}
+        {busy ? t('Saving…') : t('Save exercise')}
       </IonButton>
     </form>
   );

@@ -3,6 +3,7 @@ import { IonText } from '@ionic/react';
 import { useAuth } from '../auth/useAuth';
 import { useLastSync } from './api';
 import { SOURCE_LABELS } from './model';
+import { useT } from '../../i18n/i18n';
 
 const STALE_HOURS = 36;
 
@@ -29,6 +30,7 @@ const hoursSince = (iso: string) => (Date.now() - new Date(iso).getTime()) / 360
  * client and their trainer; turns orange when it's more than a day and a half old.
  */
 export function LastSync({ clientId, className }: { clientId: string; className?: string }) {
+  const t = useT();
   const { profile } = useAuth();
   const last = useLastSync(clientId);
   if (last.isPending || last.isError) return null;
@@ -36,7 +38,7 @@ export function LastSync({ clientId, className }: { clientId: string; className?
   if (!last.data) {
     return (
       <p className={className}>
-        <IonText color="medium">Phone sync: never synced</IonText>
+        <IonText color="medium">{t('Phone sync: never synced')}</IonText>
       </p>
     );
   }
@@ -44,9 +46,9 @@ export function LastSync({ clientId, className }: { clientId: string; className?
   return (
     <p className={className}>
       <IonText color={stale ? 'warning' : 'medium'}>
-        Last synced: {when(last.data.at, tz)} ·{' '}
+        {t('Last synced:')} {when(last.data.at, tz)} ·{' '}
         {SOURCE_LABELS[last.data.source] ?? last.data.source}
-        {stale ? ' – not synced for over a day' : ''}
+        {stale ? t(' – not synced for over a day') : ''}
       </IonText>
     </p>
   );

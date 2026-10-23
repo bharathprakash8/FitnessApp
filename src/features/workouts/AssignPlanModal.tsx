@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { useMyClients } from '../trainer/api';
 import { usePlanAssignments, useSetPlanClients } from './api';
+import { useT } from '../../i18n/i18n';
 
 /** Choose which of the trainer's clients follow this plan. */
 export function AssignPlanModal({
@@ -28,13 +29,14 @@ export function AssignPlanModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Assign plan</IonTitle>
+          <IonTitle>{t('Assign plan')}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={onClose}>Close</IonButton>
+            <IonButton onClick={onClose}>{t('Close')}</IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -46,6 +48,7 @@ export function AssignPlanModal({
 }
 
 function Picker({ planId, onDone }: { planId: string; onDone: () => void }) {
+  const t = useT();
   const { profile } = useAuth();
   const clients = useMyClients(profile?.id);
   const assignments = usePlanAssignments(planId);
@@ -60,7 +63,7 @@ function Picker({ planId, onDone }: { planId: string; onDone: () => void }) {
   if (active.length === 0) {
     return (
       <IonText color="medium">
-        <p>You don't have any active clients yet.</p>
+        <p>{t("You don't have any active clients yet.")}</p>
       </IonText>
     );
   }
@@ -77,10 +80,15 @@ function Picker({ planId, onDone }: { planId: string; onDone: () => void }) {
     const remove = [...current].filter((id) => !selected.has(id));
     try {
       await setClients.mutateAsync({ add, remove });
-      void toast({ message: 'Assignments saved', duration: 1500, position: 'top' });
+      void toast({ message: t('Assignments saved'), duration: 1500, position: 'top' });
       onDone();
     } catch {
-      void toast({ message: 'Could not save', duration: 2500, color: 'danger', position: 'top' });
+      void toast({
+        message: t('Could not save'),
+        duration: 2500,
+        color: 'danger',
+        position: 'top',
+      });
     }
   }
 
@@ -88,8 +96,9 @@ function Picker({ planId, onDone }: { planId: string; onDone: () => void }) {
     <>
       <IonText color="medium">
         <p className="workout-note">
-          A client follows one plan at a time – ticking a client here replaces their current plan.
-          Their history is kept.
+          {t(
+            'A client follows one plan at a time – ticking a client here replaces their current plan. Their history is kept.',
+          )}
         </p>
       </IonText>
       <IonList>
@@ -106,7 +115,7 @@ function Picker({ planId, onDone }: { planId: string; onDone: () => void }) {
         ))}
       </IonList>
       <IonButton expand="block" disabled={setClients.isPending} onClick={() => void save()}>
-        {setClients.isPending ? 'Saving…' : 'Save'}
+        {setClients.isPending ? t('Saving…') : t('Save')}
       </IonButton>
     </>
   );

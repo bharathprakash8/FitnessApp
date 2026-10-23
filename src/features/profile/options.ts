@@ -1,3 +1,5 @@
+import { tr } from '../../i18n/i18n';
+
 export type Sex = 'male' | 'female' | 'unspecified';
 export type Goal = 'lose_weight' | 'build_muscle' | 'get_fitter' | 'maintain' | 'other';
 export type Diet = 'veg' | 'egg' | 'non_veg' | 'vegan';
@@ -25,10 +27,10 @@ export const DIET_LABELS: Record<Diet, string> = {
 
 export function goalText(goal: string | null, other: string | null): string {
   if (!goal) return '';
-  if (goal === 'other') return other ? `Other: ${other}` : 'Other';
-  return GOAL_LABELS[goal as Goal] ?? goal;
+  if (goal === 'other') return other ? `${tr('Other')}: ${other}` : tr('Other');
+  return tr(GOAL_LABELS[goal as Goal] ?? goal);
 }
 
 export function label<T extends string>(labels: Record<T, string>, value: string | null): string {
-  return value ? (labels[value as T] ?? value) : '';
+  return value ? tr(labels[value as T] ?? value) : '';
 }

@@ -22,9 +22,11 @@ import type { Profile } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { StatsLine } from '../trainer/ClientSummaryTab';
 import { periodLabel, useSummaries, type SummaryStats } from './api';
+import { useT } from '../../i18n/i18n';
 
 /** Client → Me → Weekly summaries: what the trainer shared. */
 export function MySummariesPage() {
+  const t = useT();
   const { profile } = useAuth();
   const summaries = useSummaries(profile?.id);
   return (
@@ -34,7 +36,7 @@ export function MySummariesPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me" />
           </IonButtons>
-          <IonTitle>Weekly summaries</IonTitle>
+          <IonTitle>{t('Weekly summaries')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -50,14 +52,14 @@ export function MySummariesPage() {
           ) : (summaries.data ?? []).length === 0 ? (
             <EmptyState
               icon={documentTextOutline}
-              title="No weekly summary yet"
-              text="Your trainer shares a short review of your week – usually on Mondays."
+              title={t('No weekly summary yet')}
+              text={t('Your trainer shares a short review of your week – usually on Mondays.')}
             />
           ) : (
             summaries.data!.map((s) => (
               <IonCard key={s.id} style={{ marginInline: 0 }}>
                 <IonCardHeader>
-                  <IonCardSubtitle>Week of</IonCardSubtitle>
+                  <IonCardSubtitle>{t('Week of')}</IonCardSubtitle>
                   <IonCardTitle>{periodLabel(s)}</IonCardTitle>
                 </IonCardHeader>
                 <IonCardContent>
@@ -75,13 +77,16 @@ export function MySummariesPage() {
 
 /** Today (client): the latest shared summary, for 8 days after it was shared. */
 export function LatestSummaryCard({ profile }: { profile: Profile }) {
+  const t = useT();
   const summaries = useSummaries(profile.id);
   const latest = summaries.data?.[0];
   if (!latest?.shared_at || !isRecent(latest.shared_at)) return null;
   return (
     <IonCard style={{ marginInline: 0 }}>
       <IonCardHeader>
-        <IonCardSubtitle>Your week in review · {periodLabel(latest)}</IonCardSubtitle>
+        <IonCardSubtitle>
+          {t('Your week in review ·')} {periodLabel(latest)}
+        </IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
         <p style={{ whiteSpace: 'pre-wrap' }}>
@@ -90,7 +95,7 @@ export function LatestSummaryCard({ profile }: { profile: Profile }) {
             : latest.summary_text}
         </p>
         <IonButton fill="clear" size="small" routerLink="/me/summaries">
-          Read all summaries
+          {t('Read all summaries')}
         </IonButton>
       </IonCardContent>
     </IonCard>

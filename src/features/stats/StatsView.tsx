@@ -22,6 +22,7 @@ import { useWorkoutLogs } from '../workouts/api';
 import { requestInsights, useSavedInsights, useStatsData, type Insights } from './api';
 import { computeStats, insightInput, type Stats } from './model';
 import './stats.css';
+import { tr, useT } from '../../i18n/i18n';
 
 const PERIODS = [7, 30, 90] as const;
 const MEAL_NAMES: Record<string, string> = {
@@ -37,6 +38,7 @@ const n = (v: number) => v.toLocaleString('en-IN');
  * Used by the client's Stats tab and by the trainer (client page → Stats).
  */
 export function StatsView({ person }: { person: Profile }) {
+  const t = useT();
   const tz = person.timezone ?? DEFAULT_TIMEZONE;
   const today = todayIn(tz);
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>(30);
@@ -74,7 +76,9 @@ export function StatsView({ person }: { person: Profile }) {
   if (data.isError) {
     return (
       <IonText color="danger">
-        <p className="ion-text-center">Couldn't load stats. Pull down or tap refresh to retry.</p>
+        <p className="ion-text-center">
+          {t("Couldn't load stats. Pull down or tap refresh to retry.")}
+        </p>
       </IonText>
     );
   }
@@ -96,12 +100,12 @@ export function StatsView({ person }: { person: Profile }) {
       >
         {PERIODS.map((p) => (
           <IonSegmentButton key={p} value={String(p)}>
-            <IonLabel>{p} days</IonLabel>
+            <IonLabel>{t('{n} days', { n: p })}</IonLabel>
           </IonSegmentButton>
         ))}
       </IonSegment>
       <p className="stats-muted">
-        Up to yesterday · {stats.daysLogged} day{stats.daysLogged === 1 ? '' : 's'} with food logged
+        {t('Up to yesterday · {n} day(s) with food logged', { n: stats.daysLogged })}
       </p>
 
       <SummaryTiles s={stats} />
@@ -123,21 +127,22 @@ function Tile({ value, label, tone }: { value: string; label: string; tone?: 'go
 }
 
 function SummaryTiles({ s }: { s: Stats }) {
+  const t = useT();
   return (
     <div className="stats-tiles">
       <Tile
         value={s.avg ? `${n(s.avg.kcal)}${s.target ? ` / ${n(s.target.kcal)}` : ''}` : '–'}
-        label="avg kcal eaten / target"
+        label={t('avg kcal eaten / target')}
       />
       <Tile
-        value={s.daysOnTarget === null ? '–' : `${s.daysOnTarget} of ${s.days}`}
-        label="days on target (±10%)"
+        value={s.daysOnTarget === null ? '–' : t('{a} of {b}', { a: s.daysOnTarget, b: s.days })}
+        label={t('days on target (±10%)')}
         tone={s.daysOnTarget !== null && s.daysOnTarget >= s.days / 2 ? 'good' : undefined}
       />
-      <Tile value={`${s.streak} day${s.streak === 1 ? '' : 's'}`} label="logging streak" />
+      <Tile value={t('{n} day(s)', { n: s.streak })} label={t('logging streak')} />
       <Tile
         value={s.avgNet === null ? '–' : `${s.avgNet > 0 ? '+' : ''}${n(s.avgNet)}`}
-        label={`avg net kcal${s.burnEstimated ? ' (estimated)' : ''}`}
+        label={s.burnEstimated ? t('avg net kcal (estimated)') : t('avg net kcal')}
       />
       {s.weight && (
         <Tile
@@ -158,6 +163,7 @@ function InsightsCard({
   today: string;
   stats30: Stats;
 }) {
+  const tx = useT();
   const qc = useQueryClient();
   const saved = useSavedInsights(person.id, today);
   const [error, setError] = useState<string | null>(null);
@@ -178,14 +184,14 @@ function InsightsCard({
   return (
     <IonCard className="stats-card">
       <IonCardHeader>
-        <IonCardSubtitle>Insights · AI, last 30 days</IonCardSubtitle>
+        <IonCardSubtitle>{tx('Insights · AI, last 30 days')}</IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
         {ins ? null : !enough ? (
-          <p className="stats-muted">Log food on at least 3 days to get insights.</p>
+          <p className="stats-muted">{tx('Log food on at least 3 days to get insights.')}</p>
         ) : !error ? (
           <p className="stats-muted">
-            <IonSpinner name="dots" /> Reading the numbers…
+            <IonSpinner name="dots" /> {tx('Reading the numbers…')}
           </p>
         ) : null}
         {ins && (
@@ -197,12 +203,13 @@ function InsightsCard({
             </ul>
             {ins.focus && (
               <p className="stats-focus">
-                <strong>Focus:</strong> {ins.focus}
+                <strong>{tx('Focus:')}</strong> {ins.focus}
               </p>
             )}
             <p className="stats-muted">
-              Estimated by AI from the logs{ins.made_on !== today ? ' (from an earlier day)' : ''}.
-              Not medical advice.
+              {tx('Estimated by AI from the logs')}
+              {ins.made_on !== today ? tx(' (from an earlier day)') : ''}
+              {tx('. Not medical advice.')}
             </p>
           </>
         )}
@@ -224,41 +231,44 @@ function Bar({ pct, tone }: { pct: number; tone?: 'over' | 'under' }) {
 }
 
 function PatternsCard({ s }: { s: Stats }) {
+  const t = useT();
   if (!s.daysLogged) return null;
   const maxProtein = Math.max(1, ...s.proteinPerMeal.map((p) => p.grams ?? 0));
   return (
     <IonCard className="stats-card">
       <IonCardHeader>
-        <IonCardSubtitle>Eating patterns</IonCardSubtitle>
+        <IonCardSubtitle>{t('Eating patterns')}</IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
-        <h3 className="stats-h">Usual meal times</h3>
+        <h3 className="stats-h">{t('Usual meal times')}</h3>
         <div className="stats-rows">
           {s.mealTimes.map((m) => (
             <div key={m.meal} className="stats-row">
-              <span>{MEAL_NAMES[m.meal]}</span>
+              <span>{tr(MEAL_NAMES[m.meal])}</span>
               <strong>{m.time ?? '–'}</strong>
             </div>
           ))}
         </div>
         <p className="stats-note">
-          {s.lateDinners} late dinner{s.lateDinners === 1 ? '' : 's'} (after 9:30 pm) ·{' '}
-          {s.skippedBreakfasts} day{s.skippedBreakfasts === 1 ? '' : 's'} without breakfast
+          {t('{a} late dinner(s) (after 9:30 pm) · {b} day(s) without breakfast', {
+            a: s.lateDinners,
+            b: s.skippedBreakfasts,
+          })}
         </p>
 
-        <h3 className="stats-h">Where the calories come from</h3>
+        <h3 className="stats-h">{t('Where the calories come from')}</h3>
         {s.kcalShare.map((m) => (
           <div key={m.meal} className="stats-barrow">
-            <span>{MEAL_NAMES[m.meal]}</span>
+            <span>{tr(MEAL_NAMES[m.meal])}</span>
             <Bar pct={m.pct} />
             <strong>{m.pct}%</strong>
           </div>
         ))}
 
-        <h3 className="stats-h">Protein per meal (avg)</h3>
+        <h3 className="stats-h">{t('Protein per meal (avg)')}</h3>
         {s.proteinPerMeal.map((m) => (
           <div key={m.meal} className="stats-barrow">
-            <span>{MEAL_NAMES[m.meal]}</span>
+            <span>{tr(MEAL_NAMES[m.meal])}</span>
             <Bar pct={((m.grams ?? 0) / maxProtein) * 100} />
             <strong>{m.grams === null ? '–' : `${m.grams} g`}</strong>
           </div>
@@ -266,21 +276,21 @@ function PatternsCard({ s }: { s: Stats }) {
 
         {(s.weekdayKcal !== null || s.weekendKcal !== null) && (
           <>
-            <h3 className="stats-h">Weekdays vs weekends</h3>
+            <h3 className="stats-h">{t('Weekdays vs weekends')}</h3>
             <div className="stats-rows">
               <div className="stats-row">
-                <span>Mon–Fri average</span>
+                <span>{t('Mon–Fri average')}</span>
                 <strong>{s.weekdayKcal === null ? '–' : `${n(s.weekdayKcal)} kcal`}</strong>
               </div>
               <div className="stats-row">
-                <span>Sat–Sun average</span>
+                <span>{t('Sat–Sun average')}</span>
                 <strong>{s.weekendKcal === null ? '–' : `${n(s.weekendKcal)} kcal`}</strong>
               </div>
             </div>
           </>
         )}
 
-        <h3 className="stats-h">Most eaten</h3>
+        <h3 className="stats-h">{t('Most eaten')}</h3>
         <div className="stats-chips">
           {s.topFoods.map((f) => (
             <span key={f.name} className="stats-chip">
@@ -288,12 +298,14 @@ function PatternsCard({ s }: { s: Stats }) {
             </span>
           ))}
         </div>
-        <h3 className="stats-h">Biggest calorie sources</h3>
+        <h3 className="stats-h">{t('Biggest calorie sources')}</h3>
         <div className="stats-rows">
           {s.topSources.map((f) => (
             <div key={f.name} className="stats-row">
               <span>{f.name}</span>
-              <strong>{n(f.kcal)} kcal</strong>
+              <strong>
+                {n(f.kcal)} {t('kcal')}
+              </strong>
             </div>
           ))}
         </div>
@@ -303,24 +315,25 @@ function PatternsCard({ s }: { s: Stats }) {
 }
 
 function TargetsCard({ s }: { s: Stats }) {
+  const tx = useT();
   const t = s.target;
   const rows =
     t && s.avg
       ? [
-          { label: 'Calories', avg: s.avg.kcal, target: t.kcal, unit: 'kcal' },
-          { label: 'Protein', avg: s.avg.protein, target: t.protein, unit: 'g' },
-          { label: 'Carbs', avg: s.avg.carbs, target: t.carbs, unit: 'g' },
-          { label: 'Fat', avg: s.avg.fat, target: t.fat, unit: 'g' },
+          { label: tx('Calories'), avg: s.avg.kcal, target: t.kcal, unit: 'kcal' },
+          { label: tx('Protein'), avg: s.avg.protein, target: t.protein, unit: 'g' },
+          { label: tx('Carbs'), avg: s.avg.carbs, target: t.carbs, unit: 'g' },
+          { label: tx('Fat'), avg: s.avg.fat, target: t.fat, unit: 'g' },
         ].filter((r) => r.target > 0)
       : [];
   const last30 = s.dayStatus.slice(-30);
   return (
     <IonCard className="stats-card">
       <IonCardHeader>
-        <IonCardSubtitle>Targets and consistency</IonCardSubtitle>
+        <IonCardSubtitle>{tx('Targets and consistency')}</IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
-        {!t && <p className="stats-muted">No targets set yet.</p>}
+        {!t && <p className="stats-muted">{tx('No targets set yet.')}</p>}
         {rows.map((r) => {
           const pct = Math.round((r.avg / r.target) * 100);
           return (
@@ -335,24 +348,35 @@ function TargetsCard({ s }: { s: Stats }) {
         })}
         {s.proteinDays !== null && (
           <p className="stats-note">
-            Protein target reached on {s.proteinDays} of {s.daysLogged} logged days
+            {tx('Protein target reached on {a} of {b} logged days', {
+              a: s.proteinDays,
+              b: s.daysLogged,
+            })}
           </p>
         )}
-        <h3 className="stats-h">Last {last30.length} days</h3>
-        <div className="stats-calendar" role="img" aria-label="Days on, over and under target">
+        <h3 className="stats-h">{tx('Last {n} days', { n: last30.length })}</h3>
+        <div
+          className="stats-calendar"
+          role="img"
+          aria-label={tx('Days on, over and under target')}
+        >
           {last30.map((d) => (
             <span key={d.date} className={`stats-day ${d.status}`} title={d.date} />
           ))}
         </div>
         <div className="stats-legend">
-          <span className="stats-day on" /> on target <span className="stats-day over" /> over{' '}
-          <span className="stats-day under" /> under <span className="stats-day none" /> not logged
+          <span className="stats-day on" /> {tx('on target')} <span className="stats-day over" />{' '}
+          {tx('over')} <span className="stats-day under" /> {tx('under')}{' '}
+          <span className="stats-day none" /> {tx('not logged')}
         </div>
         {s.water && (
           <p className="stats-note">
-            Water: average {(s.water.avg / 1000).toFixed(1)} L
-            {t ? ` of ${(t.water / 1000).toFixed(1)} L` : ''} · goal reached on{' '}
-            {s.water.daysReached} of {s.water.daysLogged} days
+            {tx('Water: average {avg} L', { avg: (s.water.avg / 1000).toFixed(1) })}
+            {t ? ' ' + tx('of {goal} L', { goal: (t.water / 1000).toFixed(1) }) : ''}{' '}
+            {tx('· goal reached on {a} of {b} days', {
+              a: s.water.daysReached,
+              b: s.water.daysLogged,
+            })}
           </p>
         )}
       </IonCardContent>
@@ -361,42 +385,48 @@ function TargetsCard({ s }: { s: Stats }) {
 }
 
 function ActivityCard({ s }: { s: Stats }) {
+  const t = useT();
   return (
     <IonCard className="stats-card">
       <IonCardHeader>
-        <IonCardSubtitle>Activity and workouts</IonCardSubtitle>
+        <IonCardSubtitle>{t('Activity and workouts')}</IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
-        <h3 className="stats-h">Calories eaten</h3>
-        <BarChart points={s.eatenSeries} target={s.target?.kcal} label="Calories eaten per day" />
-        <h3 className="stats-h">Calories burnt{s.burnEstimated ? ' (partly estimated)' : ''}</h3>
-        <BarChart points={s.burntSeries} label="Calories burnt per day" color="secondary" />
+        <h3 className="stats-h">{t('Calories eaten')}</h3>
+        <BarChart
+          points={s.eatenSeries}
+          target={s.target?.kcal}
+          label={t('Calories eaten per day')}
+        />
+        <h3 className="stats-h">
+          {t('Calories burnt')}
+          {s.burnEstimated ? t(' (partly estimated)') : ''}
+        </h3>
+        <BarChart points={s.burntSeries} label={t('Calories burnt per day')} color="secondary" />
         <div className="stats-rows">
           <div className="stats-row">
-            <span>Workout days</span>
+            <span>{t('Workout days')}</span>
             <strong>
-              {s.workoutDays} ({s.workoutsPerWeek} a week)
+              {s.workoutDays} ({s.workoutsPerWeek} {t('a week)')}
             </strong>
           </div>
           {s.avgSteps !== null && (
             <div className="stats-row">
-              <span>Average steps</span>
+              <span>{t('Average steps')}</span>
               <strong>{n(s.avgSteps)}</strong>
             </div>
           )}
           {s.watchDays > 0 && (
             <div className="stats-row">
-              <span>Days with watch data</span>
-              <strong>
-                {s.watchDays} of {s.days}
-              </strong>
+              <span>{t('Days with watch data')}</span>
+              <strong>{t('{a} of {b}', { a: s.watchDays, b: s.days })}</strong>
             </div>
           )}
         </div>
         {s.volumeSeries.some((v) => v.value) && (
           <>
-            <h3 className="stats-h">Weekly volume lifted (kg × reps)</h3>
-            <BarChart points={s.volumeSeries} label="Weekly volume lifted" />
+            <h3 className="stats-h">{t('Weekly volume lifted (kg × reps)')}</h3>
+            <BarChart points={s.volumeSeries} label={t('Weekly volume lifted')} />
           </>
         )}
       </IonCardContent>

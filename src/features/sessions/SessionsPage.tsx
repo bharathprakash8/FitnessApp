@@ -43,9 +43,11 @@ import {
   type SessionWithPeople,
 } from './api';
 import './sessions.css';
+import { useT } from '../../i18n/i18n';
 
 /** Trainer → Sessions: Google connection, upcoming sessions and recent ones to mark. */
 export function SessionsPage() {
+  const t = useT();
   const { profile } = useAuth();
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -62,7 +64,7 @@ export function SessionsPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Sessions</IonTitle>
+          <IonTitle>{t('Sessions')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -70,10 +72,13 @@ export function SessionsPage() {
         <IonToolbar>
           <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as typeof tab)}>
             <IonSegmentButton value="upcoming">
-              <IonLabel>Upcoming ({upcoming.length})</IonLabel>
+              <IonLabel>
+                {t('Upcoming (')}
+                {upcoming.length})
+              </IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="past">
-              <IonLabel>Past</IonLabel>
+              <IonLabel>{t('Past')}</IonLabel>
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
@@ -88,16 +93,20 @@ export function SessionsPage() {
             <EmptyState
               icon={calendarOutline}
               title={
-                tab === 'upcoming' ? 'No upcoming sessions' : 'No sessions in the last 60 days'
+                tab === 'upcoming'
+                  ? t('No upcoming sessions')
+                  : t('No sessions in the last 60 days')
               }
               text={
                 tab === 'upcoming'
-                  ? 'Schedule a one-off or repeating session – online with Google Meet or in person.'
+                  ? t(
+                      'Schedule a one-off or repeating session – online with Google Meet or in person.',
+                    )
                   : undefined
               }
               action={
                 tab === 'upcoming'
-                  ? { label: 'Schedule a session', routerLink: '/trainer/sessions/new' }
+                  ? { label: t('Schedule a session'), routerLink: '/trainer/sessions/new' }
                   : undefined
               }
             />
@@ -105,7 +114,7 @@ export function SessionsPage() {
             <IonList inset style={{ margin: '12px 0 80px' }}>
               {tab === 'past' && (
                 <IonListHeader>
-                  <IonLabel>Last 60 days – tap to mark attendance</IonLabel>
+                  <IonLabel>{t('Last 60 days – tap to mark attendance')}</IonLabel>
                 </IonListHeader>
               )}
               {list.map((s) => (
@@ -115,7 +124,7 @@ export function SessionsPage() {
           )}
         </div>
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton routerLink="/trainer/sessions/new" aria-label="Schedule a session">
+          <IonFabButton routerLink="/trainer/sessions/new" aria-label={t('Schedule a session')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
@@ -128,6 +137,7 @@ export function SessionsPage() {
 }
 
 function SessionRow({ s, tz }: { s: SessionWithPeople; tz: string }) {
+  const t = useT();
   const names = s.session_attendees
     .map((a) => a.profiles?.full_name || a.profiles?.email || '')
     .filter(Boolean);
@@ -141,14 +151,16 @@ function SessionRow({ s, tz }: { s: SessionWithPeople; tz: string }) {
       <IonLabel>
         <h3>
           {s.title}
-          {s.series_id && <span className="sessions-tag">Repeats</span>}
-          {s.status === 'cancelled' && <span className="sessions-tag cancelled">Cancelled</span>}
-          {unmarked && <span className="sessions-tag todo">Mark attendance</span>}
+          {s.series_id && <span className="sessions-tag">{t('Repeats')}</span>}
+          {s.status === 'cancelled' && (
+            <span className="sessions-tag cancelled">{t('Cancelled')}</span>
+          )}
+          {unmarked && <span className="sessions-tag todo">{t('Mark attendance')}</span>}
         </h3>
         <p>
-          {formatWhen(s.starts_at, tz)} · {s.duration_min} min
+          {formatWhen(s.starts_at, tz)} · {s.duration_min} {t('min')}
         </p>
-        <p>{names.join(', ') || 'No clients'}</p>
+        <p>{names.join(', ') || t('No clients')}</p>
       </IonLabel>
     </IonItem>
   );
@@ -156,6 +168,7 @@ function SessionRow({ s, tz }: { s: SessionWithPeople; tz: string }) {
 
 /** Connect / disconnect the trainer's own Google account. */
 function GoogleCard() {
+  const t = useT();
   const status = useGoogleStatus();
   const disconnect = useDisconnectGoogle();
   const [alert] = useIonAlert();
@@ -174,7 +187,9 @@ function GoogleCard() {
   if (status.isError) {
     return (
       <IonText color="medium">
-        <p className="sessions-note">Couldn't check your Google connection. Tap ↻ to retry.</p>
+        <p className="sessions-note">
+          {t("Couldn't check your Google connection. Tap ↻ to retry.")}
+        </p>
       </IonText>
     );
   }
@@ -183,8 +198,9 @@ function GoogleCard() {
     return (
       <IonCard className="sessions-card">
         <IonCardContent>
-          Google Calendar isn't set up for FitCoach yet (the admin does this once). Until then you
-          can paste your own Meet link when you schedule an online session.
+          {t(
+            "Google Calendar isn't set up for FitCoach yet (the admin does this once). Until then you can paste your own Meet link when you schedule an online session.",
+          )}
         </IonCardContent>
       </IonCard>
     );
@@ -192,19 +208,21 @@ function GoogleCard() {
   if (s.connected) {
     return (
       <p className="sessions-note">
-        <IonIcon icon={logoGoogle} /> Invites and Meet links come from <strong>{s.email}</strong>.{' '}
+        <IonIcon icon={logoGoogle} /> {t('Invites and Meet links come from')}{' '}
+        <strong>{s.email}</strong>.{' '}
         <button
           type="button"
           className="sessions-link"
           onClick={() =>
             void alert({
-              header: 'Disconnect Google?',
-              message:
+              header: t('Disconnect Google?'),
+              message: t(
                 'Existing calendar events stay in your calendar. New sessions will not send invites until you connect again.',
+              ),
               buttons: [
-                { text: 'Cancel', role: 'cancel' },
+                { text: t('Cancel'), role: 'cancel' },
                 {
-                  text: 'Disconnect',
+                  text: t('Disconnect'),
                   role: 'destructive',
                   handler: () => disconnect.mutate(),
                 },
@@ -212,7 +230,7 @@ function GoogleCard() {
             })
           }
         >
-          Disconnect
+          {t('Disconnect')}
         </button>
       </p>
     );
@@ -221,13 +239,14 @@ function GoogleCard() {
     <IonCard className="sessions-card">
       <IonCardContent>
         <p style={{ marginTop: 0 }}>
-          <strong>Connect your Google account</strong> so FitCoach can send calendar invites with a
-          Google Meet link from your Gmail.
+          <strong>{t('Connect your Google account')}</strong>{' '}
+          {t('so FitCoach can send calendar invites with a Google Meet link from your Gmail.')}
         </p>
         <p className="sessions-note">
-          Google will show “Google hasn't verified this app” – tap <strong>Advanced</strong> →{' '}
-          <strong>Go to FitCoach</strong>, tick the calendar box and tap <strong>Continue</strong>.
-          Then come back here.
+          {t("Google will show “Google hasn't verified this app” – tap")}{' '}
+          <strong>{t('Advanced')}</strong> → <strong>{t('Go to FitCoach')}</strong>
+          {t(', tick the calendar box and tap')} <strong>{t('Continue')}</strong>
+          {t('. Then come back here.')}
         </p>
         <IonButton
           expand="block"
@@ -242,7 +261,7 @@ function GoogleCard() {
           }}
         >
           <IonIcon slot="start" icon={logoGoogle} />
-          {opening ? 'Opening Google…' : 'Connect Google Calendar'}
+          {opening ? t('Opening Google…') : t('Connect Google Calendar')}
         </IonButton>
       </IonCardContent>
     </IonCard>

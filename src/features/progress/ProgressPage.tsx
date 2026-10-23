@@ -23,9 +23,11 @@ import { useAuth } from '../auth/useAuth';
 import { useAddMeasurement } from './api';
 import { ProgressView } from './ProgressView';
 import './progress.css';
+import { useT } from '../../i18n/i18n';
 
 /** Me → Progress (clients, and trainers for themselves). */
 export function ProgressPage() {
+  const t = useT();
   const { profile } = useAuth();
   return (
     <IonPage>
@@ -34,7 +36,7 @@ export function ProgressPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me" />
           </IonButtons>
-          <IonTitle>Progress</IonTitle>
+          <IonTitle>{t('Progress')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -44,7 +46,7 @@ export function ProgressPage() {
       <IonContent className="ion-padding">
         <IonButton expand="block" routerLink="/me/progress/new">
           <IonIcon slot="start" icon={add} />
-          Add measurement
+          {t('Add measurement')}
         </IonButton>
         {profile && <ProgressView person={profile} editable />}
       </IonContent>
@@ -56,6 +58,7 @@ const num = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.'))
 
 /** Me → Progress → Add: weight, waist, a note and up to 3 photos. */
 export function AddMeasurementPage() {
+  const t = useT();
   const { profile } = useAuth();
   const save = useAddMeasurement(profile?.id);
   const router = useIonRouter();
@@ -86,7 +89,7 @@ export function AddMeasurementPage() {
         notes: notes.trim() || null,
         photos,
       });
-      void toast({ message: 'Saved', duration: 1500, position: 'top' });
+      void toast({ message: t('Saved'), duration: 1500, position: 'top' });
       router.goBack();
     } catch (err) {
       fail(err instanceof Error ? err.message : 'Could not save. Try again.');
@@ -100,14 +103,14 @@ export function AddMeasurementPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me/progress" />
           </IonButtons>
-          <IonTitle>Add measurement</IonTitle>
+          <IonTitle>{t('Add measurement')}</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
         <div className="progress-page progress-form">
           <IonInput
             fill="outline"
-            label="Date"
+            label={t('Date')}
             labelPlacement="stacked"
             type="date"
             value={date}
@@ -116,7 +119,7 @@ export function AddMeasurementPage() {
           <div className="progress-row">
             <IonInput
               fill="outline"
-              label="Weight (kg)"
+              label={t('Weight (kg)')}
               labelPlacement="floating"
               type="number"
               inputmode="decimal"
@@ -125,7 +128,7 @@ export function AddMeasurementPage() {
             />
             <IonInput
               fill="outline"
-              label="Waist (cm)"
+              label={t('Waist (cm)')}
               labelPlacement="floating"
               type="number"
               inputmode="decimal"
@@ -135,7 +138,7 @@ export function AddMeasurementPage() {
           </div>
           <IonTextarea
             fill="outline"
-            label="Note (optional)"
+            label={t('Note (optional)')}
             labelPlacement="floating"
             autoGrow
             maxlength={1000}
@@ -160,12 +163,13 @@ export function AddMeasurementPage() {
               <IonIcon slot="start" icon={camera} />
               {photos.length
                 ? `${photos.length} photo(s) chosen – change`
-                : 'Add progress photos (up to 3)'}
+                : t('Add progress photos (up to 3)')}
             </IonButton>
             <IonText color="medium">
               <p className="progress-note">
-                Front, side and back work best, in the same light each time. Photos are private:
-                only you, your trainer and the admin can see them. You can add photos once a week.
+                {t(
+                  'Front, side and back work best, in the same light each time. Photos are private: only you, your trainer and the admin can see them. You can add photos once a week.',
+                )}
               </p>
             </IonText>
           </div>
@@ -176,7 +180,7 @@ export function AddMeasurementPage() {
             disabled={save.isPending}
             onClick={() => void submit()}
           >
-            {save.isPending ? 'Saving…' : 'Save'}
+            {save.isPending ? t('Saving…') : t('Save')}
           </IonButton>
         </div>
       </IonContent>

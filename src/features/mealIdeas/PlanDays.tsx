@@ -2,6 +2,7 @@ import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, useIonAlert } 
 
 import type { MealPlan, PlanDay, PlanMeal } from './api';
 import './mealIdeas.css';
+import { tr, useT } from '../../i18n/i18n';
 
 const MEAL_NAMES: Record<string, string> = {
   breakfast: 'Breakfast',
@@ -42,45 +43,46 @@ export function PlanDays({
   plan: MealPlan;
   onEditMeal?: (dayIndex: number, mealIndex: number, meal: PlanMeal) => void;
 }) {
+  const t = useT();
   const [alert] = useIonAlert();
 
   function edit(di: number, mi: number, m: PlanMeal) {
     if (!onEditMeal) return;
     void alert({
-      header: `${MEAL_NAMES[m.meal]} – ${dayTitle(plan.starts_on, di + 1)}`,
-      message: 'Dish · portion · kcal · protein (g)',
+      header: `${tr(MEAL_NAMES[m.meal])} – ${dayTitle(plan.starts_on, di + 1)}`,
+      message: t('Dish · portion · kcal · protein (g)'),
       inputs: [
         {
           name: 'dish',
           value: m.dish,
-          placeholder: 'Dish',
+          placeholder: t('Dish'),
           attributes: { maxlength: 100, 'aria-label': 'Dish' },
         },
         {
           name: 'portion',
           value: m.portion,
-          placeholder: 'Portion',
+          placeholder: t('Portion'),
           attributes: { maxlength: 80, 'aria-label': 'Portion' },
         },
         {
           name: 'kcal',
           type: 'number',
           value: m.kcal,
-          placeholder: 'kcal',
+          placeholder: t('kcal'),
           attributes: { 'aria-label': 'kcal' },
         },
         {
           name: 'protein_g',
           type: 'number',
           value: m.protein_g,
-          placeholder: 'Protein g',
+          placeholder: t('Protein g'),
           attributes: { 'aria-label': 'Protein in grams' },
         },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Save',
+          text: t('Save'),
           handler: (v: Record<string, string>) => {
             const num = (x: string, max: number) =>
               Math.min(max, Math.max(0, Math.round(Number(x) || 0)));
@@ -105,8 +107,8 @@ export function PlanDays({
           <IonCard key={d.day} className="ideas-day">
             <IonCardHeader>
               <IonCardSubtitle>
-                {dayTitle(plan.starts_on, d.day)} · ~{d.total_kcal} kcal · {d.total_protein_g} g
-                protein
+                {dayTitle(plan.starts_on, d.day)} · ~{d.total_kcal} {t('kcal ·')}{' '}
+                {d.total_protein_g} {t('g protein')}
               </IonCardSubtitle>
             </IonCardHeader>
             <IonCardContent>
@@ -118,17 +120,21 @@ export function PlanDays({
                   disabled={!onEditMeal}
                   onClick={() => edit(di, mi, m)}
                 >
-                  <span className="ideas-meal-name">{MEAL_NAMES[m.meal]}</span>
+                  <span className="ideas-meal-name">{tr(MEAL_NAMES[m.meal])}</span>
                   <span className="ideas-dish">
                     {m.dish}
                     {m.portion ? <span className="ideas-portion"> · {m.portion}</span> : null}
                   </span>
                   <span className="ideas-nums">
-                    {m.kcal} kcal · {m.protein_g} g
+                    {m.kcal} {t('kcal ·')} {m.protein_g} g
                   </span>
                 </button>
               ))}
-              {flags.length > 0 && <p className="ideas-flag">Check: {flags.join(', ')}</p>}
+              {flags.length > 0 && (
+                <p className="ideas-flag">
+                  {t('Check:')} {flags.join(', ')}
+                </p>
+              )}
             </IonCardContent>
           </IonCard>
         );

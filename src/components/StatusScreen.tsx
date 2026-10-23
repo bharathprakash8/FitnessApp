@@ -16,6 +16,7 @@ interface StatusScreenProps {
 
 /** Full-screen loading or message state (e.g. checking session, account inactive). */
 export function StatusScreen({ loading, title, message, actions = [] }: StatusScreenProps) {
+  const tx = useT();
   const t = useT();
   return (
     <IonPage>
@@ -34,7 +35,7 @@ export function StatusScreen({ loading, title, message, actions = [] }: StatusSc
           }}
         >
           {loading ? (
-            <IonSpinner name="crescent" color="primary" aria-label="Loading" />
+            <IonSpinner name="crescent" color="primary" aria-label={tx('Loading')} />
           ) : (
             <>
               {title && <h2 style={{ margin: 0 }}>{t(title)}</h2>}

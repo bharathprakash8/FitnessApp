@@ -48,7 +48,8 @@ function fill(text: string, vars?: Record<string, string | number>) {
 }
 
 /** Translate outside React (toasts, errors). */
-export function tr(en: string, vars?: Record<string, string | number>): string {
+export function tr(en: string | null | undefined, vars?: Record<string, string | number>): string {
+  if (!en) return '';
   return fill(current === 'kn' ? (kn[en] ?? en) : en, vars);
 }
 

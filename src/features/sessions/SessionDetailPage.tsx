@@ -42,9 +42,11 @@ import {
   type SessionWithPeople,
 } from './api';
 import './sessions.css';
+import { useT } from '../../i18n/i18n';
 
 /** Trainer → one session: details, Join, attendance, edit and cancel. */
 export function SessionDetailPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const session = useSession(id);
   return (
@@ -54,7 +56,7 @@ export function SessionDetailPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/trainer/sessions" />
           </IonButtons>
-          <IonTitle>{session.data?.title ?? 'Session'}</IonTitle>
+          <IonTitle>{session.data?.title ?? t('Session')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -69,7 +71,7 @@ export function SessionDetailPage() {
             </div>
           ) : !session.data ? (
             <IonText color="medium">
-              <p className="ion-text-center">This session no longer exists.</p>
+              <p className="ion-text-center">{t('This session no longer exists.')}</p>
             </IonText>
           ) : (
             <Detail s={session.data} />
@@ -81,6 +83,7 @@ export function SessionDetailPage() {
 }
 
 function Detail({ s }: { s: SessionWithPeople }) {
+  const t = useT();
   const { profile } = useAuth();
   const myTz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const router = useIonRouter();
@@ -94,17 +97,17 @@ function Detail({ s }: { s: SessionWithPeople }) {
   function edit() {
     if (!s.series_id) return router.push(`/trainer/sessions/${s.id}/edit`);
     void sheet({
-      header: 'This session repeats',
+      header: t('This session repeats'),
       buttons: [
         {
-          text: 'Change only this session',
+          text: t('Change only this session'),
           handler: () => router.push(`/trainer/sessions/${s.id}/edit?scope=one`),
         },
         {
-          text: 'Change this and later sessions',
+          text: t('Change this and later sessions'),
           handler: () => router.push(`/trainer/sessions/${s.id}/edit?scope=series`),
         },
-        { text: 'Back', role: 'cancel' },
+        { text: t('Back'), role: 'cancel' },
       ],
     });
   }
@@ -134,23 +137,23 @@ function Detail({ s }: { s: SessionWithPeople }) {
 
   function askCancel() {
     void sheet({
-      header: 'Cancel – clients are told by notification and calendar update',
+      header: t('Cancel – clients are told by notification and calendar update'),
       buttons: [
         ...(s.series_id
           ? [
               {
-                text: 'Cancel only this session',
+                text: t('Cancel only this session'),
                 role: 'destructive',
                 handler: () => doCancel('one'),
               },
               {
-                text: 'Cancel this and all later sessions',
+                text: t('Cancel this and all later sessions'),
                 role: 'destructive',
                 handler: () => doCancel('series'),
               },
             ]
-          : [{ text: 'Cancel session', role: 'destructive', handler: () => doCancel('one') }]),
-        { text: 'Keep it', role: 'cancel' },
+          : [{ text: t('Cancel session'), role: 'destructive', handler: () => doCancel('one') }]),
+        { text: t('Keep it'), role: 'cancel' },
       ],
     });
   }
@@ -160,9 +163,9 @@ function Detail({ s }: { s: SessionWithPeople }) {
       <IonCard className="sessions-card">
         <IonCardHeader>
           <IonCardSubtitle>
-            {s.type === 'online' ? 'Online' : 'In person'}
-            {s.series_id ? ' · repeating' : ''}
-            {cancelled ? ' · cancelled' : ''}
+            {s.type === 'online' ? t('Online') : t('In person')}
+            {s.series_id ? t(' · repeating') : ''}
+            {cancelled ? t(' · cancelled') : ''}
           </IonCardSubtitle>
           <IonCardTitle>
             {formatWhen(s.starts_at, myTz)} {zoneAbbr(s.starts_at, myTz)}
@@ -170,11 +173,12 @@ function Detail({ s }: { s: SessionWithPeople }) {
         </IonCardHeader>
         <IonCardContent>
           <p>
-            {s.duration_min} min
+            {s.duration_min} {t('min')}
             {s.time_zone !== myTz && (
               <>
                 {' '}
-                · scheduled as {formatWhen(s.starts_at, s.time_zone)} ({timeZoneLabel(s.time_zone)})
+                {t('· scheduled as')} {formatWhen(s.starts_at, s.time_zone)} (
+                {timeZoneLabel(s.time_zone)})
               </>
             )}
           </p>
@@ -189,22 +193,22 @@ function Detail({ s }: { s: SessionWithPeople }) {
               rel="noopener"
             >
               <IonIcon slot="start" icon={videocam} />
-              Join
+              {t('Join')}
             </IonButton>
           )}
           {!s.send_invite && (
-            <p className="sessions-note">No calendar invites were sent for this session.</p>
+            <p className="sessions-note">{t('No calendar invites were sent for this session.')}</p>
           )}
         </IonCardContent>
       </IonCard>
 
       <IonList inset style={{ margin: '16px 0' }}>
         <IonListHeader>
-          <IonLabel>{started ? 'Attendance' : 'Clients'}</IonLabel>
+          <IonLabel>{started ? t('Attendance') : t('Clients')}</IonLabel>
         </IonListHeader>
         {s.session_attendees.map((a) => (
           <IonItem key={a.client_id}>
-            <IonLabel>{a.profiles?.full_name || a.profiles?.email || 'Client'}</IonLabel>
+            <IonLabel>{a.profiles?.full_name || a.profiles?.email || t('Client')}</IonLabel>
             {started && !cancelled ? (
               <IonSegment
                 slot="end"
@@ -218,15 +222,15 @@ function Detail({ s }: { s: SessionWithPeople }) {
                 }
               >
                 <IonSegmentButton value="present">
-                  <IonLabel>Present</IonLabel>
+                  <IonLabel>{t('Present')}</IonLabel>
                 </IonSegmentButton>
                 <IonSegmentButton value="missed">
-                  <IonLabel>Missed</IonLabel>
+                  <IonLabel>{t('Missed')}</IonLabel>
                 </IonSegmentButton>
               </IonSegment>
             ) : (
               <IonLabel slot="end" color="medium">
-                Invited
+                {t('Invited')}
               </IonLabel>
             )}
           </IonItem>
@@ -236,7 +240,7 @@ function Detail({ s }: { s: SessionWithPeople }) {
       {!cancelled && !started && (
         <>
           <IonButton expand="block" fill="outline" onClick={edit}>
-            Edit
+            {t('Edit')}
           </IonButton>
           <IonButton
             expand="block"
@@ -245,7 +249,7 @@ function Detail({ s }: { s: SessionWithPeople }) {
             disabled={cancel.isPending}
             onClick={askCancel}
           >
-            {cancel.isPending ? 'Cancelling…' : 'Cancel session'}
+            {cancel.isPending ? t('Cancelling…') : t('Cancel session')}
           </IonButton>
         </>
       )}

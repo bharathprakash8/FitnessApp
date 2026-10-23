@@ -41,9 +41,11 @@ import { HealthAccessHelp } from './HealthAccessHelp';
 import { rememberConnect, useIphoneSyncStuck } from './syncStuck';
 import { SHORTCUT_RUN_URL, shortcutConnectUrl } from './shortcut';
 import './activity.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: connect Health Connect (Android app) or set up the iPhone Shortcut. */
 export function HealthSyncPage() {
+  const t = useT();
   return (
     <IonPage>
       <IonHeader>
@@ -51,7 +53,7 @@ export function HealthSyncPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me" />
           </IonButtons>
-          <IonTitle>Health sync</IonTitle>
+          <IonTitle>{t('Health sync')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -61,14 +63,17 @@ export function HealthSyncPage() {
       <IonContent className="ion-padding">
         <div style={{ maxWidth: 560, margin: '0 auto' }}>
           <p>
-            FitCoach reads <strong>calories burnt, steps and sleep</strong> from your phone so your
-            trainer can see your full picture. It never writes to your health data.
+            {t('FitCoach reads')} <strong>{t('calories burnt, steps and sleep')}</strong>{' '}
+            {t(
+              'from your phone so your trainer can see your full picture. It never writes to your health data.',
+            )}
           </p>
           {isImpersonating() ? (
             <p className="health-error">
-              You're logged in as {impersonatedName()}. Health sync uses the phone's own health
-              data, so connecting or syncing is switched off here – it would send your data to their
-              account.
+              {t("You're logged in as")} {impersonatedName()}
+              {t(
+                ". Health sync uses the phone's own health data, so connecting or syncing is switched off here – it would send your data to their account.",
+              )}
             </p>
           ) : isAndroidApp ? (
             <AndroidSection />
@@ -76,9 +81,9 @@ export function HealthSyncPage() {
             <IPhoneSection />
           )}
           <p className="burn-muted">
-            No phone data? You can always type your active calories on the Today screen.{' '}
+            {t('No phone data? You can always type your active calories on the Today screen.')}{' '}
             <a href="/privacy.html" target="_blank" rel="noopener">
-              Privacy policy
+              {t('Privacy policy')}
             </a>
           </p>
         </div>
@@ -88,6 +93,7 @@ export function HealthSyncPage() {
 }
 
 function AndroidSection() {
+  const t = useT();
   const { profile } = useAuth();
   const qc = useQueryClient();
   const [toast] = useIonToast();
@@ -135,7 +141,7 @@ function AndroidSection() {
         reportDays(days);
       } else {
         void toast({
-          message: 'FitCoach needs at least "Active calories burned" to show your burn.',
+          message: t('FitCoach needs at least "Active calories burned" to show your burn.'),
           duration: 3500,
           color: 'warning',
           position: 'top',
@@ -169,69 +175,74 @@ function AndroidSection() {
   return (
     <IonCard style={{ marginInline: 0 }}>
       <IonCardHeader>
-        <IonCardTitle>Health Connect</IonCardTitle>
+        <IonCardTitle>{t('Health Connect')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         {state === null ? (
           <IonSpinner name="dots" />
         ) : state === 'not_installed' ? (
           <>
-            <p>Health Connect isn't installed on this phone. Install it, then come back here.</p>
+            <p>
+              {t("Health Connect isn't installed on this phone. Install it, then come back here.")}
+            </p>
             <IonButton expand="block" href={HEALTH_CONNECT_PLAY_URL} target="_blank">
-              Get Health Connect
+              {t('Get Health Connect')}
             </IonButton>
             <IonButton expand="block" fill="clear" onClick={refresh}>
-              I've installed it
+              {t("I've installed it")}
             </IonButton>
           </>
         ) : state === 'connected' ? (
           <>
             <p>
-              ✅ Connected. FitCoach syncs the last 7 days each time you open the app.
+              {t('✅ Connected. FitCoach syncs the last 7 days each time you open the app.')}
               {last ? ` Last sync: ${last.toLocaleString('en-IN')}.` : ''}
             </p>
             <IonButton expand="block" disabled={busy} onClick={() => void syncNow()}>
-              {busy ? 'Syncing…' : 'Sync now'}
+              {busy ? t('Syncing…') : t('Sync now')}
             </IonButton>
             <IonButton expand="block" fill="clear" onClick={() => void openHealthConnectSettings()}>
-              Manage permissions
+              {t('Manage permissions')}
             </IonButton>
           </>
         ) : (
           <>
             <p>
-              Allow FitCoach to <strong>read</strong> active calories, total calories, steps, sleep
-              and heart rate (only used to see when a watch was worn). Your fitness app or watch
-              (e.g. Google Fit, Samsung Health, Fitbit) must also share its data with Health
-              Connect.
+              {t('Allow FitCoach to')} <strong>{t('read')}</strong>{' '}
+              {t(
+                'active calories, total calories, steps, sleep and heart rate (only used to see when a watch was worn). Your fitness app or watch (e.g. Google Fit, Samsung Health, Fitbit) must also share its data with Health Connect.',
+              )}
             </p>
             <IonButton expand="block" disabled={busy} onClick={() => void connect()}>
-              {busy ? 'Connecting…' : 'Connect Health Connect'}
+              {busy ? t('Connecting…') : t('Connect Health Connect')}
             </IonButton>
           </>
         )}
         {noData && !syncError && (
           <IonText color="warning">
             <p className="health-error">
-              <strong>No activity in Health Connect yet.</strong> Health Connect only stores data –
-              an app has to record it. Install <strong>Google Fit</strong> (or your watch or band's
-              app), turn on activity tracking and its <strong>Health Connect</strong> sharing, then
-              tap Sync now. Until then FitCoach estimates your burn.
+              <strong>{t('No activity in Health Connect yet.')}</strong>{' '}
+              {t('Health Connect only stores data – an app has to record it. Install')}{' '}
+              <strong>{t('Google Fit')}</strong>{' '}
+              {t("(or your watch or band's app), turn on activity tracking and its")}{' '}
+              <strong>{t('Health Connect')}</strong>{' '}
+              {t('sharing, then tap Sync now. Until then FitCoach estimates your burn.')}
             </p>
           </IonText>
         )}
         {syncError && (
           <IonButton size="small" fill="outline" routerLink="/me/report">
-            Report a problem
+            {t('Report a problem')}
           </IonButton>
         )}
         {syncError && (
           <IonText color="danger">
             <p className="health-error">
-              <strong>Sync failed:</strong> {syncError}
+              <strong>{t('Sync failed:')}</strong> {syncError}
               <br />
-              Check Manage permissions (allow all), then Sync now. If it keeps failing, tap Report a
-              problem below.
+              {t(
+                'Check Manage permissions (allow all), then Sync now. If it keeps failing, tap Report a problem below.',
+              )}
             </p>
           </IonText>
         )}
@@ -254,6 +265,7 @@ async function sha256Hex(text: string): Promise<string> {
 }
 
 function IPhoneSection() {
+  const tx = useT();
   const { profile } = useAuth();
   const qc = useQueryClient();
   const [alert] = useIonAlert();
@@ -278,7 +290,7 @@ function IPhoneSection() {
       await qc.invalidateQueries({ queryKey: profileKey(profile.id) });
     } catch {
       void toast({
-        message: 'Could not create a sync code',
+        message: tx('Could not create a sync code'),
         duration: 2500,
         color: 'danger',
         position: 'top',
@@ -291,12 +303,13 @@ function IPhoneSection() {
   function confirmNew() {
     if (!hasToken) return void generate();
     void alert({
-      header: 'Connect again?',
-      message:
+      header: tx('Connect again?'),
+      message: tx(
         'This makes a new connection code; the old one stops working. Use it after changing phones or reinstalling the Shortcut.',
+      ),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Connect again', handler: () => void generate() },
+        { text: tx('Cancel'), role: 'cancel' },
+        { text: tx('Connect again'), handler: () => void generate() },
       ],
     });
   }
@@ -307,7 +320,7 @@ function IPhoneSection() {
       void toast({ message: `${what} copied`, duration: 1500, position: 'top' });
     } catch {
       void toast({
-        message: 'Could not copy – select and copy it by hand',
+        message: tx('Could not copy – select and copy it by hand'),
         duration: 2500,
         position: 'top',
       });
@@ -317,32 +330,36 @@ function IPhoneSection() {
   return (
     <IonCard style={{ marginInline: 0 }}>
       <IonCardHeader>
-        <IonCardTitle>iPhone (Apple Health)</IonCardTitle>
+        <IonCardTitle>{tx('iPhone (Apple Health)')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         {profile && <LastSync clientId={profile.id} />}
         {stuck && (
           <IonText color="warning">
             <p>
-              <strong>Nothing has arrived from the Shortcut yet.</strong> Usually Health access is
-              off – see the help under step 2.
+              <strong>{tx('Nothing has arrived from the Shortcut yet.')}</strong>{' '}
+              {tx('Usually Health access is off – see the help under step 2.')}
             </p>
           </IonText>
         )}
         {hasToken && !token && (
           <IonButton expand="block" href={SHORTCUT_RUN_URL}>
-            Sync now
+            {tx('Sync now')}
           </IonButton>
         )}
         <p>
-          An Apple Shortcut sends your Apple Health numbers (and, if you wear an Apple Watch, the
-          hours you wore it) to FitCoach. Set it up once – about 2 minutes.
+          {tx(
+            'An Apple Shortcut sends your Apple Health numbers (and, if you wear an Apple Watch, the hours you wore it) to FitCoach. Set it up once – about 2 minutes.',
+          )}
         </p>
 
         <ol className="health-steps">
           <li>
-            <strong>Get the Shortcut.</strong> Tap the button, then <strong>Add Shortcut</strong>.
-            If you already have an older “FitCoach Sync”, delete it first (press and hold → Delete).
+            <strong>{tx('Get the Shortcut.')}</strong> {tx('Tap the button, then')}{' '}
+            <strong>{tx('Add Shortcut')}</strong>
+            {tx(
+              '. If you already have an older “FitCoach Sync”, delete it first (press and hold → Delete).',
+            )}
             <IonButton
               expand="block"
               fill="outline"
@@ -350,28 +367,30 @@ function IPhoneSection() {
               target="_blank"
               rel="noopener"
             >
-              Get “FitCoach Sync”
+              {tx('Get “FitCoach Sync”')}
             </IonButton>
           </li>
           <li>
-            <strong>Connect.</strong> Come back here and tap Connect, then{' '}
-            <strong>Finish in Shortcuts</strong>. The first time, iPhone asks to allow Health data
-            (tap <strong>Turn On All</strong> → <strong>Allow</strong>) and sending to FitCoach (tap{' '}
-            <strong>Always Allow</strong>).
+            <strong>{tx('Connect.')}</strong> {tx('Come back here and tap Connect, then')}{' '}
+            <strong>{tx('Finish in Shortcuts')}</strong>
+            {tx('. The first time, iPhone asks to allow Health data (tap')}{' '}
+            <strong>{tx('Turn On All')}</strong> → <strong>{tx('Allow')}</strong>
+            {tx(') and sending to FitCoach (tap')} <strong>{tx('Always Allow')}</strong>).
             {token ? (
               <>
                 <IonButton expand="block" href={shortcutConnectUrl(token)}>
-                  Finish in Shortcuts
+                  {tx('Finish in Shortcuts')}
                 </IonButton>
                 <details className="health-manual">
-                  <summary>Shortcut didn’t open?</summary>
+                  <summary>{tx('Shortcut didn’t open?')}</summary>
                   <p>
-                    Copy this code, open the Shortcuts app, run “FitCoach Sync” and paste it when
-                    asked.
+                    {tx(
+                      'Copy this code, open the Shortcuts app, run “FitCoach Sync” and paste it when asked.',
+                    )}
                   </p>
                   <p className="health-code">{token}</p>
                   <IonButton size="small" fill="outline" onClick={() => void copy(token, 'Code')}>
-                    Copy code
+                    {tx('Copy code')}
                   </IonButton>
                 </details>
               </>
@@ -382,19 +401,24 @@ function IPhoneSection() {
                 disabled={busy}
                 onClick={confirmNew}
               >
-                {hasToken ? 'Connect again' : 'Connect'}
+                {hasToken ? tx('Connect again') : tx('Connect')}
               </IonButton>
             )}
             <HealthAccessHelp open={stuck} />
           </li>
           <li>
-            <strong>Sync automatically.</strong> Apple doesn’t let apps do this step, so it takes a
-            few taps, once: open Shortcuts → <strong>Automation</strong> → <strong>+</strong> →{' '}
-            <strong>Time of Day</strong> → set <strong>10:00 PM</strong>, Daily →{' '}
-            <strong>Run Immediately</strong> → Next → choose <strong>FitCoach Sync</strong>. Then do
-            the same again for <strong>7:00 AM</strong> (it catches the end of the previous day).
+            <strong>{tx('Sync automatically.')}</strong>{' '}
+            {tx(
+              'Apple doesn’t let apps do this step, so it takes a few taps, once: open Shortcuts →',
+            )}{' '}
+            <strong>{tx('Automation')}</strong> → <strong>+</strong> →{' '}
+            <strong>{tx('Time of Day')}</strong> {tx('→ set')} <strong>{tx('10:00 PM')}</strong>
+            {tx(', Daily →')} <strong>{tx('Run Immediately')}</strong> {tx('→ Next → choose')}{' '}
+            <strong>{tx('FitCoach Sync')}</strong>
+            {tx('. Then do the same again for')} <strong>{tx('7:00 AM')}</strong>{' '}
+            {tx('(it catches the end of the previous day).')}
             <IonButton expand="block" fill="outline" href="shortcuts://">
-              Open Shortcuts
+              {tx('Open Shortcuts')}
             </IonButton>
           </li>
         </ol>

@@ -22,9 +22,11 @@ import { useActivePlan, useWorkoutLogs } from './api';
 import { ExerciseLogCard } from './ExerciseLogCard';
 import { RestTimer } from './RestTimer';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: do one plan day – log each set, with last time's numbers as a guide. */
 export function WorkoutDayPage() {
+  const t = useT();
   const { dayId } = useParams<{ dayId: string }>();
   const { profile } = useAuth();
   const active = useActivePlan(profile?.id);
@@ -42,7 +44,7 @@ export function WorkoutDayPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
-          <IonTitle>{day?.title ?? 'Workout'}</IonTitle>
+          <IonTitle>{day?.title ?? t('Workout')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -57,12 +59,12 @@ export function WorkoutDayPage() {
             </div>
           ) : !day ? (
             <IonText color="medium">
-              <p className="ion-text-center">This workout isn't in your current plan.</p>
+              <p className="ion-text-center">{t("This workout isn't in your current plan.")}</p>
             </IonText>
           ) : (
             <>
               <p className="workout-muted" style={{ marginTop: 0 }}>
-                {formatDate(today)} · sets are saved as you log them
+                {formatDate(today)} {t('· sets are saved as you log them')}
               </p>
               {day.plan_exercises.map((pe) => (
                 <ExerciseLogCard
@@ -77,7 +79,7 @@ export function WorkoutDayPage() {
                 />
               ))}
               <IonButton expand="block" onClick={() => router.push('/workouts', 'back')}>
-                Finish workout
+                {t('Finish workout')}
               </IonButton>
             </>
           )}

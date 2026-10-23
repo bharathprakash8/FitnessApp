@@ -37,6 +37,7 @@ import { StatsView } from '../stats/StatsView';
 import { LastSync } from '../activity/LastSync';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
+import { useT } from '../../i18n/i18n';
 
 type Tab =
   | 'overview'
@@ -50,6 +51,7 @@ type Tab =
   | 'reminders';
 
 export function TrainerClientPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const { profile: me } = useAuth();
   const qc = useQueryClient();
@@ -75,31 +77,31 @@ export function TrainerClientPage() {
         <IonToolbar>
           <IonSegment scrollable value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="overview">
-              <IonLabel>Overview</IonLabel>
+              <IonLabel>{t('Overview')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="stats">
-              <IonLabel>Stats</IonLabel>
+              <IonLabel>{t('Stats')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="progress">
-              <IonLabel>Progress</IonLabel>
+              <IonLabel>{t('Progress')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="summary">
-              <IonLabel>Summary</IonLabel>
+              <IonLabel>{t('Summary')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="targets">
-              <IonLabel>Targets</IonLabel>
+              <IonLabel>{t('Targets')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="food">
-              <IonLabel>Food</IonLabel>
+              <IonLabel>{t('Food')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="ideas">
-              <IonLabel>Meal ideas</IonLabel>
+              <IonLabel>{t('Meal ideas')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="workouts">
-              <IonLabel>Workouts</IonLabel>
+              <IonLabel>{t('Workouts')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="reminders">
-              <IonLabel>Reminders</IonLabel>
+              <IonLabel>{t('Reminders')}</IonLabel>
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
@@ -113,7 +115,7 @@ export function TrainerClientPage() {
             </div>
           ) : !client.data ? (
             <IonText color="medium">
-              <p className="ion-text-center">This client isn't assigned to you.</p>
+              <p className="ion-text-center">{t("This client isn't assigned to you.")}</p>
             </IonText>
           ) : tab === 'overview' ? (
             <Overview client={client.data} />
@@ -141,6 +143,7 @@ export function TrainerClientPage() {
 }
 
 function Overview({ client }: { client: Profile }) {
+  const t = useT();
   const weight = useLatestWeight(client.id);
   const targets = useTargets(client.id);
   const age = ageFrom(client.date_of_birth, client.timezone);
@@ -150,8 +153,8 @@ function Overview({ client }: { client: Profile }) {
       {!client.onboarded_at && (
         <IonText color="warning">
           <p className="trainer-note">
-            {client.full_name || 'This client'} hasn't finished onboarding yet, so some details are
-            missing.
+            {client.full_name || t('This client')}{' '}
+            {t("hasn't finished onboarding yet, so some details are missing.")}
           </p>
         </IonText>
       )}
@@ -159,27 +162,27 @@ function Overview({ client }: { client: Profile }) {
       <TargetsCard
         target={currentTarget(targets.data, client.timezone)}
         upcoming={upcomingTarget(targets.data, client.timezone)}
-        emptyText="No targets yet – set them in the Targets tab."
+        emptyText={t('No targets yet – set them in the Targets tab.')}
       />
       <IonList inset style={{ margin: '16px 0' }}>
-        <DetailRow label="Age" value={age !== null ? `${age}` : ''} />
-        <DetailRow label="Sex" value={label(SEX_LABELS, client.sex)} />
-        <DetailRow label="Height" value={client.height_cm ? `${client.height_cm} cm` : ''} />
+        <DetailRow label={t('Age')} value={age !== null ? `${age}` : ''} />
+        <DetailRow label={t('Sex')} value={label(SEX_LABELS, client.sex)} />
+        <DetailRow label={t('Height')} value={client.height_cm ? `${client.height_cm} cm` : ''} />
         <DetailRow
-          label="Weight"
+          label={t('Weight')}
           value={
             weight.data?.weight_kg
               ? `${weight.data.weight_kg} kg (${formatDate(weight.data.measured_on)})`
               : ''
           }
         />
-        <DetailRow label="Goal" value={goalText(client.goal, client.goal_other)} />
-        <DetailRow label="Diet" value={label(DIET_LABELS, client.diet_preference)} />
-        <DetailRow label="Injuries" value={client.injuries ?? ''} />
-        <DetailRow label="Phone" value={client.phone ?? ''} />
-        <DetailRow label="Email" value={client.email} />
-        <DetailRow label="Consent given" value={formatDate(client.consent_at)} />
-        <DetailRow label="Joined" value={formatDate(client.created_at)} />
+        <DetailRow label={t('Goal')} value={goalText(client.goal, client.goal_other)} />
+        <DetailRow label={t('Diet')} value={label(DIET_LABELS, client.diet_preference)} />
+        <DetailRow label={t('Injuries')} value={client.injuries ?? ''} />
+        <DetailRow label={t('Phone')} value={client.phone ?? ''} />
+        <DetailRow label={t('Email')} value={client.email} />
+        <DetailRow label={t('Consent given')} value={formatDate(client.consent_at)} />
+        <DetailRow label={t('Joined')} value={formatDate(client.created_at)} />
       </IonList>
     </>
   );

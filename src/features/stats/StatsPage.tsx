@@ -16,16 +16,18 @@ import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { CLIENT_TABS } from '../../components/tabs';
 import { useAuth } from '../auth/useAuth';
 import { StatsView } from './StatsView';
+import { useT } from '../../i18n/i18n';
 
 /** Stats tab: the signed-in person's own stats (clients, and trainers for themselves). */
 export function StatsPage() {
+  const t = useT();
   const { profile } = useAuth();
   const qc = useQueryClient();
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Stats</IonTitle>
+          <IonTitle>{t('Stats')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>

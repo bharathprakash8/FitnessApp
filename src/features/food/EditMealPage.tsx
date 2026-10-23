@@ -22,9 +22,11 @@ import { itemsJson, useDeleteMeal, useMeal, usePhotoUrls, useSaveMeal } from './
 import { MealEditor } from './MealEditor';
 import { itemsOf, localToIso, timeIn, totalsOf, type MealType } from './model';
 import './food.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: change or delete a saved meal. */
 export function EditMealPage() {
+  const tx = useT();
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
@@ -46,7 +48,7 @@ export function EditMealPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/food" />
           </IonButtons>
-          <IonTitle>Edit meal</IonTitle>
+          <IonTitle>{tx('Edit meal')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -61,11 +63,11 @@ export function EditMealPage() {
             </div>
           ) : !m ? (
             <IonText color="medium">
-              <p className="ion-text-center">This meal no longer exists.</p>
+              <p className="ion-text-center">{tx('This meal no longer exists.')}</p>
             </IonText>
           ) : (
             <>
-              {photo && <img src={photo} alt="Your meal" className="food-preview" />}
+              {photo && <img src={photo} alt={tx('Your meal')} className="food-preview" />}
               <MealEditor
                 key={m.id}
                 initialItems={itemsOf(m)}
@@ -96,7 +98,7 @@ export function EditMealPage() {
                     .then(() => router.push('/food', 'back'))
                     .catch(() =>
                       toast({
-                        message: 'Could not save',
+                        message: tx('Could not save'),
                         duration: 2500,
                         color: 'danger',
                         position: 'top',
@@ -111,11 +113,11 @@ export function EditMealPage() {
                 style={{ marginTop: 8 }}
                 onClick={() =>
                   void alert({
-                    header: 'Delete this meal?',
+                    header: tx('Delete this meal?'),
                     buttons: [
-                      { text: 'Cancel', role: 'cancel' },
+                      { text: tx('Cancel'), role: 'cancel' },
                       {
-                        text: 'Delete',
+                        text: tx('Delete'),
                         role: 'destructive',
                         handler: () => {
                           remove.mutate(m, { onSuccess: () => router.push('/food', 'back') });
@@ -125,7 +127,7 @@ export function EditMealPage() {
                   })
                 }
               >
-                Delete meal
+                {tx('Delete meal')}
               </IonButton>
             </>
           )}

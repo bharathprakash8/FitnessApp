@@ -21,6 +21,7 @@ import { useIphoneSyncStuck } from './syncStuck';
 import { SHORTCUT_RUN_URL } from './shortcut';
 import { LastSync } from './LastSync';
 import './activity.css';
+import { tr, useT } from '../../i18n/i18n';
 
 /**
  * Calories burnt for one day and the net balance against food eaten.
@@ -38,6 +39,7 @@ export function BurnCard({
   eatenKcal: number;
   editable: boolean;
 }) {
+  const t = useT();
   const tz = client.timezone;
   const today = todayIn(tz);
   const activity = useActivityDay(client.id, day);
@@ -67,7 +69,7 @@ export function BurnCard({
     const n = Math.round(Number(manual));
     if (!Number.isFinite(n) || n < 0 || n > 10000) {
       void toast({
-        message: 'Enter a number of calories (0–10,000)',
+        message: t('Enter a number of calories (0–10,000)'),
         duration: 2000,
         color: 'warning',
         position: 'top',
@@ -79,14 +81,14 @@ export function BurnCard({
       setManual('');
       if (result === 'offline') {
         void toast({
-          message: 'Saved offline – will sync when you’re back online',
+          message: t('Saved offline – will sync when you’re back online'),
           duration: 2500,
           position: 'top',
         });
       }
     } catch {
       void toast({
-        message: 'Could not save. Try again.',
+        message: t('Could not save. Try again.'),
         duration: 2500,
         color: 'danger',
         position: 'top',
@@ -97,28 +99,35 @@ export function BurnCard({
   return (
     <IonCard className="burn-card">
       <IonCardHeader>
-        <IonCardSubtitle>Calories burnt</IonCardSubtitle>
+        <IonCardSubtitle>{t('Calories burnt')}</IonCardSubtitle>
       </IonCardHeader>
       <IonCardContent>
         <div className="burn-row">
           <div>
-            <div className="burn-big">{burn.total.toLocaleString('en-IN')} kcal</div>
-            <div className="burn-muted">
-              Active {burn.active.toLocaleString('en-IN')}
-              {burn.activeEstimated ? ' (estimated)' : ''} · Resting{' '}
-              {burn.resting.toLocaleString('en-IN')}
-              {burn.restingEstimated ? ' (estimated)' : ''}
+            <div className="burn-big">
+              {burn.total.toLocaleString('en-IN')} {t('kcal')}
             </div>
-            <div className="burn-muted">{burn.activeSource}</div>
+            <div className="burn-muted">
+              {t('Active')} {burn.active.toLocaleString('en-IN')}
+              {burn.activeEstimated ? t(' (estimated)') : ''} {t('· Resting')}{' '}
+              {burn.resting.toLocaleString('en-IN')}
+              {burn.restingEstimated ? t(' (estimated)') : ''}
+            </div>
+            <div className="burn-muted">
+              {burn.activeSource
+                .split(' + ')
+                .map((part) => tr(part))
+                .join(' + ')}
+            </div>
             {burn.workoutAdded > 0 && burn.hasDeviceData && (
               <div className="burn-muted">
-                +{burn.workoutAdded.toLocaleString('en-IN')} kcal from workouts logged while no
-                watch was worn
+                +{burn.workoutAdded.toLocaleString('en-IN')}{' '}
+                {t('kcal from workouts logged while no watch was worn')}
               </div>
             )}
             {burn.countedByWatch.length > 0 && (
               <div className="burn-muted">
-                Already counted by the watch: {burn.countedByWatch.join(', ')}
+                {t('Already counted by the watch:')} {burn.countedByWatch.join(', ')}
               </div>
             )}
           </div>
@@ -127,7 +136,10 @@ export function BurnCard({
               {net > 0 ? '+' : ''}
               {net.toLocaleString('en-IN')}
             </div>
-            <div className="burn-muted">net kcal ({net > 0 ? 'surplus' : 'deficit'})</div>
+            <div className="burn-muted">
+              {t('net kcal (')}
+              {net > 0 ? t('surplus') : t('deficit')})
+            </div>
           </div>
         </div>
         {(burn.steps !== null || burn.sleepMinutes !== null) && (
@@ -141,12 +153,12 @@ export function BurnCard({
         <LastSync clientId={client.id} className="burn-muted burn-last-sync" />
         {iphoneStuck && (
           <IonButton size="small" color="warning" routerLink="/me/health">
-            Sync not working? Fix it
+            {t('Sync not working? Fix it')}
           </IonButton>
         )}
         {editable && isIOSWeb && client.health_sync_token_hash && (
           <IonButton size="small" fill="outline" href={SHORTCUT_RUN_URL}>
-            Sync now
+            {t('Sync now')}
           </IonButton>
         )}
 
@@ -154,8 +166,8 @@ export function BurnCard({
           <div className="burn-manual">
             <IonText color="medium">
               <p>
-                {day === today ? "Enter today's" : 'Enter'} active calories from your watch or phone
-                app:
+                {day === today ? t("Enter today's") : t('Enter')}{' '}
+                {t('active calories from your watch or phone app:')}
               </p>
             </IonText>
             <div className="burn-manual-row">
@@ -171,12 +183,12 @@ export function BurnCard({
                 disabled={!manual || saveManual.isPending}
                 onClick={() => void saveManualEntry()}
               >
-                Save
+                {t('Save')}
               </IonButton>
             </div>
             {(isAndroidApp || isIOSWeb) && (
               <IonButton fill="clear" size="small" routerLink="/me/health">
-                {isAndroidApp ? 'Connect Health Connect' : 'Set up iPhone sync'}
+                {isAndroidApp ? t('Connect Health Connect') : t('Set up iPhone sync')}
               </IonButton>
             )}
           </div>

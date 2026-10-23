@@ -11,9 +11,11 @@ import {
 } from '@ionic/react';
 
 import { describeDays, useCustomReminders, useMuteCustomReminder } from './api';
+import { useT } from '../../i18n/i18n';
 
 /** Client: reminders their trainer set. They can mute the ones the trainer allows. */
 export function TrainerRemindersCard({ clientId }: { clientId: string }) {
+  const t = useT();
   const reminders = useCustomReminders(clientId);
   const mute = useMuteCustomReminder(clientId);
   const [toast] = useIonToast();
@@ -23,7 +25,7 @@ export function TrainerRemindersCard({ clientId }: { clientId: string }) {
   return (
     <IonCard className="notif-card">
       <IonCardHeader>
-        <IonCardTitle>From your trainer</IonCardTitle>
+        <IonCardTitle>{t('From your trainer')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <IonList lines="full">
@@ -39,7 +41,7 @@ export function TrainerRemindersCard({ clientId }: { clientId: string }) {
                       {
                         onError: () =>
                           void toast({
-                            message: 'Could not save',
+                            message: t('Could not save'),
                             duration: 2500,
                             color: 'danger',
                             position: 'top',
@@ -53,7 +55,7 @@ export function TrainerRemindersCard({ clientId }: { clientId: string }) {
               ) : (
                 <IonLabel>
                   <ReminderText title={r.title} body={r.body} when={when(r)} />
-                  <p className="notif-muted">Always on – set by your trainer</p>
+                  <p className="notif-muted">{t('Always on – set by your trainer')}</p>
                 </IonLabel>
               )}
             </IonItem>

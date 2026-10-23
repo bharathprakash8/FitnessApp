@@ -14,9 +14,11 @@ import { formatWhen, zoneAbbr } from '../../lib/timezones';
 import type { Profile } from '../auth/roles';
 import { canJoin, sessionEnded, useClientSessions } from './api';
 import './sessions.css';
+import { useT } from '../../i18n/i18n';
 
 /** Today page (client): the next session, with Join for online ones. */
 export function NextSessionCard({ profile }: { profile: Profile }) {
+  const t = useT();
   const sessions = useClientSessions(profile.id);
   const tz = profile.timezone ?? DEFAULT_TIMEZONE;
   const next = (sessions.data ?? []).find((s) => s.status === 'scheduled' && !sessionEnded(s));
@@ -27,14 +29,15 @@ export function NextSessionCard({ profile }: { profile: Profile }) {
     <IonCard style={{ marginInline: 0 }}>
       <IonCardHeader>
         <IonCardSubtitle>
-          {live ? 'Happening now' : 'Next session'} ·{' '}
-          {next.type === 'online' ? 'online' : 'in person'}
+          {live ? t('Happening now') : t('Next session')} ·{' '}
+          {next.type === 'online' ? t('online') : t('in person')}
         </IonCardSubtitle>
         <IonCardTitle>{next.title}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <p>
-          {formatWhen(next.starts_at, tz)} {zoneAbbr(next.starts_at, tz)} · {next.duration_min} min
+          {formatWhen(next.starts_at, tz)} {zoneAbbr(next.starts_at, tz)} · {next.duration_min}{' '}
+          {t('min')}
         </p>
         {next.location && <p>📍 {next.location}</p>}
         {next.type === 'online' && next.meet_url && (
@@ -47,11 +50,11 @@ export function NextSessionCard({ profile }: { profile: Profile }) {
             rel="noopener"
           >
             <IonIcon slot="start" icon={videocam} />
-            Join
+            {t('Join')}
           </IonButton>
         )}
         <IonButton fill="clear" size="small" routerLink="/me/sessions">
-          All my sessions
+          {t('All my sessions')}
         </IonButton>
       </IonCardContent>
     </IonCard>

@@ -12,9 +12,11 @@ import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
+import { useT } from '../../i18n/i18n';
 
 /** Trainer → My fitness: set your own calorie and macro targets (same editor as for clients). */
 export function MyTargetsPage() {
+  const t = useT();
   const { profile } = useAuth();
   return (
     <IonPage>
@@ -23,7 +25,7 @@ export function MyTargetsPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/today" />
           </IonButtons>
-          <IonTitle>My targets</IonTitle>
+          <IonTitle>{t('My targets')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>

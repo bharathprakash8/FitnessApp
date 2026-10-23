@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 
 import { DEFAULT_REMINDERS, useSaveReminderSettings, type ReminderSettings } from './api';
+import { useT } from '../../i18n/i18n';
 
 const MEALS = [
   { key: 'breakfast', label: 'Breakfast' },
@@ -36,6 +37,7 @@ export function ReminderForm({
   mode: 'client' | 'trainer';
   clientName?: string;
 }) {
+  const t = useT();
   const save = useSaveReminderSettings(clientId);
   const [toast] = useIonToast();
   const [s, setS] = useState({
@@ -68,9 +70,14 @@ export function ReminderForm({
         workout_reminder_time: s.workout_reminder_time || null,
         meal_times_locked: trainer ? s.meal_times_locked : initial.meal_times_locked,
       });
-      void toast({ message: 'Reminders saved', duration: 1500, position: 'top' });
+      void toast({ message: t('Reminders saved'), duration: 1500, position: 'top' });
     } catch {
-      void toast({ message: 'Could not save', duration: 2500, color: 'danger', position: 'top' });
+      void toast({
+        message: t('Could not save'),
+        duration: 2500,
+        color: 'danger',
+        position: 'top',
+      });
     }
   }
 
@@ -79,8 +86,8 @@ export function ReminderForm({
       {trainer && !initial.enabled && (
         <IonText color="warning">
           <p className="notif-muted">
-            {clientName || 'This client'} has paused reminders. Only reminders they can't change
-            will arrive.
+            {clientName || t('This client')}{' '}
+            {t("has paused reminders. Only reminders they can't change will arrive.")}
           </p>
         </IonText>
       )}
@@ -88,7 +95,7 @@ export function ReminderForm({
         {!trainer && (
           <IonItem>
             <IonToggle checked={s.enabled} onIonChange={(e) => set('enabled', e.detail.checked)}>
-              <strong>All reminders</strong>
+              <strong>{t('All reminders')}</strong>
             </IonToggle>
           </IonItem>
         )}
@@ -115,16 +122,16 @@ export function ReminderForm({
         <IonItem disabled={timesDisabled}>
           <IonToggle
             slot="start"
-            aria-label="Workout reminder"
+            aria-label={t('Workout reminder')}
             checked={Boolean(s.workout_reminder_time)}
             onIonChange={(e) => set('workout_reminder_time', e.detail.checked ? '18:00' : '')}
           />
-          <IonLabel>Workout</IonLabel>
+          <IonLabel>{t('Workout')}</IonLabel>
           <IonInput
             slot="end"
             className="notif-time"
             type="time"
-            aria-label="Workout reminder time"
+            aria-label={t('Workout reminder time')}
             disabled={!s.workout_reminder_time}
             value={s.workout_reminder_time}
             onIonInput={(e) => set('workout_reminder_time', String(e.detail.value ?? ''))}
@@ -137,8 +144,8 @@ export function ReminderForm({
               onIonChange={(e) => set('meal_times_locked', !e.detail.checked)}
             >
               <IonLabel>
-                <strong>Client can change these</strong>
-                <p>Off = these times are fixed and arrive even if they pause reminders</p>
+                <strong>{t('Client can change these')}</strong>
+                <p>{t('Off = these times are fixed and arrive even if they pause reminders')}</p>
               </IonLabel>
             </IonToggle>
           </IonItem>
@@ -146,12 +153,13 @@ export function ReminderForm({
       </IonList>
       <IonText color="medium">
         <p className="notif-muted">
-          {timesLocked ? 'Your trainer has set these times. ' : ''}A reminder is sent only if{' '}
-          {trainer ? 'they haven’t' : 'you haven’t'} logged that meal (or today's workout) yet.
+          {timesLocked ? t('Your trainer has set these times. ') : ''}
+          {t('A reminder is sent only if')} {trainer ? t('they haven’t') : t('you haven’t')}{' '}
+          {t("logged that meal (or today's workout) yet.")}
         </p>
       </IonText>
       <IonButton expand="block" disabled={save.isPending} onClick={() => void submit()}>
-        {save.isPending ? 'Saving…' : 'Save reminders'}
+        {save.isPending ? t('Saving…') : t('Save reminders')}
       </IonButton>
     </>
   );

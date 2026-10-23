@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { StatusScreen } from '../../components/StatusScreen';
 import { homePathFor, needsOnboarding, type Role } from './roles';
 import { useAuth } from './useAuth';
+import { useT } from '../../i18n/i18n';
 
 /**
  * Shows `children` only to a signed-in, active user with one of the given roles.
@@ -21,6 +22,7 @@ export function RequireRole({
   onboarding?: boolean;
   children: ReactElement;
 }) {
+  const t = useT();
   const { status, profile, signOut, retry } = useAuth();
 
   switch (status) {
@@ -31,19 +33,19 @@ export function RequireRole({
     case 'inactive':
       return (
         <StatusScreen
-          title="Account not active"
-          message="Your FitCoach account is not active. Ask your trainer or admin for access."
-          actions={[{ label: 'Log out', onClick: () => void signOut() }]}
+          title={t('Account not active')}
+          message={t('Your FitCoach account is not active. Ask your trainer or admin for access.')}
+          actions={[{ label: t('Log out'), onClick: () => void signOut() }]}
         />
       );
     case 'error':
       return (
         <StatusScreen
-          title="Can't load your account"
-          message="Please check your internet connection and try again."
+          title={t("Can't load your account")}
+          message={t('Please check your internet connection and try again.')}
           actions={[
-            { label: 'Try again', onClick: retry },
-            { label: 'Log out', onClick: () => void signOut() },
+            { label: t('Try again'), onClick: retry },
+            { label: t('Log out'), onClick: () => void signOut() },
           ]}
         />
       );

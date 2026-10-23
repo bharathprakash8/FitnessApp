@@ -31,6 +31,7 @@ import {
 } from './api';
 import { BarChart, LineChart } from './Charts';
 import './progress.css';
+import { useT } from '../../i18n/i18n';
 
 const addDays = (date: string, n: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
@@ -41,6 +42,7 @@ const isoWeekday = (date: string) => {
 
 /** Charts, measurements and progress photos – the person's own (editable) or a client's. */
 export function ProgressView({ person, editable }: { person: Profile; editable: boolean }) {
+  const t = useT();
   const tz = person.timezone ?? DEFAULT_TIMEZONE;
   const today = todayIn(tz);
   const measurements = useMeasurements(person.id);
@@ -78,31 +80,31 @@ export function ProgressView({ person, editable }: { person: Profile; editable: 
 
   return (
     <div className="progress-page">
-      <ChartCard title="Weight (kg)" subtitle="Last 6 months">
-        <LineChart points={weights} unit="kg" label="Weight over time" />
+      <ChartCard title={t('Weight (kg)')} subtitle="Last 6 months">
+        <LineChart points={weights} unit="kg" label={t('Weight over time')} />
       </ChartCard>
-      <ChartCard title="Calories eaten" subtitle="Last 30 days">
+      <ChartCard title={t('Calories eaten')} subtitle="Last 30 days">
         <BarChart
           points={calories.data?.eaten ?? []}
           target={target?.calories}
-          label="Calories eaten per day"
+          label={t('Calories eaten per day')}
         />
       </ChartCard>
-      <ChartCard title="Calories burnt" subtitle="Last 30 days · from the phone or entered">
+      <ChartCard title={t('Calories burnt')} subtitle="Last 30 days · from the phone or entered">
         <BarChart
           points={calories.data?.burnt ?? []}
-          label="Calories burnt per day"
+          label={t('Calories burnt per day')}
           color="secondary"
         />
       </ChartCard>
-      <ChartCard title="Workout days per week" subtitle="Last 12 weeks">
-        <BarChart points={perWeek} label="Workout days per week" />
+      <ChartCard title={t('Workout days per week')} subtitle="Last 12 weeks">
+        <BarChart points={perWeek} label={t('Workout days per week')} />
       </ChartCard>
 
-      <h3>Measurements and photos</h3>
+      <h3>{t('Measurements and photos')}</h3>
       {(measurements.data ?? []).length === 0 ? (
         <p className="progress-empty">
-          {editable ? 'No measurements yet – add your first one.' : 'No measurements yet.'}
+          {editable ? t('No measurements yet – add your first one.') : t('No measurements yet.')}
         </p>
       ) : (
         measurements.data!.map((m) => (
@@ -142,6 +144,7 @@ function MeasurementCard({
   clientId: string;
   editable: boolean;
 }) {
+  const t = useT();
   const photos = useProgressPhotoUrls(m.photo_paths);
   const remove = useDeleteMeasurement(clientId);
   const [alert] = useIonAlert();
@@ -161,15 +164,15 @@ function MeasurementCard({
               fill="clear"
               color="medium"
               size="small"
-              aria-label="Delete this entry"
+              aria-label={t('Delete this entry')}
               disabled={remove.isPending}
               onClick={() =>
                 void alert({
-                  header: 'Delete this entry?',
+                  header: t('Delete this entry?'),
                   message: m.photo_paths.length ? 'Its photos are deleted too.' : undefined,
                   buttons: [
-                    { text: 'Cancel', role: 'cancel' },
-                    { text: 'Delete', role: 'destructive', handler: () => remove.mutate(m) },
+                    { text: t('Cancel'), role: 'cancel' },
+                    { text: t('Delete'), role: 'destructive', handler: () => remove.mutate(m) },
                   ],
                 })
               }
@@ -187,7 +190,7 @@ function MeasurementCard({
                 <img
                   key={p}
                   src={photos.data[p]}
-                  alt="Progress photo"
+                  alt={t('Progress photo')}
                   loading="lazy"
                   onClick={() => setOpen(photos.data![p]!)}
                 />
@@ -201,12 +204,12 @@ function MeasurementCard({
           <IonToolbar>
             <IonTitle>{formatDate(m.measured_on)}</IonTitle>
             <IonButtons slot="end">
-              <IonButton onClick={() => setOpen(null)}>Close</IonButton>
+              <IonButton onClick={() => setOpen(null)}>{t('Close')}</IonButton>
             </IonButtons>
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
-          {open && <img src={open} alt="Progress photo" className="photo-viewer" />}
+          {open && <img src={open} alt={t('Progress photo')} className="photo-viewer" />}
         </IonContent>
       </IonModal>
     </IonCard>

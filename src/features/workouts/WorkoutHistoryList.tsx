@@ -5,6 +5,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { formatDate } from '../../lib/dates';
 import { formatSet, groupByDate, type LogWithExercise } from './model';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /** Logged sessions by date, used by the client (history) and the trainer (client detail). */
 export function WorkoutHistoryList({
@@ -16,6 +17,7 @@ export function WorkoutHistoryList({
   emptyText: string;
   limitDays?: number;
 }) {
+  const t = useT();
   const sessions = groupByDate(logs).slice(0, limitDays);
   if (sessions.length === 0) {
     return <EmptyState icon={barbellOutline} title={emptyText} />;
@@ -31,8 +33,8 @@ export function WorkoutHistoryList({
             {s.exercises.map((ex) => (
               <p key={ex.key} style={{ margin: '0 0 6px' }}>
                 <strong>{ex.name}</strong>
-                {ex.self && <span className="workout-self-tag">Self</span>}
-                {ex.byTrainer && <span className="workout-self-tag">Logged by trainer</span>}
+                {ex.self && <span className="workout-self-tag">{t('Self')}</span>}
+                {ex.byTrainer && <span className="workout-self-tag">{t('Logged by trainer')}</span>}
                 <br />
                 <span className="workout-muted">
                   {ex.sets.map((set) => formatSet(set, ex.type)).join(' · ')}

@@ -26,6 +26,7 @@ import { ExercisePicker } from './ExercisePicker';
 import type { Exercise, ExerciseSlot } from './model';
 import { RestTimer } from './RestTimer';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /** A quick-logged exercise has no saved prescription: suggest 3 sets with 60 s rest. */
 const quickSlot = (ex: Exercise): ExerciseSlot => ({
@@ -43,6 +44,7 @@ const quickSlot = (ex: Exercise): ExerciseSlot => ({
  * without a saved workout (/workouts/self/quick). Everything here is logged as "Self".
  */
 export function SelfWorkoutPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const quick = id === 'quick';
   const { profile } = useAuth();
@@ -87,10 +89,12 @@ export function SelfWorkoutPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
-          <IonTitle>{quick ? 'Quick log' : (workout?.name ?? 'My workout')}</IonTitle>
+          <IonTitle>{quick ? t('Quick log') : (workout?.name ?? t('My workout'))}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
-            {workout && <IonButton routerLink={`/workouts/mine/${workout.id}`}>Edit</IonButton>}
+            {workout && (
+              <IonButton routerLink={`/workouts/mine/${workout.id}`}>{t('Edit')}</IonButton>
+            )}
           </IonButtons>
         </IonToolbar>
         <SyncStatusBar />
@@ -103,17 +107,18 @@ export function SelfWorkoutPage() {
             </div>
           ) : !quick && !workout ? (
             <IonText color="medium">
-              <p className="ion-text-center">This workout no longer exists.</p>
+              <p className="ion-text-center">{t('This workout no longer exists.')}</p>
             </IonText>
           ) : (
             <>
               <p className="workout-muted" style={{ marginTop: 0 }}>
-                {formatDate(today)} · logged as <span className="workout-self-tag">Self</span> ·
-                sets are saved as you log them
+                {formatDate(today)} {t('· logged as')}{' '}
+                <span className="workout-self-tag">{t('Self')}</span>{' '}
+                {t('· sets are saved as you log them')}
               </p>
               {quick && slots.length === 0 && (
                 <IonText color="medium">
-                  <p>Pick an exercise from the library and log your sets.</p>
+                  <p>{t('Pick an exercise from the library and log your sets.')}</p>
                 </IonText>
               )}
               {slots.map((slot) => (
@@ -131,11 +136,11 @@ export function SelfWorkoutPage() {
               {quick && (
                 <IonButton expand="block" fill="outline" onClick={() => setPicking(true)}>
                   <IonIcon slot="start" icon={add} />
-                  Add exercise
+                  {t('Add exercise')}
                 </IonButton>
               )}
               <IonButton expand="block" onClick={() => router.push('/workouts', 'back')}>
-                Finish workout
+                {t('Finish workout')}
               </IonButton>
             </>
           )}

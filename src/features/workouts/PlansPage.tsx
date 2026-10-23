@@ -31,8 +31,10 @@ import { formatDate } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
 import { planApi, useMyPlans } from './api';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 export function PlansPage() {
+  const t = useT();
   const { profile } = useAuth();
   const plans = useMyPlans(profile?.id);
   const router = useIonRouter();
@@ -42,14 +44,14 @@ export function PlansPage() {
 
   function newPlan() {
     void alert({
-      header: 'New plan',
+      header: t('New plan'),
       inputs: [
-        { name: 'name', placeholder: 'e.g. 3-day full body', attributes: { maxlength: 80 } },
+        { name: 'name', placeholder: t('e.g. 3-day full body'), attributes: { maxlength: 80 } },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Create',
+          text: t('Create'),
           handler: (data: { name?: string }) => {
             const name = (data.name ?? '').trim();
             if (!name || !profile) return false;
@@ -60,7 +62,7 @@ export function PlansPage() {
                 router.push(`/trainer/plans/${id}`);
               })
               .catch(() =>
-                toast({ message: 'Could not create the plan', duration: 2500, color: 'danger' }),
+                toast({ message: t('Could not create the plan'), duration: 2500, color: 'danger' }),
               );
             return true;
           },
@@ -73,12 +75,12 @@ export function PlansPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Workout plans</IonTitle>
+          <IonTitle>{t('Workout plans')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
             <IonButton routerLink="/trainer/exercises">
               <IonIcon slot="start" icon={barbellOutline} />
-              Exercises
+              {t('Exercises')}
             </IonButton>
           </IonButtons>
         </IonToolbar>
@@ -98,7 +100,7 @@ export function PlansPage() {
         ) : (plans.data ?? []).length === 0 ? (
           <IonText color="medium">
             <p className="ion-padding ion-text-center">
-              No plans yet. Tap + to build your first plan.
+              {t('No plans yet. Tap + to build your first plan.')}
             </p>
           </IonText>
         ) : (
@@ -108,8 +110,9 @@ export function PlansPage() {
                 <IonLabel>
                   <h2>{p.name}</h2>
                   <p>
-                    {p.dayCount} day{p.dayCount === 1 ? '' : 's'} · {p.activeClients} client
-                    {p.activeClients === 1 ? '' : 's'} · updated {formatDate(p.updated_at)}
+                    {p.dayCount} {t('day')}
+                    {p.dayCount === 1 ? '' : 's'} · {p.activeClients} {t('client')}
+                    {p.activeClients === 1 ? '' : 's'} {t('· updated')} {formatDate(p.updated_at)}
                   </p>
                 </IonLabel>
               </IonItem>
@@ -117,7 +120,7 @@ export function PlansPage() {
           </IonList>
         )}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton onClick={newPlan} aria-label="New plan">
+          <IonFabButton onClick={newPlan} aria-label={t('New plan')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>

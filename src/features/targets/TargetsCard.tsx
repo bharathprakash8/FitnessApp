@@ -9,6 +9,7 @@ import {
 import { formatDate } from '../../lib/dates';
 import type { Target } from './api';
 import './targets.css';
+import { useT } from '../../i18n/i18n';
 
 /** Daily calorie and macro targets. */
 export function TargetsCard({
@@ -20,13 +21,14 @@ export function TargetsCard({
   upcoming?: Target | null;
   emptyText: string;
 }) {
+  const t = useT();
   return (
     <IonCard className="targets-card">
       <IonCardHeader>
-        <IonCardSubtitle>Daily targets</IonCardSubtitle>
+        <IonCardSubtitle>{t('Daily targets')}</IonCardSubtitle>
         {target ? (
           <IonCardTitle className="targets-kcal">
-            {target.calories.toLocaleString('en-IN')} <span>kcal</span>
+            {target.calories.toLocaleString('en-IN')} <span>{t('kcal')}</span>
           </IonCardTitle>
         ) : (
           <IonCardTitle className="targets-empty">{emptyText}</IonCardTitle>
@@ -35,18 +37,21 @@ export function TargetsCard({
       {target && (
         <IonCardContent>
           <div className="targets-macros">
-            <Macro label="Protein" grams={target.protein_g} />
-            <Macro label="Carbs" grams={target.carbs_g} />
-            <Macro label="Fat" grams={target.fat_g} />
+            <Macro label={t('Protein')} grams={target.protein_g} />
+            <Macro label={t('Carbs')} grams={target.carbs_g} />
+            <Macro label={t('Fat')} grams={target.fat_g} />
           </div>
-          <p className="targets-since">Since {formatDate(target.effective_from)}</p>
+          <p className="targets-since">
+            {t('Since')} {formatDate(target.effective_from)}
+          </p>
         </IonCardContent>
       )}
       {upcoming && (
         <IonCardContent>
           <p className="targets-since">
-            From {formatDate(upcoming.effective_from)}: {upcoming.calories.toLocaleString('en-IN')}{' '}
-            kcal · P {upcoming.protein_g} g · C {upcoming.carbs_g} g · F {upcoming.fat_g} g
+            {t('From')} {formatDate(upcoming.effective_from)}:{' '}
+            {upcoming.calories.toLocaleString('en-IN')} {t('kcal · P')} {upcoming.protein_g} g · C{' '}
+            {upcoming.carbs_g} g · F {upcoming.fat_g} g
           </p>
         </IonCardContent>
       )}

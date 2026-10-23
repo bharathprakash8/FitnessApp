@@ -15,11 +15,13 @@ import { friendlyAuthError } from './authErrors';
 import { homePathFor } from './roles';
 import { useAuth } from './useAuth';
 import './LoginPage.css';
+import { useT } from '../../i18n/i18n';
 
 const CODE_LENGTH = 6;
 const RESEND_SECONDS = 60;
 
 export function LoginPage() {
+  const tx = useT();
   const { status, profile } = useAuth();
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
@@ -86,17 +88,17 @@ export function LoginPage() {
       <IonContent className="ion-padding login-content">
         <div className="login-box">
           <img src="/icon.svg" alt="" className="login-logo" />
-          <h1 className="login-title">FitCoach</h1>
+          <h1 className="login-title">{tx('FitCoach')}</h1>
 
           {step === 'email' ? (
             <form onSubmit={sendCode} noValidate>
               <p className="login-hint">
-                Enter your email and we'll send you a 6-digit login code.
+                {tx("Enter your email and we'll send you a 6-digit login code.")}
               </p>
               <IonInput
                 className="login-input"
                 fill="outline"
-                label="Email"
+                label={tx('Email')}
                 labelPlacement="floating"
                 type="email"
                 inputmode="email"
@@ -106,7 +108,7 @@ export function LoginPage() {
                 disabled={busy}
               />
               <IonButton type="submit" expand="block" size="large" disabled={busy || !email}>
-                {busy ? <IonSpinner name="dots" /> : 'Send code'}
+                {busy ? <IonSpinner name="dots" /> : tx('Send code')}
               </IonButton>
             </form>
           ) : (
@@ -118,12 +120,13 @@ export function LoginPage() {
               noValidate
             >
               <p className="login-hint">
-                We sent a code to <strong>{email}</strong>. It works for 10 minutes.
+                {tx('We sent a code to')} <strong>{email}</strong>
+                {tx('. It works for 10 minutes.')}
               </p>
               <IonInput
                 className="login-input login-code"
                 fill="outline"
-                label="6-digit code"
+                label={tx('6-digit code')}
                 labelPlacement="floating"
                 type="text"
                 inputmode="numeric"
@@ -139,7 +142,7 @@ export function LoginPage() {
                 size="large"
                 disabled={busy || code.length !== CODE_LENGTH}
               >
-                {busy ? <IonSpinner name="dots" /> : 'Log in'}
+                {busy ? <IonSpinner name="dots" /> : tx('Log in')}
               </IonButton>
               <div className="login-links">
                 <IonButton
@@ -148,7 +151,7 @@ export function LoginPage() {
                   disabled={busy || resendIn > 0}
                   onClick={() => void sendCode()}
                 >
-                  {resendIn > 0 ? `Resend code in ${resendIn}s` : 'Resend code'}
+                  {resendIn > 0 ? `Resend code in ${resendIn}s` : tx('Resend code')}
                 </IonButton>
                 <IonButton
                   fill="clear"
@@ -159,7 +162,7 @@ export function LoginPage() {
                     setError(null);
                   }}
                 >
-                  Use a different email
+                  {tx('Use a different email')}
                 </IonButton>
               </div>
             </form>
@@ -172,7 +175,7 @@ export function LoginPage() {
           )}
 
           <IonNote className="login-footer">
-            No account? Ask your trainer or admin to add you.
+            {tx('No account? Ask your trainer or admin to add you.')}
           </IonNote>
         </div>
       </IonContent>

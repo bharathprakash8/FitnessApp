@@ -22,6 +22,7 @@ import {
   type MealType,
 } from './model';
 import './food.css';
+import { tr, useT } from '../../i18n/i18n';
 
 const FACTORS = [0.5, 1, 1.5, 2];
 
@@ -74,6 +75,7 @@ export function MealEditor({
   saveLabel: string;
   onSave: (v: MealEditorValues) => void;
 }) {
+  const tx = useT();
   const [rows, setRows] = useState<Row[]>(
     (initialItems.length ? initialItems : [emptyItem()]).map((item) => ({ item, factor: 1 })),
   );
@@ -152,7 +154,7 @@ export function MealEditor({
               <div className="food-item-head">
                 <IonInput
                   fill="outline"
-                  placeholder="Or type your answer"
+                  placeholder={tx('Or type your answer')}
                   value={freeAnswer}
                   onIonInput={(e) => setFreeAnswer(String(e.detail.value ?? ''))}
                 />
@@ -160,7 +162,7 @@ export function MealEditor({
                   disabled={!freeAnswer.trim()}
                   onClick={() => followUp.onAnswer(freeAnswer.trim())}
                 >
-                  Send
+                  {tx('Send')}
                 </IonButton>
               </div>
             </>
@@ -170,8 +172,8 @@ export function MealEditor({
 
       {estimated && (
         <p>
-          <span className="food-estimated">Estimated</span>{' '}
-          <span className="food-muted">AI guesses – please check and adjust.</span>
+          <span className="food-estimated">{tx('Estimated')}</span>{' '}
+          <span className="food-muted">{tx('AI guesses – please check and adjust.')}</span>
         </p>
       )}
 
@@ -180,7 +182,7 @@ export function MealEditor({
           <div className="food-item-head">
             <IonInput
               fill="outline"
-              label="Food"
+              label={tx('Food')}
               labelPlacement="stacked"
               maxlength={80}
               value={r.item.name}
@@ -189,7 +191,7 @@ export function MealEditor({
             <IonButton
               fill="clear"
               color="medium"
-              aria-label="Remove item"
+              aria-label={tx('Remove item')}
               onClick={() => {
                 setRows((rs) => rs.filter((_, j) => j !== i));
                 setEdited(true);
@@ -200,10 +202,10 @@ export function MealEditor({
           </div>
           <IonInput
             fill="outline"
-            label="Portion"
+            label={tx('Portion')}
             labelPlacement="stacked"
             maxlength={80}
-            placeholder="e.g. 2 pieces, 1 bowl"
+            placeholder={tx('e.g. 2 pieces, 1 bowl')}
             value={r.item.portion}
             onIonInput={(e) => update(i, { portion: String(e.detail.value ?? '') })}
             style={{ marginTop: 8 }}
@@ -253,21 +255,23 @@ export function MealEditor({
         }}
       >
         <IonIcon slot="start" icon={add} />
-        Add item
+        {tx('Add item')}
       </IonButton>
 
       <div className="food-totals">
-        <span>Total {estimated ? '(estimated)' : ''}</span>
         <span>
-          {totals.calories} kcal · P {Math.round(totals.protein_g)} · C {Math.round(totals.carbs_g)}{' '}
-          · F {Math.round(totals.fat_g)}
+          {tx('Total')} {estimated ? tx('(estimated)') : ''}
+        </span>
+        <span>
+          {totals.calories} {tx('kcal · P')} {Math.round(totals.protein_g)} · C{' '}
+          {Math.round(totals.carbs_g)} · F {Math.round(totals.fat_g)}
         </span>
       </div>
 
       <div className="food-when">
         <IonSelect
           fill="outline"
-          label="Meal"
+          label={tx('Meal')}
           labelPlacement="stacked"
           interface="popover"
           value={mealType}
@@ -275,14 +279,14 @@ export function MealEditor({
         >
           {MEAL_TYPES.map((t) => (
             <IonSelectOption key={t} value={t}>
-              {MEAL_LABELS[t]}
+              {tr(MEAL_LABELS[t])}
             </IonSelectOption>
           ))}
         </IonSelect>
         <IonInput
           fill="outline"
           ref={dateRef}
-          label="Date"
+          label={tx('Date')}
           labelPlacement="stacked"
           type="date"
           max={maxDate}
@@ -293,10 +297,10 @@ export function MealEditor({
         <div className="food-time">
           <IonSelect
             fill="outline"
-            label="Time"
+            label={tx('Time')}
             labelPlacement="stacked"
             interface="action-sheet"
-            interfaceOptions={{ header: 'Hour' }}
+            interfaceOptions={{ header: tx('Hour') }}
             value={hour}
             onIonChange={(e) => setTime(`${pad(Number(e.detail.value))}:${pad(minute)}`)}
           >
@@ -308,10 +312,10 @@ export function MealEditor({
           </IonSelect>
           <IonSelect
             fill="outline"
-            label="Minutes"
+            label={tx('Minutes')}
             labelPlacement="stacked"
             interface="action-sheet"
-            interfaceOptions={{ header: 'Minutes' }}
+            interfaceOptions={{ header: tx('Minutes') }}
             value={minute}
             onIonChange={(e) => setTime(`${pad(hour)}:${pad(Number(e.detail.value))}`)}
           >
@@ -330,7 +334,7 @@ export function MealEditor({
         </IonText>
       )}
       <IonButton expand="block" size="large" disabled={busy} onClick={() => void save()}>
-        {busy ? 'Saving…' : saveLabel}
+        {busy ? tx('Saving…') : saveLabel}
       </IonButton>
     </div>
   );

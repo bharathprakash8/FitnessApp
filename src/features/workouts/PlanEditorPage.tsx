@@ -36,8 +36,10 @@ import { ExercisePicker } from './ExercisePicker';
 import { prescription, type PlanDayFull, type PlanExerciseFull, type PlanFull } from './model';
 import { PlanExerciseEditor, type PlanExerciseFields } from './PlanExerciseEditor';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 export function PlanEditorPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const plan = usePlan(id);
   // Load the exercise list (for "Add exercise") alongside the plan, not after it.
@@ -50,7 +52,7 @@ export function PlanEditorPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/trainer/plans" />
           </IonButtons>
-          <IonTitle>{plan.data?.name ?? 'Plan'}</IonTitle>
+          <IonTitle>{plan.data?.name ?? t('Plan')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -65,7 +67,7 @@ export function PlanEditorPage() {
             </div>
           ) : !plan.data ? (
             <IonText color="medium">
-              <p className="ion-text-center">This plan no longer exists.</p>
+              <p className="ion-text-center">{t('This plan no longer exists.')}</p>
             </IonText>
           ) : (
             <Editor plan={plan.data} />
@@ -77,6 +79,7 @@ export function PlanEditorPage() {
 }
 
 function Editor({ plan }: { plan: PlanFull }) {
+  const tx = useT();
   const { profile } = useAuth();
   const router = useIonRouter();
   const [alert] = useIonAlert();
@@ -87,7 +90,7 @@ function Editor({ plan }: { plan: PlanFull }) {
   const [assigning, setAssigning] = useState(false);
 
   const fail = () =>
-    void toast({ message: 'Could not save. Try again.', duration: 2500, color: 'danger' });
+    void toast({ message: tx('Could not save. Try again.'), duration: 2500, color: 'danger' });
   const mutate = usePlanMutation(plan.id, (fn: () => Promise<void>) => fn());
   const run = (fn: () => Promise<void>, after?: () => void) =>
     mutate.mutate(fn, { onSuccess: after, onError: fail });
@@ -106,9 +109,9 @@ function Editor({ plan }: { plan: PlanFull }) {
       header,
       inputs: [{ name: 'v', value, attributes: { maxlength: 60 } }],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: tx('Cancel'), role: 'cancel' },
         {
-          text: 'Save',
+          text: tx('Save'),
           handler: (data: { v?: string }) => {
             const v = (data.v ?? '').trim();
             if (!v) return false;
@@ -152,32 +155,32 @@ function Editor({ plan }: { plan: PlanFull }) {
       header: day.title,
       buttons: [
         {
-          text: 'Rename',
+          text: tx('Rename'),
           handler: () =>
             askText('Rename day', day.title, (t) =>
               run(() => planApi.updateDay(day.id, { title: t })),
             ),
         },
-        ...(i > 0 ? [{ text: 'Move up', handler: () => moveDay(i, -1) }] : []),
-        ...(i < days.length - 1 ? [{ text: 'Move down', handler: () => moveDay(i, 1) }] : []),
+        ...(i > 0 ? [{ text: tx('Move up'), handler: () => moveDay(i, -1) }] : []),
+        ...(i < days.length - 1 ? [{ text: tx('Move down'), handler: () => moveDay(i, 1) }] : []),
         {
-          text: 'Delete day',
+          text: tx('Delete day'),
           role: 'destructive',
           handler: () =>
             void alert({
               header: `Delete ${day.title}?`,
-              message: 'Its exercises are removed from the plan. Logged workouts are kept.',
+              message: tx('Its exercises are removed from the plan. Logged workouts are kept.'),
               buttons: [
-                { text: 'Cancel', role: 'cancel' },
+                { text: tx('Cancel'), role: 'cancel' },
                 {
-                  text: 'Delete',
+                  text: tx('Delete'),
                   role: 'destructive',
                   handler: () => run(() => planApi.removeDay(day.id)),
                 },
               ],
             }),
         },
-        { text: 'Cancel', role: 'cancel' },
+        { text: tx('Cancel'), role: 'cancel' },
       ],
     });
   }
@@ -188,7 +191,7 @@ function Editor({ plan }: { plan: PlanFull }) {
       header: plan.name,
       buttons: [
         {
-          text: 'Duplicate plan',
+          text: tx('Duplicate plan'),
           handler: () => {
             let newId = '';
             run(
@@ -200,17 +203,18 @@ function Editor({ plan }: { plan: PlanFull }) {
           },
         },
         {
-          text: 'Delete plan',
+          text: tx('Delete plan'),
           role: 'destructive',
           handler: () =>
             void alert({
-              header: 'Delete this plan?',
-              message:
+              header: tx('Delete this plan?'),
+              message: tx(
                 'Clients on this plan will no longer see it. Their logged workouts are kept.',
+              ),
               buttons: [
-                { text: 'Cancel', role: 'cancel' },
+                { text: tx('Cancel'), role: 'cancel' },
                 {
-                  text: 'Delete',
+                  text: tx('Delete'),
                   role: 'destructive',
                   handler: () =>
                     run(
@@ -221,7 +225,7 @@ function Editor({ plan }: { plan: PlanFull }) {
               ],
             }),
         },
-        { text: 'Cancel', role: 'cancel' },
+        { text: tx('Cancel'), role: 'cancel' },
       ],
     });
   }
@@ -235,9 +239,9 @@ function Editor({ plan }: { plan: PlanFull }) {
       />
 
       <div className="workout-day-actions" style={{ margin: '12px 0' }}>
-        <IonButton onClick={() => setAssigning(true)}>Assign to clients</IonButton>
+        <IonButton onClick={() => setAssigning(true)}>{tx('Assign to clients')}</IonButton>
         <IonButton fill="outline" onClick={planMenu}>
-          More
+          {tx('More')}
         </IonButton>
       </div>
 
@@ -256,7 +260,9 @@ function Editor({ plan }: { plan: PlanFull }) {
             </div>
           </IonCardHeader>
           <IonCardContent>
-            {day.plan_exercises.length === 0 && <p className="workout-muted">No exercises yet.</p>}
+            {day.plan_exercises.length === 0 && (
+              <p className="workout-muted">{tx('No exercises yet.')}</p>
+            )}
             <IonList lines="full">
               {day.plan_exercises.map((pe, j) => (
                 <IonItem key={pe.id} button detail={false} onClick={() => setEditing(pe)}>
@@ -267,7 +273,7 @@ function Editor({ plan }: { plan: PlanFull }) {
                   </IonLabel>
                   <IonButtons slot="end">
                     <IonButton
-                      aria-label="Move up"
+                      aria-label={tx('Move up')}
                       disabled={j === 0 || mutate.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -277,7 +283,7 @@ function Editor({ plan }: { plan: PlanFull }) {
                       <IonIcon icon={arrowUp} />
                     </IonButton>
                     <IonButton
-                      aria-label="Move down"
+                      aria-label={tx('Move down')}
                       disabled={j === day.plan_exercises.length - 1 || mutate.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -292,7 +298,7 @@ function Editor({ plan }: { plan: PlanFull }) {
             </IonList>
             <IonButton fill="clear" size="small" onClick={() => setPickFor(day)}>
               <IonIcon slot="start" icon={add} />
-              Add exercise
+              {tx('Add exercise')}
             </IonButton>
           </IonCardContent>
         </IonCard>
@@ -300,7 +306,7 @@ function Editor({ plan }: { plan: PlanFull }) {
 
       <IonButton expand="block" fill="outline" onClick={addDay}>
         <IonIcon slot="start" icon={add} />
-        Add day
+        {tx('Add day')}
       </IonButton>
 
       {profile && (
@@ -363,6 +369,7 @@ function PlanDetails({
   plan: PlanFull;
   onSave: (fields: { name: string; description: string | null }) => void;
 }) {
+  const t = useT();
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description ?? '');
   const dirty = name.trim() !== plan.name || description.trim() !== (plan.description ?? '');
@@ -371,7 +378,7 @@ function PlanDetails({
     <div className="workout-form">
       <IonInput
         fill="outline"
-        label="Plan name"
+        label={t('Plan name')}
         labelPlacement="floating"
         maxlength={80}
         value={name}
@@ -379,7 +386,7 @@ function PlanDetails({
       />
       <IonTextarea
         fill="outline"
-        label="Description (optional)"
+        label={t('Description (optional)')}
         labelPlacement="floating"
         autoGrow
         maxlength={1000}
@@ -391,7 +398,7 @@ function PlanDetails({
           size="small"
           onClick={() => onSave({ name: name.trim(), description: description.trim() || null })}
         >
-          Save name and description
+          {t('Save name and description')}
         </IonButton>
       )}
     </div>

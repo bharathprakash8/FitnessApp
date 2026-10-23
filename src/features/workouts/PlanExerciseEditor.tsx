@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 
 import type { ExerciseSlot } from './model';
+import { useT } from '../../i18n/i18n';
 
 export interface PlanExerciseFields {
   sets: number;
@@ -38,13 +39,14 @@ export function PlanExerciseEditor({
   onRemove: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <IonModal isOpen={item !== null} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
           <IonTitle>{item?.exercises.name}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={onClose}>Close</IonButton>
+            <IonButton onClick={onClose}>{t('Close')}</IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -77,6 +79,7 @@ function Fields({
   onSave: (fields: PlanExerciseFields) => void;
   onRemove: () => void;
 }) {
+  const t = useT();
   const timed = item.exercises.log_type === 'timed';
   const [sets, setSets] = useState(String(item.sets));
   const [reps, setReps] = useState(item.reps ?? '');
@@ -98,7 +101,7 @@ function Fields({
       <div className="workout-row">
         <IonInput
           fill="outline"
-          label="Sets"
+          label={t('Sets')}
           labelPlacement="floating"
           type="number"
           inputmode="numeric"
@@ -107,7 +110,7 @@ function Fields({
         />
         <IonInput
           fill="outline"
-          label={timed ? 'Time per set' : 'Reps'}
+          label={timed ? t('Time per set') : t('Reps')}
           labelPlacement="floating"
           placeholder={timed ? 'e.g. 30 s' : 'e.g. 8-10'}
           maxlength={20}
@@ -116,7 +119,7 @@ function Fields({
         />
         <IonInput
           fill="outline"
-          label="Rest (s)"
+          label={t('Rest (s)')}
           labelPlacement="floating"
           type="number"
           inputmode="numeric"
@@ -126,7 +129,7 @@ function Fields({
       </div>
       <IonTextarea
         fill="outline"
-        label={forSelf ? 'Notes (optional)' : 'Notes for the client (optional)'}
+        label={forSelf ? t('Notes (optional)') : t('Notes for the client (optional)')}
         labelPlacement="floating"
         autoGrow
         maxlength={500}
@@ -139,10 +142,10 @@ function Fields({
         </IonText>
       )}
       <IonButton expand="block" disabled={busy} onClick={save}>
-        {busy ? 'Saving…' : 'Save'}
+        {busy ? t('Saving…') : t('Save')}
       </IonButton>
       <IonButton expand="block" fill="clear" color="danger" disabled={busy} onClick={onRemove}>
-        {forSelf ? 'Remove from this workout' : 'Remove from this day'}
+        {forSelf ? t('Remove from this workout') : t('Remove from this day')}
       </IonButton>
     </div>
   );

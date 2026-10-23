@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { logError } from '../lib/errorLog';
+import { tr } from '../i18n/i18n';
 
 const RELOAD_KEY = 'fitcoach-reloaded-after-error';
 
@@ -37,13 +38,13 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
     return (
       <div className="crash-screen" role="alert">
         <img src="/icon.svg" alt="" width={72} height={72} />
-        <h1>Something went wrong</h1>
-        <p>Sorry about that. Your saved data is safe. Please reload the app.</p>
+        <h1>{tr('Something went wrong')}</h1>
+        <p>{tr('Sorry about that. Your saved data is safe. Please reload the app.')}</p>
         <button type="button" onClick={() => window.location.reload()}>
-          Reload
+          {tr('Reload')}
         </button>
-        <a href="/">Go to the home screen</a>
-        <a href="/me/report">Report this problem</a>
+        <a href="/">{tr('Go to the home screen')}</a>
+        <a href="/me/report">{tr('Report this problem')}</a>
         <p className="crash-detail">{this.state.error.message}</p>
       </div>
     );

@@ -29,8 +29,10 @@ import { useAuth } from '../auth/useAuth';
 import { goalText } from '../profile/options';
 import { useDashboard, useMyClients, type ClientFlag, type TrainerClient } from './api';
 import './trainer.css';
+import { useT } from '../../i18n/i18n';
 
 export function TrainerClientsPage() {
+  const t = useT();
   const { profile } = useAuth();
   const clients = useMyClients(profile?.id);
   const dashboard = useDashboard(profile?.id);
@@ -40,7 +42,7 @@ export function TrainerClientsPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>My clients</IonTitle>
+          <IonTitle>{t('My clients')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -49,7 +51,7 @@ export function TrainerClientsPage() {
           <IonSearchbar
             value={search}
             onIonInput={(e) => setSearch(String(e.detail.value ?? ''))}
-            placeholder="Search clients"
+            placeholder={t('Search clients')}
             debounce={150}
           />
         </IonToolbar>
@@ -71,7 +73,7 @@ export function TrainerClientsPage() {
         ) : clients.isError ? (
           <IonText color="danger">
             <p className="ion-padding ion-text-center">
-              Couldn't load your clients. Pull down to try again.
+              {t("Couldn't load your clients. Pull down to try again.")}
             </p>
           </IonText>
         ) : (
@@ -97,6 +99,7 @@ function ClientList({
   flags: Record<string, ClientFlag[]> | undefined;
   search: string;
 }) {
+  const t = useT();
   const term = search.trim().toLowerCase();
   // Clients who need attention first, then by name (the list arrives sorted by name).
   const shown = clients
@@ -116,15 +119,15 @@ function ClientList({
     return (
       <EmptyState
         icon={people}
-        title="No clients yet"
-        text="The admin assigns clients to you. They'll appear here with their progress."
+        title={t('No clients yet')}
+        text={t("The admin assigns clients to you. They'll appear here with their progress.")}
       />
     );
   }
   if (shown.length === 0) {
     return (
       <IonText color="medium">
-        <p className="ion-padding ion-text-center">No clients match.</p>
+        <p className="ion-padding ion-text-center">{t('No clients match.')}</p>
       </IonText>
     );
   }
@@ -134,7 +137,7 @@ function ClientList({
       {flags && (
         <p className="trainer-attention">
           {attention === 0
-            ? 'All clients are on track 👍'
+            ? t('All clients are on track 👍')
             : `${attention} client${attention === 1 ? ' needs' : 's need'} attention`}
         </p>
       )}
@@ -145,12 +148,12 @@ function ClientList({
             <h2>{p.full_name || p.email}</h2>
             <p>{goalText(p.goal, p.goal_other) || p.email}</p>
             <p className="trainer-flags">
-              {!p.is_active && <IonBadge color="medium">Deactivated</IonBadge>}
+              {!p.is_active && <IonBadge color="medium">{t('Deactivated')}</IonBadge>}
               {p.is_active && !p.onboarded_at && (
-                <IonBadge color="warning">Onboarding not finished</IonBadge>
+                <IonBadge color="warning">{t('Onboarding not finished')}</IonBadge>
               )}
               {p.is_active && p.onboarded_at && !hasTarget && (
-                <IonBadge color="danger">No targets yet</IonBadge>
+                <IonBadge color="danger">{t('No targets yet')}</IonBadge>
               )}
               {p.is_active &&
                 p.onboarded_at &&

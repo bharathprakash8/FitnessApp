@@ -32,8 +32,10 @@ import { IosInstallSteps } from './IosInstallSteps';
 import { ReminderForm } from './ReminderForm';
 import { TrainerRemindersCard } from './TrainerRemindersCard';
 import './notifications.css';
+import { useT } from '../../i18n/i18n';
 
 export function NotificationsPage() {
+  const t = useT();
   const { profile } = useAuth();
   return (
     <IonPage>
@@ -42,7 +44,7 @@ export function NotificationsPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/me" />
           </IonButtons>
-          <IonTitle>Notifications</IonTitle>
+          <IonTitle>{t('Notifications')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -68,6 +70,7 @@ export function NotificationsPage() {
 }
 
 function DeviceCard() {
+  const t = useT();
   const [toast] = useIonToast();
   const support = pushSupport();
   const [permission, setPermission] = useState<PushPermission | null>(null);
@@ -124,42 +127,48 @@ function DeviceCard() {
   return (
     <IonCard className="notif-card">
       <IonCardHeader>
-        <IonCardTitle>This device</IonCardTitle>
+        <IonCardTitle>{t('This device')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         {support === 'ios_needs_install' ? (
           <IosInstallSteps />
         ) : support === 'ios_too_old' ? (
           <p>
-            Notifications need iOS 16.4 or newer. Please update your iPhone (Settings → General →
-            Software Update).
+            {t(
+              'Notifications need iOS 16.4 or newer. Please update your iPhone (Settings → General → Software Update).',
+            )}
           </p>
         ) : support === 'not_configured' ? (
-          <p>Notifications aren't set up yet. Please ask the admin.</p>
+          <p>{t("Notifications aren't set up yet. Please ask the admin.")}</p>
         ) : support === 'unsupported' ? (
           <p>
-            This browser can't show notifications. Use Chrome on Android, or Safari on iPhone after
-            “Add to Home Screen”.
+            {t(
+              "This browser can't show notifications. Use Chrome on Android, or Safari on iPhone after “Add to Home Screen”.",
+            )}
           </p>
         ) : permission === null ? (
           <IonSpinner name="dots" />
         ) : permission === 'denied' ? (
           <>
-            <p>Notifications are blocked for FitCoach on this device.</p>
+            <p>{t('Notifications are blocked for FitCoach on this device.')}</p>
             <p className="notif-muted">
               {support === 'android'
-                ? 'Open Settings → Apps → FitCoach → Notifications and turn them on, then come back.'
-                : 'Open Settings → Notifications → FitCoach (iPhone) or the site settings in your browser and allow notifications.'}
+                ? t(
+                    'Open Settings → Apps → FitCoach → Notifications and turn them on, then come back.',
+                  )
+                : t(
+                    'Open Settings → Notifications → FitCoach (iPhone) or the site settings in your browser and allow notifications.',
+                  )}
             </p>
             <IonButton fill="clear" onClick={refresh}>
-              I've changed it
+              {t("I've changed it")}
             </IonButton>
           </>
         ) : permission === 'granted' && registered ? (
           <>
-            <p>✅ Notifications are on for this device.</p>
+            <p>{t('✅ Notifications are on for this device.')}</p>
             <IonButton expand="block" disabled={busy} onClick={() => void test()}>
-              Send test notification
+              {t('Send test notification')}
             </IonButton>
             <IonButton
               expand="block"
@@ -168,14 +177,14 @@ function DeviceCard() {
               disabled={busy}
               onClick={() => void turnOff()}
             >
-              Turn off on this device
+              {t('Turn off on this device')}
             </IonButton>
           </>
         ) : (
           <>
-            <p>Get a gentle reminder when it's time to log a meal or do your workout.</p>
+            <p>{t("Get a gentle reminder when it's time to log a meal or do your workout.")}</p>
             <IonButton expand="block" size="large" disabled={busy} onClick={() => void turnOn()}>
-              {busy ? 'Turning on…' : 'Turn on notifications'}
+              {busy ? t('Turning on…') : t('Turn on notifications')}
             </IonButton>
           </>
         )}
@@ -186,20 +195,21 @@ function DeviceCard() {
 }
 
 function BatteryTips() {
+  const t = useT();
   return (
     <details className="notif-tips">
-      <summary>Not getting reminders? (Xiaomi, Oppo, Vivo, Realme, OnePlus)</summary>
-      <p>Some phones stop apps in the background to save battery. To fix it:</p>
+      <summary>{t('Not getting reminders? (Xiaomi, Oppo, Vivo, Realme, OnePlus)')}</summary>
+      <p>{t('Some phones stop apps in the background to save battery. To fix it:')}</p>
       <ol className="notif-steps">
         <li>
-          Long-press the FitCoach icon → <strong>App info</strong>.
+          {t('Long-press the FitCoach icon →')} <strong>{t('App info')}</strong>.
         </li>
         <li>
-          <strong>Battery</strong> (or Battery saver) → choose <strong>Unrestricted</strong> / No
-          restrictions.
+          <strong>{t('Battery')}</strong> {t('(or Battery saver) → choose')}{' '}
+          <strong>{t('Unrestricted')}</strong> {t('/ No restrictions.')}
         </li>
         <li>
-          On Xiaomi also turn on <strong>Autostart</strong> in App info.
+          {t('On Xiaomi also turn on')} <strong>{t('Autostart')}</strong> {t('in App info.')}
         </li>
       </ol>
     </details>
@@ -207,11 +217,12 @@ function BatteryTips() {
 }
 
 function RemindersCard({ clientId }: { clientId: string }) {
+  const t = useT();
   const settings = useReminderSettings(clientId);
   return (
     <IonCard className="notif-card">
       <IonCardHeader>
-        <IonCardTitle>Reminders</IonCardTitle>
+        <IonCardTitle>{t('Reminders')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         {settings.isPending || !settings.data ? (

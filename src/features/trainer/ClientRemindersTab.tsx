@@ -41,9 +41,11 @@ import {
 } from '../notifications/api';
 import { ReminderForm } from '../notifications/ReminderForm';
 import '../notifications/notifications.css';
+import { useT } from '../../i18n/i18n';
 
 /** Trainer → client → Reminders: meal/workout times and the trainer's own reminders. */
 export function ClientRemindersTab({ client }: { client: Profile }) {
+  const t = useT();
   const settings = useReminderSettings(client.id);
   const device = useHasPushDevice(client.id);
   const name = client.full_name || 'This client';
@@ -53,14 +55,16 @@ export function ClientRemindersTab({ client }: { client: Profile }) {
       {device.data === false && (
         <IonText color="warning">
           <p className="trainer-note">
-            {name} hasn't turned on notifications yet, so reminders won't reach them. Ask them to
-            open Me → Notifications → Turn on notifications.
+            {name}{' '}
+            {t(
+              "hasn't turned on notifications yet, so reminders won't reach them. Ask them to open Me → Notifications → Turn on notifications.",
+            )}
           </p>
         </IonText>
       )}
       <IonCard className="trainer-card">
         <IonCardHeader>
-          <IonCardTitle>Meal and workout reminders</IonCardTitle>
+          <IonCardTitle>{t('Meal and workout reminders')}</IonCardTitle>
         </IonCardHeader>
         <IonCardContent>
           {settings.isPending || !settings.data ? (
@@ -100,17 +104,18 @@ const newDraft = (kind: ReminderKind = 'cardio'): Draft => ({
 });
 
 function CustomReminders({ client }: { client: Profile }) {
+  const t = useT();
   const reminders = useCustomReminders(client.id);
   const [editing, setEditing] = useState<Draft | null>(null);
 
   return (
     <IonCard className="trainer-card">
       <IonCardHeader>
-        <IonCardTitle>Your reminders</IonCardTitle>
+        <IonCardTitle>{t('Your reminders')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <p className="trainer-note" style={{ marginTop: 0 }}>
-          Cardio, session, food update or anything else – on the days and time you choose.
+          {t('Cardio, session, food update or anything else – on the days and time you choose.')}
         </p>
         {reminders.isPending ? (
           <IonSpinner name="dots" />
@@ -121,17 +126,17 @@ function CustomReminders({ client }: { client: Profile }) {
                 <IonLabel color={r.is_active ? undefined : 'medium'}>
                   <h3>
                     {r.title}
-                    {!r.is_active && ' (off)'}
+                    {!r.is_active && t(' (off)')}
                   </h3>
                   <p>
                     {r.remind_at.slice(0, 5)} · {describeDays(r.days)}
                   </p>
                   <p>
                     {!r.client_can_mute
-                      ? 'Always on (client can’t mute)'
+                      ? t('Always on (client can’t mute)')
                       : r.muted
-                        ? 'Muted by the client'
-                        : 'Client can mute'}
+                        ? t('Muted by the client')
+                        : t('Client can mute')}
                   </p>
                 </IonLabel>
               </IonItem>
@@ -140,7 +145,7 @@ function CustomReminders({ client }: { client: Profile }) {
         )}
         <IonButton expand="block" fill="outline" onClick={() => setEditing(newDraft())}>
           <IonIcon slot="start" icon={add} />
-          Add reminder
+          {t('Add reminder')}
         </IonButton>
       </IonCardContent>
       <ReminderModal clientId={client.id} draft={editing} onClose={() => setEditing(null)} />
@@ -157,13 +162,14 @@ function ReminderModal({
   draft: Draft | null;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <IonModal isOpen={draft !== null} onDidDismiss={onClose}>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>{draft?.id ? 'Edit reminder' : 'New reminder'}</IonTitle>
+          <IonTitle>{draft?.id ? t('Edit reminder') : t('New reminder')}</IonTitle>
           <IonButtons slot="end">
-            <IonButton onClick={onClose}>Close</IonButton>
+            <IonButton onClick={onClose}>{t('Close')}</IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -190,6 +196,7 @@ function ReminderFields({
   initial: Draft;
   onDone: () => void;
 }) {
+  const t = useT();
   const save = useSaveCustomReminder(clientId);
   const remove = useDeleteCustomReminder(clientId);
   const [toast] = useIonToast();
@@ -238,11 +245,11 @@ function ReminderFields({
 
   function confirmDelete() {
     void alert({
-      header: 'Delete this reminder?',
+      header: t('Delete this reminder?'),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Delete',
+          text: t('Delete'),
           role: 'destructive',
           handler: () =>
             remove.mutate(d.id!, { onSuccess: onDone, onError: () => fail('Could not delete.') }),
@@ -255,7 +262,7 @@ function ReminderFields({
     <div className="workout-form" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div>
         <p className="notif-muted" style={{ margin: '0 0 6px' }}>
-          Type
+          {t('Type')}
         </p>
         {REMINDER_KINDS.map((k) => (
           <IonChip
@@ -270,7 +277,7 @@ function ReminderFields({
       </div>
       <IonInput
         fill="outline"
-        label="Title"
+        label={t('Title')}
         labelPlacement="floating"
         maxlength={60}
         value={d.title}
@@ -278,9 +285,9 @@ function ReminderFields({
       />
       <IonTextarea
         fill="outline"
-        label="Message (optional)"
+        label={t('Message (optional)')}
         labelPlacement="floating"
-        placeholder="e.g. 30 min brisk walk"
+        placeholder={t('e.g. 30 min brisk walk')}
         autoGrow
         maxlength={200}
         value={d.body ?? ''}
@@ -288,7 +295,7 @@ function ReminderFields({
       />
       <IonInput
         fill="outline"
-        label="Time (client's time)"
+        label={t("Time (client's time)")}
         labelPlacement="floating"
         type="time"
         value={d.remind_at}
@@ -296,7 +303,7 @@ function ReminderFields({
       />
       <div>
         <p className="notif-muted" style={{ margin: '0 0 6px' }}>
-          Days · {d.days.length ? describeDays(d.days) : 'none'}
+          {t('Days ·')} {d.days.length ? describeDays(d.days) : t('none')}
         </p>
         {WEEKDAYS.map((w, i) => (
           <IonChip
@@ -309,7 +316,7 @@ function ReminderFields({
           </IonChip>
         ))}
         <IonButton size="small" fill="clear" onClick={() => set('days', [1, 2, 3, 4, 5, 6, 7])}>
-          Every day
+          {t('Every day')}
         </IonButton>
       </div>
       <IonList lines="full">
@@ -319,19 +326,19 @@ function ReminderFields({
             onIonChange={(e) => set('client_can_mute', e.detail.checked)}
           >
             <IonLabel>
-              <strong>Client can mute this</strong>
-              <p>Off = always on, even if they pause reminders</p>
+              <strong>{t('Client can mute this')}</strong>
+              <p>{t('Off = always on, even if they pause reminders')}</p>
             </IonLabel>
           </IonToggle>
         </IonItem>
         <IonItem>
           <IonToggle checked={d.is_active} onIonChange={(e) => set('is_active', e.detail.checked)}>
-            <strong>Reminder on</strong>
+            <strong>{t('Reminder on')}</strong>
           </IonToggle>
         </IonItem>
       </IonList>
       <IonButton expand="block" disabled={busy} onClick={() => void submit()}>
-        {save.isPending ? 'Saving…' : 'Save reminder'}
+        {save.isPending ? t('Saving…') : t('Save reminder')}
       </IonButton>
       {d.id && (
         <IonButton
@@ -341,7 +348,7 @@ function ReminderFields({
           disabled={busy}
           onClick={confirmDelete}
         >
-          Delete reminder
+          {t('Delete reminder')}
         </IonButton>
       )}
     </div>

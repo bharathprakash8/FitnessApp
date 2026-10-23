@@ -36,12 +36,13 @@ interface Person {
   diet_preference: string | null;
   foods_to_avoid: string | null;
   goal: string | null;
+  language: string | null;
 }
 
 async function loadPerson(db: SupabaseClient, id: string): Promise<Person> {
   const { data, error } = await db
     .from('profiles')
-    .select('id, full_name, timezone, diet_preference, foods_to_avoid, goal')
+    .select('id, full_name, timezone, diet_preference, foods_to_avoid, goal, language')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
@@ -108,7 +109,11 @@ async function insights(db: SupabaseClient, caller: Caller, body: z.infer<typeof
 
   const prompt = `Diet preference: ${person.diet_preference ?? 'not given'}. Foods to avoid: ${
     person.foods_to_avoid || 'none'
-  }. Goal: ${person.goal ?? 'not given'}.\nNumbers: ${JSON.stringify(body.stats)}`;
+  }. Goal: ${person.goal ?? 'not given'}.\nNumbers: ${JSON.stringify(body.stats)}${
+    person.language === 'kn'
+      ? '\nWrite the observations and the focus in simple Kannada (Kannada script).'
+      : ''
+  }`;
   const parsed = InsightsOut.safeParse(
     await generateJson({
       system: INSIGHTS_SYSTEM,

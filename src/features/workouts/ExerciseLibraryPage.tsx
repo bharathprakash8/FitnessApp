@@ -32,6 +32,7 @@ import { useArchiveExercise, useExercises, useSaveExercise } from './api';
 import { ExerciseForm, type ExerciseInput } from './ExerciseForm';
 import type { Exercise } from './model';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 type Filter = 'all' | 'mine' | 'shared';
 
@@ -40,6 +41,7 @@ type Filter = 'all' | 'mine' | 'shared';
  * Admins see everything and edit the shared library.
  */
 export function ExerciseLibraryPage() {
+  const t = useT();
   const { profile } = useAuth();
   const exercises = useExercises();
   const save = useSaveExercise();
@@ -73,20 +75,25 @@ export function ExerciseLibraryPage() {
         await save.mutateAsync({ ...input, id: editing.id });
       }
       setEditing(null);
-      void toast({ message: 'Exercise saved', duration: 1500, position: 'top' });
+      void toast({ message: t('Exercise saved'), duration: 1500, position: 'top' });
     } catch {
-      void toast({ message: 'Could not save', duration: 2500, color: 'danger', position: 'top' });
+      void toast({
+        message: t('Could not save'),
+        duration: 2500,
+        color: 'danger',
+        position: 'top',
+      });
     }
   }
 
   function remove(ex: Exercise) {
     void alert({
-      header: 'Remove exercise?',
+      header: t('Remove exercise?'),
       message: `${ex.name} will be hidden from the library. Plans and logs that already use it keep it.`,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Remove',
+          text: t('Remove'),
           role: 'destructive',
           handler: () => {
             archive.mutate(ex.id, {
@@ -105,7 +112,7 @@ export function ExerciseLibraryPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref={isAdmin ? '/admin' : '/trainer/plans'} />
           </IonButtons>
-          <IonTitle>Exercise library</IonTitle>
+          <IonTitle>{t('Exercise library')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -114,7 +121,7 @@ export function ExerciseLibraryPage() {
           <IonSearchbar
             value={search}
             onIonInput={(e) => setSearch(String(e.detail.value ?? ''))}
-            placeholder="Search exercises"
+            placeholder={t('Search exercises')}
             debounce={150}
           />
         </IonToolbar>
@@ -122,13 +129,13 @@ export function ExerciseLibraryPage() {
           <IonToolbar>
             <IonSegment value={filter} onIonChange={(e) => setFilter(e.detail.value as Filter)}>
               <IonSegmentButton value="all">
-                <IonLabel>All</IonLabel>
+                <IonLabel>{t('All')}</IonLabel>
               </IonSegmentButton>
               <IonSegmentButton value="mine">
-                <IonLabel>Mine</IonLabel>
+                <IonLabel>{t('Mine')}</IonLabel>
               </IonSegmentButton>
               <IonSegmentButton value="shared">
-                <IonLabel>Shared</IonLabel>
+                <IonLabel>{t('Shared')}</IonLabel>
               </IonSegmentButton>
             </IonSegment>
           </IonToolbar>
@@ -142,7 +149,7 @@ export function ExerciseLibraryPage() {
           </div>
         ) : shown.length === 0 ? (
           <IonText color="medium">
-            <p className="ion-padding ion-text-center">No exercises match.</p>
+            <p className="ion-padding ion-text-center">{t('No exercises match.')}</p>
           </IonText>
         ) : (
           <IonList>
@@ -154,7 +161,7 @@ export function ExerciseLibraryPage() {
                 </IonLabel>
                 {ex.trainer_id !== null && (
                   <IonBadge slot="end" color={ex.trainer_id === profile?.id ? 'primary' : 'medium'}>
-                    {ex.trainer_id === profile?.id ? 'Mine' : 'Trainer'}
+                    {ex.trainer_id === profile?.id ? t('Mine') : t('Trainer')}
                   </IonBadge>
                 )}
               </IonItem>
@@ -162,7 +169,7 @@ export function ExerciseLibraryPage() {
           </IonList>
         )}
         <IonFab slot="fixed" vertical="bottom" horizontal="end">
-          <IonFabButton onClick={() => setEditing('new')} aria-label="Add exercise">
+          <IonFabButton onClick={() => setEditing('new')} aria-label={t('Add exercise')}>
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
@@ -171,10 +178,10 @@ export function ExerciseLibraryPage() {
           <IonHeader>
             <IonToolbar>
               <IonTitle>
-                {editing === 'new' ? 'New exercise' : editing ? editing.name : ''}
+                {editing === 'new' ? t('New exercise') : editing ? editing.name : ''}
               </IonTitle>
               <IonButtons slot="end">
-                <IonButton onClick={() => setEditing(null)}>Close</IonButton>
+                <IonButton onClick={() => setEditing(null)}>{t('Close')}</IonButton>
               </IonButtons>
             </IonToolbar>
           </IonHeader>
@@ -195,7 +202,7 @@ export function ExerciseLibraryPage() {
                     style={{ marginTop: 12 }}
                     onClick={() => remove(editing)}
                   >
-                    Remove from library
+                    {t('Remove from library')}
                   </IonButton>
                 )}
               </>
@@ -211,6 +218,7 @@ export function ExerciseLibraryPage() {
 
 /** Read-only view (shared exercises for trainers). */
 export function ExerciseDetails({ exercise }: { exercise: Exercise }) {
+  const t = useT();
   return (
     <div className="workout-page">
       <p className="workout-muted">
@@ -219,11 +227,11 @@ export function ExerciseDetails({ exercise }: { exercise: Exercise }) {
       {exercise.cues && <p className="workout-cues">{exercise.cues}</p>}
       {exercise.demo_url && (
         <IonButton fill="outline" href={exercise.demo_url} target="_blank" rel="noopener">
-          Watch demo
+          {t('Watch demo')}
         </IonButton>
       )}
       {exercise.trainer_id === null && (
-        <p className="workout-muted">Shared library exercise – the admin can edit it.</p>
+        <p className="workout-muted">{t('Shared library exercise – the admin can edit it.')}</p>
       )}
     </div>
   );

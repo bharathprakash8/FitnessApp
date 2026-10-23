@@ -16,6 +16,7 @@ import type { Profile } from '../auth/roles';
 import type { ClientDetails } from './api';
 import { DIET_LABELS, GOAL_LABELS, SEX_LABELS, type Diet, type Goal, type Sex } from './options';
 import './profile.css';
+import { tr, useT } from '../../i18n/i18n';
 
 interface Props {
   profile: Profile;
@@ -29,6 +30,7 @@ const num = (v: string) => (v.trim() === '' ? NaN : Number(v.replace(',', '.')))
 
 /** Date of birth, sex, height, weight, goal, diet, injuries, foods to avoid – for onboarding and "Edit my details". */
 export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubmit }: Props) {
+  const t = useT();
   const [dob, setDob] = useState(profile.date_of_birth ?? '');
   const [sex, setSex] = useState(profile.sex ?? '');
   const [height, setHeight] = useState(profile.height_cm?.toString() ?? '');
@@ -78,7 +80,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
     <form className="profile-form" onSubmit={submit} noValidate>
       <IonInput
         fill="outline"
-        label="Date of birth"
+        label={t('Date of birth')}
         labelPlacement="stacked"
         type="date"
         max={today}
@@ -89,12 +91,12 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
 
       <div>
         <IonText color="medium">
-          <p className="profile-label">Sex</p>
+          <p className="profile-label">{t('Sex')}</p>
         </IonText>
         <IonSegment value={sex} onIonChange={(e) => setSex(String(e.detail.value))}>
           {(Object.keys(SEX_LABELS) as Sex[]).map((s) => (
             <IonSegmentButton key={s} value={s}>
-              <IonLabel>{SEX_LABELS[s]}</IonLabel>
+              <IonLabel>{tr(SEX_LABELS[s])}</IonLabel>
             </IonSegmentButton>
           ))}
         </IonSegment>
@@ -103,7 +105,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
       <div className="profile-row">
         <IonInput
           fill="outline"
-          label="Height (cm)"
+          label={t('Height (cm)')}
           labelPlacement="floating"
           type="number"
           inputmode="decimal"
@@ -112,7 +114,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         />
         <IonInput
           fill="outline"
-          label="Weight (kg)"
+          label={t('Weight (kg)')}
           labelPlacement="floating"
           type="number"
           inputmode="decimal"
@@ -123,23 +125,23 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
 
       <IonSelect
         fill="outline"
-        label="Your goal"
+        label={t('Your goal')}
         labelPlacement="floating"
         interface="action-sheet"
-        interfaceOptions={{ header: 'Your goal' }}
+        interfaceOptions={{ header: t('Your goal') }}
         value={goal || undefined}
         onIonChange={(e) => setGoal(String(e.detail.value))}
       >
         {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
           <IonSelectOption key={g} value={g}>
-            {GOAL_LABELS[g]}
+            {tr(GOAL_LABELS[g])}
           </IonSelectOption>
         ))}
       </IonSelect>
       {goal === 'other' && (
         <IonInput
           fill="outline"
-          label="Describe your goal"
+          label={t('Describe your goal')}
           labelPlacement="floating"
           maxlength={200}
           value={goalOther}
@@ -149,23 +151,23 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
 
       <IonSelect
         fill="outline"
-        label="Diet preference"
+        label={t('Diet preference')}
         labelPlacement="floating"
         interface="action-sheet"
-        interfaceOptions={{ header: 'Diet preference' }}
+        interfaceOptions={{ header: t('Diet preference') }}
         value={diet || undefined}
         onIonChange={(e) => setDiet(String(e.detail.value))}
       >
         {(Object.keys(DIET_LABELS) as Diet[]).map((d) => (
           <IonSelectOption key={d} value={d}>
-            {DIET_LABELS[d]}
+            {tr(DIET_LABELS[d])}
           </IonSelectOption>
         ))}
       </IonSelect>
 
       <IonTextarea
         fill="outline"
-        label="Injuries or pain we should know about (optional)"
+        label={t('Injuries or pain we should know about (optional)')}
         labelPlacement="floating"
         autoGrow
         maxlength={1000}
@@ -175,7 +177,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
 
       <IonTextarea
         fill="outline"
-        label="Foods to avoid – allergies or dislikes (optional)"
+        label={t('Foods to avoid – allergies or dislikes (optional)')}
         labelPlacement="floating"
         autoGrow
         maxlength={300}
@@ -189,7 +191,7 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         </IonText>
       )}
       <IonButton type="submit" expand="block" size="large" disabled={busy}>
-        {busy ? 'Saving…' : submitLabel}
+        {busy ? t('Saving…') : submitLabel}
       </IonButton>
     </form>
   );

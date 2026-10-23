@@ -24,6 +24,7 @@ import {
   type LogWithExercise,
 } from './model';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /**
  * One exercise in a workout: what to do, last time's numbers as a guide, today's sets and a
@@ -51,6 +52,7 @@ export function ExerciseLogCard({
   logs: LogWithExercise[];
   onLogged: () => void;
 }) {
+  const t = useT();
   // Today's sets count only for this workout; "last time" uses every log of the exercise.
   const mine = (l: LogWithExercise) =>
     target.source === 'self'
@@ -131,7 +133,7 @@ export function ExerciseLogCard({
       const result = await logSet.mutateAsync({ row, exercise: pe.exercises });
       if (result === 'offline') {
         void toast({
-          message: 'Saved offline – will sync when you’re back online',
+          message: t('Saved offline – will sync when you’re back online'),
           duration: 2500,
           position: 'top',
         });
@@ -143,7 +145,7 @@ export function ExerciseLogCard({
       onLogged();
     } catch {
       void toast({
-        message: "Couldn't save the set – check your internet and try again.",
+        message: t("Couldn't save the set – check your internet and try again."),
         duration: 3000,
         color: 'danger',
         position: 'top',
@@ -156,7 +158,7 @@ export function ExerciseLogCard({
       <IonCardHeader>
         <IonCardTitle>
           {pe.exercises.name}{' '}
-          {done && <IonIcon icon={checkmarkCircle} color="success" aria-label="Done" />}
+          {done && <IonIcon icon={checkmarkCircle} color="success" aria-label={t('Done')} />}
         </IonCardTitle>
         <IonCardSubtitle>{prescription(pe)}</IonCardSubtitle>
       </IonCardHeader>
@@ -166,7 +168,7 @@ export function ExerciseLogCard({
           <div>
             {pe.exercises.cues && (
               <IonButton size="small" fill="clear" onClick={() => setShowCues((s) => !s)}>
-                {showCues ? 'Hide tips' : 'How to do it'}
+                {showCues ? t('Hide tips') : t('How to do it')}
               </IonButton>
             )}
             {pe.exercises.demo_url && (
@@ -177,7 +179,7 @@ export function ExerciseLogCard({
                 target="_blank"
                 rel="noopener"
               >
-                Watch demo
+                {t('Watch demo')}
               </IonButton>
             )}
             {showCues && <p className="workout-cues">{pe.exercises.cues}</p>}
@@ -185,8 +187,8 @@ export function ExerciseLogCard({
         )}
         {lastDate && (
           <p className="workout-muted">
-            Last time ({formatDate(lastDate)}):{' '}
-            {lastSets.map((s) => formatSet(s, type)).join(' · ')}
+            {t('Last time (')}
+            {formatDate(lastDate)}): {lastSets.map((s) => formatSet(s, type)).join(' · ')}
           </p>
         )}
 
@@ -195,11 +197,11 @@ export function ExerciseLogCard({
             {todaySets.map((s) => (
               <li key={s.id}>
                 <span>
-                  Set {s.set_number}: <strong>{formatSet(s, type)}</strong>
+                  {t('Set')} {s.set_number}: <strong>{formatSet(s, type)}</strong>
                   {s.logged_by && s.logged_by !== s.client_id && owner === profile?.id && (
-                    <span className="workout-muted"> · by trainer</span>
+                    <span className="workout-muted"> {t('· by trainer')}</span>
                   )}
-                  {'offline' in s && <span className="offline-badge"> waiting to sync</span>}
+                  {'offline' in s && <span className="offline-badge"> {t('waiting to sync')}</span>}
                 </span>
                 {canDelete(s) && (
                   <IonButton
@@ -216,13 +218,17 @@ export function ExerciseLogCard({
             ))}
           </ul>
         )}
-        {done && <p className="workout-done">All {pe.sets} sets done – extra sets are fine too.</p>}
+        {done && (
+          <p className="workout-done">
+            {t('All')} {pe.sets} {t('sets done – extra sets are fine too.')}
+          </p>
+        )}
 
         <div className="workout-log-row">
           {type === 'weights' && (
             <IonInput
               fill="outline"
-              label="kg"
+              label={t('kg')}
               labelPlacement="stacked"
               type="number"
               inputmode="decimal"
@@ -233,7 +239,7 @@ export function ExerciseLogCard({
           {type !== 'timed' ? (
             <IonInput
               fill="outline"
-              label="Reps"
+              label={t('Reps')}
               labelPlacement="stacked"
               type="number"
               inputmode="numeric"
@@ -243,7 +249,7 @@ export function ExerciseLogCard({
           ) : (
             <IonInput
               fill="outline"
-              label="Minutes"
+              label={t('Minutes')}
               labelPlacement="stacked"
               type="number"
               inputmode="decimal"
@@ -252,18 +258,18 @@ export function ExerciseLogCard({
             />
           )}
           <IonButton disabled={logSet.isPending} onClick={() => void log()}>
-            Log set {nextSetNumber}
+            {t('Log set')} {nextSetNumber}
           </IonButton>
         </div>
         {type === 'timed' && (
           <IonInput
             className="workout-machine-kcal"
             fill="outline"
-            label="Machine kcal (optional)"
+            label={t('Machine kcal (optional)')}
             labelPlacement="stacked"
             type="number"
             inputmode="numeric"
-            placeholder="From the machine or app"
+            placeholder={t('From the machine or app')}
             value={machineKcal}
             onIonInput={(e) => setMachineKcal(String(e.detail.value ?? ''))}
           />

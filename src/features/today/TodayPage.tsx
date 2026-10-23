@@ -191,7 +191,9 @@ function TrainerSetupCard() {
         </IonCardHeader>
         <IonCardContent>
           <p>
-            {t('Log your meals (photo or text), workouts and calories burnt – just like your clients. Only you and the admin can see it.')}
+            {t(
+              'Log your meals (photo or text), workouts and calories burnt – just like your clients. Only you and the admin can see it.',
+            )}
           </p>
           <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/onboarding">
             {t('Set up My fitness (2 minutes)')}

@@ -1,9 +1,11 @@
 import type { Target } from '../targets/api';
 import type { Totals } from './model';
 import './food.css';
+import { useT } from '../../i18n/i18n';
 
 /** Calories-in ring plus protein / carbs / fat bars against the day's targets. */
 export function DayProgress({ totals, target }: { totals: Totals; target: Target | null }) {
+  const t = useT();
   const goal = target?.calories ?? 0;
   const pct = goal ? Math.min(1, totals.calories / goal) : 0;
   const over = goal > 0 && totals.calories > goal;
@@ -47,15 +49,15 @@ export function DayProgress({ totals, target }: { totals: Totals; target: Target
         <text x="56" y="72" textAnchor="middle" className="ring-sub">
           {goal
             ? left >= 0
-              ? `${left.toLocaleString('en-IN')} left`
-              : `${(-left).toLocaleString('en-IN')} over`
-            : 'kcal eaten'}
+              ? t('{n} left', { n: left.toLocaleString('en-IN') })
+              : t('{n} over', { n: (-left).toLocaleString('en-IN') })
+            : t('kcal eaten')}
         </text>
       </svg>
       <div className="macro-bars">
-        <Bar label="Protein" value={totals.protein_g} goal={target?.protein_g} />
-        <Bar label="Carbs" value={totals.carbs_g} goal={target?.carbs_g} />
-        <Bar label="Fat" value={totals.fat_g} goal={target?.fat_g} />
+        <Bar label={t('Protein')} value={totals.protein_g} goal={target?.protein_g} />
+        <Bar label={t('Carbs')} value={totals.carbs_g} goal={target?.carbs_g} />
+        <Bar label={t('Fat')} value={totals.fat_g} goal={target?.fat_g} />
       </div>
     </div>
   );

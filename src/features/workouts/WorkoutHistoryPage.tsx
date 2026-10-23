@@ -24,10 +24,12 @@ import { useWorkoutLogs } from './api';
 import { personalBests, type LogWithExercise } from './model';
 import { WorkoutHistoryList } from './WorkoutHistoryList';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 type Tab = 'history' | 'bests';
 
 export function WorkoutHistoryPage() {
+  const t = useT();
   const { profile } = useAuth();
   const logs = useWorkoutLogs(profile?.id);
   const [tab, setTab] = useState<Tab>('history');
@@ -39,7 +41,7 @@ export function WorkoutHistoryPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
-          <IonTitle>My workouts</IonTitle>
+          <IonTitle>{t('My workouts')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -47,10 +49,10 @@ export function WorkoutHistoryPage() {
         <IonToolbar>
           <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as Tab)}>
             <IonSegmentButton value="history">
-              <IonLabel>History</IonLabel>
+              <IonLabel>{t('History')}</IonLabel>
             </IonSegmentButton>
             <IonSegmentButton value="bests">
-              <IonLabel>Personal bests</IonLabel>
+              <IonLabel>{t('Personal bests')}</IonLabel>
             </IonSegmentButton>
           </IonSegment>
         </IonToolbar>
@@ -63,7 +65,7 @@ export function WorkoutHistoryPage() {
               <IonSpinner name="crescent" />
             </div>
           ) : tab === 'history' ? (
-            <WorkoutHistoryList logs={logs.data ?? []} emptyText="No workouts logged yet." />
+            <WorkoutHistoryList logs={logs.data ?? []} emptyText={t('No workouts logged yet.')} />
           ) : (
             <Bests logs={logs.data ?? []} />
           )}
@@ -74,11 +76,12 @@ export function WorkoutHistoryPage() {
 }
 
 function Bests({ logs }: { logs: LogWithExercise[] }) {
+  const t = useT();
   const bests = personalBests(logs);
   if (bests.length === 0) {
     return (
       <IonText color="medium">
-        <p className="ion-text-center">Your personal bests appear here once you log sets.</p>
+        <p className="ion-text-center">{t('Your personal bests appear here once you log sets.')}</p>
       </IonText>
     );
   }

@@ -31,12 +31,14 @@ import {
 } from './api';
 import { PlanDays } from './PlanDays';
 import './mealIdeas.css';
+import { useT } from '../../i18n/i18n';
 
 /**
  * Trainer → client → Meal ideas: AI drafts 7 days of short meal ideas from the client's own
  * food pattern, diet and targets; the trainer checks/edits each meal and shares it.
  */
 export function ClientMealIdeasTab({ client }: { client: Profile }) {
+  const t = useT();
   const qc = useQueryClient();
   const [toast] = useIonToast();
   const [confirm] = useIonAlert();
@@ -77,7 +79,7 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
     try {
       await setFoodsToAvoid(client.id, avoid);
       await qc.invalidateQueries({ queryKey: ['profiles'] });
-      void toast({ message: 'Saved', duration: 1200, position: 'top' });
+      void toast({ message: t('Saved'), duration: 1200, position: 'top' });
     } catch (e) {
       fail(e);
     } finally {
@@ -108,38 +110,51 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
     <>
       <IonCard className="trainer-card">
         <IonCardHeader>
-          <IonCardSubtitle>7-day food ideas</IonCardSubtitle>
+          <IonCardSubtitle>{t('7-day food ideas')}</IonCardSubtitle>
         </IonCardHeader>
         <IonCardContent>
           {targets.isPending || weight.isPending ? (
             <IonSpinner name="dots" />
           ) : target ? (
             <p>
-              Fitted to their target: <strong>{target.calories} kcal</strong>,{' '}
-              <strong>{target.protein_g ?? '–'} g protein</strong>.
+              {t('Fitted to their target:')}{' '}
+              <strong>
+                {target.calories} {t('kcal')}
+              </strong>
+              ,{' '}
+              <strong>
+                {target.protein_g ?? '–'} {t('g protein')}
+              </strong>
+              .
             </p>
           ) : suggested ? (
             <IonText color="warning">
               <p>
-                No targets set. Suggested (Estimated): <strong>{suggested.calories} kcal</strong>,{' '}
-                <strong>{suggested.protein_g} g protein</strong> – the draft will use these. Set
-                them properly in the Targets tab.
+                {t('No targets set. Suggested (Estimated):')}{' '}
+                <strong>
+                  {suggested.calories} {t('kcal')}
+                </strong>
+                ,{' '}
+                <strong>
+                  {suggested.protein_g} {t('g protein')}
+                </strong>{' '}
+                {t('– the draft will use these. Set them properly in the Targets tab.')}
               </p>
             </IonText>
           ) : (
             <IonText color="warning">
-              <p>Set targets in the Targets tab first (their details are incomplete).</p>
+              <p>{t('Set targets in the Targets tab first (their details are incomplete).')}</p>
             </IonText>
           )}
           <p className="ideas-muted">
-            Uses their last 30 days of food, diet (
-            {label(DIET_LABELS, client.diet_preference) || 'not given'}) and foods to avoid. Short
-            ideas only – dish, portion, kcal, protein.
+            {t('Uses their last 30 days of food, diet (')}
+            {label(DIET_LABELS, client.diet_preference) || t('not given')}
+            {t(') and foods to avoid. Short ideas only – dish, portion, kcal, protein.')}
           </p>
 
           <IonTextarea
             fill="outline"
-            label="Foods to avoid (allergies, dislikes)"
+            label={t('Foods to avoid (allergies, dislikes)')}
             labelPlacement="stacked"
             autoGrow
             maxlength={300}
@@ -148,14 +163,14 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
           />
           {avoid !== (client.foods_to_avoid ?? '') && (
             <IonButton size="small" fill="outline" disabled={savingAvoid} onClick={saveAvoid}>
-              Save foods to avoid
+              {t('Save foods to avoid')}
             </IonButton>
           )}
           <IonTextarea
             fill="outline"
-            label="Note for this draft (optional)"
+            label={t('Note for this draft (optional)')}
             labelPlacement="stacked"
-            placeholder="e.g. more paneer, light dinners, office lunch box"
+            placeholder={t('e.g. more paneer, light dinners, office lunch box')}
             autoGrow
             maxlength={500}
             value={note}
@@ -170,19 +185,19 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
           >
             {draft.isPending ? (
               <>
-                <IonSpinner name="dots" /> Drafting… (about 10 seconds)
+                <IonSpinner name="dots" /> {t('Drafting… (about 10 seconds)')}
               </>
             ) : plan ? (
-              'Draft a new 7 days'
+              t('Draft a new 7 days')
             ) : (
-              'Draft 7 days'
+              t('Draft 7 days')
             )}
           </IonButton>
         </IonCardContent>
       </IonCard>
 
       {plans.isPending ? null : !plan ? (
-        <p className="ideas-muted ion-text-center">No food ideas drafted yet.</p>
+        <p className="ideas-muted ion-text-center">{t('No food ideas drafted yet.')}</p>
       ) : (
         <>
           <div className="ideas-actions">
@@ -192,7 +207,7 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
                 disabled={share.isPending}
                 onClick={() => share.mutate({ planId: plan.id, share: false }, { onError: fail })}
               >
-                Take back
+                {t('Take back')}
               </IonButton>
             ) : (
               <IonButton
@@ -203,7 +218,7 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
                     {
                       onSuccess: () =>
                         void toast({
-                          message: 'Shared with the client',
+                          message: t('Shared with the client'),
                           duration: 1500,
                           position: 'top',
                         }),
@@ -212,7 +227,7 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
                   )
                 }
               >
-                Share with client
+                {t('Share with client')}
               </IonButton>
             )}
             <IonButton
@@ -220,11 +235,11 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
               color="medium"
               onClick={() =>
                 void confirm({
-                  header: 'Delete these food ideas?',
+                  header: t('Delete these food ideas?'),
                   buttons: [
-                    { text: 'Cancel', role: 'cancel' },
+                    { text: t('Cancel'), role: 'cancel' },
                     {
-                      text: 'Delete',
+                      text: t('Delete'),
                       role: 'destructive',
                       handler: () => remove.mutate(plan.id, { onError: fail }),
                     },
@@ -232,16 +247,22 @@ export function ClientMealIdeasTab({ client }: { client: Profile }) {
                 })
               }
             >
-              Delete
+              {t('Delete')}
             </IonButton>
           </div>
           <p className="ideas-muted">
             <IonBadge color={plan.status === 'shared' ? 'success' : 'medium'}>
-              {plan.status === 'shared' ? 'Shared' : 'Draft'}
+              {plan.status === 'shared' ? t('Shared') : t('Draft')}
             </IonBadge>{' '}
-            Estimated by AI{plan.edited ? ', edited by you' : ''}. Tap any meal to change it.
+            {t('Estimated by AI')}
+            {plan.edited ? t(', edited by you') : ''}
+            {t('. Tap any meal to change it.')}
           </p>
-          {plan.note && <p className="ideas-note">Note: {plan.note}</p>}
+          {plan.note && (
+            <p className="ideas-note">
+              {t('Note:')} {plan.note}
+            </p>
+          )}
           <PlanDays plan={plan} onEditMeal={editMeal} />
         </>
       )}

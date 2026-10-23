@@ -23,11 +23,13 @@ import { prescription } from '../workouts/model';
 import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { WorkoutHistoryList } from '../workouts/WorkoutHistoryList';
+import { useT } from '../../i18n/i18n';
 
 const NONE = 'none';
 
 /** Trainer → client detail → Workouts: current plan (change it here) and logged sessions. */
 export function ClientWorkoutsTab({ client }: { client: Profile }) {
+  const t = useT();
   const { profile: me } = useAuth();
   const active = useActivePlan(client.id);
   const plans = useMyPlans(me?.id);
@@ -59,9 +61,9 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
         qc.invalidateQueries({ queryKey: ['plans'] }),
         qc.invalidateQueries({ queryKey: ['plan-assignments'] }),
       ]);
-      void toast({ message: 'Plan updated', duration: 1500, position: 'top' });
+      void toast({ message: t('Plan updated'), duration: 1500, position: 'top' });
     } catch {
-      void toast({ message: 'Could not change the plan', duration: 2500, color: 'danger' });
+      void toast({ message: t('Could not change the plan'), duration: 2500, color: 'danger' });
     }
   }
 
@@ -77,24 +79,26 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
     <>
       <IonCard className="trainer-card">
         <IonCardHeader>
-          <IonCardSubtitle>Current plan</IonCardSubtitle>
-          <IonCardTitle>{active.data?.plan.name ?? 'No plan'}</IonCardTitle>
+          <IonCardSubtitle>{t('Current plan')}</IonCardSubtitle>
+          <IonCardTitle>{active.data?.plan.name ?? t('No plan')}</IonCardTitle>
         </IonCardHeader>
         <IonCardContent>
           {active.data && (
-            <p className="trainer-note">Since {formatDate(active.data.assignment.start_date)}</p>
+            <p className="trainer-note">
+              {t('Since')} {formatDate(active.data.assignment.start_date)}
+            </p>
           )}
           <IonSelect
             fill="outline"
-            label="Change plan"
+            label={t('Change plan')}
             labelPlacement="stacked"
             interface="action-sheet"
-            interfaceOptions={{ header: 'Choose a plan' }}
+            interfaceOptions={{ header: t('Choose a plan') }}
             value={active.data?.plan.id ?? NONE}
             onIonChange={(e) => void changePlan(String(e.detail.value))}
             style={{ marginTop: 12 }}
           >
-            <IonSelectOption value={NONE}>No plan</IonSelectOption>
+            <IonSelectOption value={NONE}>{t('No plan')}</IonSelectOption>
             {(plans.data ?? []).map((p) => (
               <IonSelectOption key={p.id} value={p.id}>
                 {p.name}
@@ -103,7 +107,7 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
           </IonSelect>
           {(plans.data ?? []).length === 0 && (
             <IonText color="medium">
-              <p className="trainer-note">Build a plan in the Plans tab first.</p>
+              <p className="trainer-note">{t('Build a plan in the Plans tab first.')}</p>
             </IonText>
           )}
         </IonCardContent>
@@ -111,7 +115,7 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
       {(own.data ?? []).length > 0 && (
         <IonCard className="trainer-card">
           <IonCardHeader>
-            <IonCardSubtitle>Their own workouts (logged as Self)</IonCardSubtitle>
+            <IonCardSubtitle>{t('Their own workouts (logged as Self)')}</IonCardSubtitle>
           </IonCardHeader>
           <IonCardContent>
             {own.data!.map((w) => (
@@ -121,7 +125,7 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
                 <span className="trainer-note">
                   {w.self_workout_exercises
                     .map((x) => `${x.exercises.name} ${prescription(x)}`)
-                    .join(' · ') || 'No exercises yet'}
+                    .join(' · ') || t('No exercises yet')}
                 </span>
               </p>
             ))}
@@ -130,12 +134,12 @@ export function ClientWorkoutsTab({ client }: { client: Profile }) {
       )}
       <IonButton expand="block" routerLink={`/trainer/clients/${client.id}/log`}>
         <IonIcon slot="start" icon={add} />
-        Log a workout for them
+        {t('Log a workout for them')}
       </IonButton>
-      <h3>Logged workouts</h3>
+      <h3>{t('Logged workouts')}</h3>
       <WorkoutHistoryList
         logs={logs.data ?? []}
-        emptyText="No workouts logged yet."
+        emptyText={t('No workouts logged yet.')}
         limitDays={30}
       />
     </>

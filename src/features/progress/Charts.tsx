@@ -2,6 +2,7 @@
  * Small SVG charts (no chart library, to keep the app light). They scale to the card width.
  */
 import './progress.css';
+import { dateLocale, useT } from '../../i18n/i18n';
 
 const W = 320;
 const H = 140;
@@ -10,7 +11,7 @@ const innerW = W - PAD.left - PAD.right;
 const innerH = H - PAD.top - PAD.bottom;
 
 const shortDate = (date: string) =>
-  new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+  new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
     new Date(`${date}T00:00:00Z`),
   );
 
@@ -36,7 +37,8 @@ export function LineChart({
   unit: string;
   label: string;
 }) {
-  if (points.length === 0) return <p className="progress-empty">No entries yet.</p>;
+  const t = useT();
+  if (points.length === 0) return <p className="progress-empty">{t('No entries yet.')}</p>;
   const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
   const t0 = Date.parse(sorted[0]!.date);
   const t1 = Date.parse(sorted.at(-1)!.date);
@@ -82,9 +84,10 @@ export function BarChart({
   label: string;
   color?: 'primary' | 'secondary';
 }) {
+  const t = useT();
   const values = points.map((p) => p.value).filter((v): v is number => v !== null);
   if (values.length === 0)
-    return <p className="progress-empty">Nothing recorded in this period.</p>;
+    return <p className="progress-empty">{t('Nothing recorded in this period.')}</p>;
   const max = Math.max(...values, target ?? 0, 1) * 1.1;
   const y = (v: number) => PAD.top + (1 - v / max) * innerH;
   const slot = innerW / points.length;
@@ -120,7 +123,7 @@ export function BarChart({
             className="chart-target"
           />
           <text x={W - PAD.right} y={y(target) - 3} textAnchor="end" className="chart-label">
-            target {target}
+            {t('target')} {target}
           </text>
         </>
       ) : null}

@@ -28,9 +28,11 @@ import { ExercisePicker } from './ExercisePicker';
 import { prescription, type SelfWorkoutExerciseFull, type SelfWorkoutFull } from './model';
 import { PlanExerciseEditor, type PlanExerciseFields } from './PlanExerciseEditor';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /** Build or change one of your own saved workouts. */
 export function MyWorkoutEditorPage() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
   const { profile } = useAuth();
   const workouts = useSelfWorkouts(profile?.id);
@@ -43,7 +45,7 @@ export function MyWorkoutEditorPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/workouts" />
           </IonButtons>
-          <IonTitle>{workout?.name ?? 'My workout'}</IonTitle>
+          <IonTitle>{workout?.name ?? t('My workout')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -58,7 +60,7 @@ export function MyWorkoutEditorPage() {
             </div>
           ) : !workout ? (
             <IonText color="medium">
-              <p className="ion-text-center">This workout no longer exists.</p>
+              <p className="ion-text-center">{t('This workout no longer exists.')}</p>
             </IonText>
           ) : (
             <Editor workout={workout} />
@@ -70,6 +72,7 @@ export function MyWorkoutEditorPage() {
 }
 
 function Editor({ workout }: { workout: SelfWorkoutFull }) {
+  const t = useT();
   const { profile } = useAuth();
   const router = useIonRouter();
   const [alert] = useIonAlert();
@@ -82,19 +85,19 @@ function Editor({ workout }: { workout: SelfWorkoutFull }) {
     mutate.mutate(fn, {
       onSuccess: after,
       onError: () =>
-        void toast({ message: 'Could not save. Try again.', duration: 2500, color: 'danger' }),
+        void toast({ message: t('Could not save. Try again.'), duration: 2500, color: 'danger' }),
     });
 
   const list = workout.self_workout_exercises;
 
   function rename() {
     void alert({
-      header: 'Rename workout',
+      header: t('Rename workout'),
       inputs: [{ name: 'v', value: workout.name, attributes: { maxlength: 60 } }],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Save',
+          text: t('Save'),
           handler: (data: { v?: string }) => {
             const v = (data.v ?? '').trim();
             if (!v) return false;
@@ -108,12 +111,12 @@ function Editor({ workout }: { workout: SelfWorkoutFull }) {
 
   function remove() {
     void alert({
-      header: 'Delete this workout?',
-      message: 'Sets you already logged stay in your history.',
+      header: t('Delete this workout?'),
+      message: t('Sets you already logged stay in your history.'),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Delete',
+          text: t('Delete'),
           role: 'destructive',
           handler: () =>
             run(
@@ -145,13 +148,13 @@ function Editor({ workout }: { workout: SelfWorkoutFull }) {
         routerLink={`/workouts/self/${workout.id}`}
         disabled={list.length === 0}
       >
-        Start this workout
+        {t('Start this workout')}
       </IonButton>
 
       <IonList inset style={{ margin: '16px 0' }}>
         {list.length === 0 && (
           <IonItem lines="none">
-            <IonLabel color="medium">No exercises yet – add a few below.</IonLabel>
+            <IonLabel color="medium">{t('No exercises yet – add a few below.')}</IonLabel>
           </IonItem>
         )}
         {list.map((row, i) => (
@@ -166,14 +169,14 @@ function Editor({ workout }: { workout: SelfWorkoutFull }) {
             </IonLabel>
             <IonButtons slot="end">
               <IonButton
-                aria-label="Move up"
+                aria-label={t('Move up')}
                 disabled={i === 0 || mutate.isPending}
                 onClick={() => move(i, -1)}
               >
                 <IonIcon icon={arrowUp} />
               </IonButton>
               <IonButton
-                aria-label="Move down"
+                aria-label={t('Move down')}
                 disabled={i === list.length - 1 || mutate.isPending}
                 onClick={() => move(i, 1)}
               >
@@ -183,17 +186,17 @@ function Editor({ workout }: { workout: SelfWorkoutFull }) {
           </IonItem>
         ))}
       </IonList>
-      <p className="workout-muted">Tap an exercise to change sets, reps or rest.</p>
+      <p className="workout-muted">{t('Tap an exercise to change sets, reps or rest.')}</p>
 
       <IonButton expand="block" fill="outline" onClick={() => setPicking(true)}>
         <IonIcon slot="start" icon={add} />
-        Add exercise
+        {t('Add exercise')}
       </IonButton>
       <IonButton expand="block" fill="clear" onClick={rename}>
-        Rename
+        {t('Rename')}
       </IonButton>
       <IonButton expand="block" fill="clear" color="danger" onClick={remove}>
-        Delete workout
+        {t('Delete workout')}
       </IonButton>
 
       <ExercisePicker

@@ -4,6 +4,7 @@ import type { Tables } from '../../lib/database.types';
 import { resolveBurn, type ActivityDay } from '../activity/model';
 import type { Profile } from '../auth/roles';
 import type { LogWithExercise } from '../workouts/model';
+import { dateLocale } from '../../i18n/i18n';
 
 export const addDays = (date: string, n: number) => {
   const d = new Date(`${date}T00:00:00Z`);
@@ -77,9 +78,12 @@ function minutesIn(iso: string, timeZone: string) {
 }
 
 export function clockText(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+  // A clock time in the app's language (e.g. 7:30 pm / ಸಂಜೆ 7:30).
+  return new Intl.DateTimeFormat(dateLocale(), {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(2000, 0, 1, Math.floor(minutes / 60), minutes % 60)));
 }
 
 const avgOf = (list: number[]) =>

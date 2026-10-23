@@ -45,9 +45,11 @@ import {
 } from './api';
 import { nextDay } from './model';
 import './workouts.css';
+import { useT } from '../../i18n/i18n';
 
 /** Client: assigned plan, next workout and all plan days. */
 export function WorkoutsPage() {
+  const t = useT();
   const { profile } = useAuth();
   const active = useActivePlan(profile?.id);
   const logs = useWorkoutLogs(profile?.id);
@@ -61,7 +63,7 @@ export function WorkoutsPage() {
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>Workouts</IonTitle>
+          <IonTitle>{t('Workouts')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -89,7 +91,9 @@ export function WorkoutsPage() {
               <MyPlanPicker />
             ) : (
               <IonText color="medium">
-                <p className="ion-text-center">Your trainer hasn't given you a workout plan yet.</p>
+                <p className="ion-text-center">
+                  {t("Your trainer hasn't given you a workout plan yet.")}
+                </p>
               </IonText>
             )
           ) : (
@@ -101,14 +105,14 @@ export function WorkoutsPage() {
                 <IonCard className="workout-card">
                   <IonCardHeader>
                     <IonCardSubtitle>
-                      {next.inProgress ? 'In progress today' : 'Next workout'}
+                      {next.inProgress ? t('In progress today') : t('Next workout')}
                     </IonCardSubtitle>
                     <IonCardTitle>{next.day.title}</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent>
                     <p className="workout-muted">
                       {next.day.plan_exercises.map((pe) => pe.exercises.name).join(' · ') ||
-                        'No exercises yet'}
+                        t('No exercises yet')}
                     </p>
                     <IonButton
                       expand="block"
@@ -116,21 +120,21 @@ export function WorkoutsPage() {
                       routerLink={`/workouts/day/${next.day.id}`}
                       disabled={next.day.plan_exercises.length === 0}
                     >
-                      {next.inProgress ? 'Continue workout' : 'Start workout'}
+                      {next.inProgress ? t('Continue workout') : t('Start workout')}
                     </IonButton>
                   </IonCardContent>
                 </IonCard>
               )}
               <IonList inset style={{ margin: '16px 0' }}>
                 <IonListHeader>
-                  <IonLabel>All days – pick any</IonLabel>
+                  <IonLabel>{t('All days – pick any')}</IonLabel>
                 </IonListHeader>
                 {plan.plan_days.map((d) => (
                   <IonItem key={d.id} routerLink={`/workouts/day/${d.id}`} detail>
                     <IonLabel>
                       <h3>{d.title}</h3>
                       <p>
-                        {d.plan_exercises.length} exercise
+                        {d.plan_exercises.length} {t('exercise')}
                         {d.plan_exercises.length === 1 ? '' : 's'}
                       </p>
                     </IonLabel>
@@ -141,7 +145,7 @@ export function WorkoutsPage() {
           )}
           <MyWorkouts />
           <IonButton expand="block" fill="outline" routerLink="/workouts/history">
-            History and personal bests
+            {t('History and personal bests')}
           </IonButton>
         </div>
       </IonContent>
@@ -154,6 +158,7 @@ export function WorkoutsPage() {
 
 /** Workouts the person saved for themselves, plus a quick log. Logged as "Self". */
 function MyWorkouts() {
+  const t = useT();
   const { profile } = useAuth();
   const workouts = useSelfWorkouts(profile?.id);
   const router = useIonRouter();
@@ -165,13 +170,13 @@ function MyWorkouts() {
 
   function newWorkout() {
     void alert({
-      header: 'New workout',
-      message: 'Give it a name, then add exercises from the library.',
-      inputs: [{ name: 'v', placeholder: 'e.g. Home legs', attributes: { maxlength: 60 } }],
+      header: t('New workout'),
+      message: t('Give it a name, then add exercises from the library.'),
+      inputs: [{ name: 'v', placeholder: t('e.g. Home legs'), attributes: { maxlength: 60 } }],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: t('Cancel'), role: 'cancel' },
         {
-          text: 'Create',
+          text: t('Create'),
           handler: (data: { v?: string }) => {
             const v = (data.v ?? '').trim();
             if (!v) return false;
@@ -196,7 +201,7 @@ function MyWorkouts() {
   return (
     <IonList inset style={{ margin: '16px 0' }}>
       <IonListHeader>
-        <IonLabel>My workouts (logged as Self)</IonLabel>
+        <IonLabel>{t('My workouts (logged as Self)')}</IonLabel>
       </IonListHeader>
       {(workouts.data ?? []).map((w) => (
         <IonItem
@@ -210,7 +215,7 @@ function MyWorkouts() {
           <IonLabel>
             <h3>{w.name}</h3>
             <p>
-              {w.self_workout_exercises.length} exercise
+              {w.self_workout_exercises.length} {t('exercise')}
               {w.self_workout_exercises.length === 1 ? '' : 's'}
             </p>
           </IonLabel>
@@ -218,13 +223,13 @@ function MyWorkouts() {
       ))}
       <IonItem button detail={false} onClick={newWorkout} disabled={create.isPending}>
         <IonIcon slot="start" icon={add} />
-        <IonLabel>Create a workout</IonLabel>
+        <IonLabel>{t('Create a workout')}</IonLabel>
       </IonItem>
       <IonItem routerLink="/workouts/self/quick" detail={false} lines="none">
         <IonIcon slot="start" icon={flash} />
         <IonLabel>
-          <h3>Quick log</h3>
-          <p>Log any exercise without saving a workout</p>
+          <h3>{t('Quick log')}</h3>
+          <p>{t('Log any exercise without saving a workout')}</p>
         </IonLabel>
       </IonItem>
     </IonList>
@@ -235,6 +240,7 @@ const NO_PLAN = 'none';
 
 /** Trainer → My fitness: follow one of your own plans (or none). */
 function MyPlanPicker({ current }: { current?: string }) {
+  const t = useT();
   const { profile } = useAuth();
   const plans = useMyPlans(profile?.id);
   const [toast] = useIonToast();
@@ -248,7 +254,7 @@ function MyPlanPicker({ current }: { current?: string }) {
       if (planId === NO_PLAN) await setPlan.mutateAsync({ add: [], remove: [profile.id] });
       else await setPlan.mutateAsync({ planId, add: [profile.id], remove: [] });
     } catch {
-      void toast({ message: 'Could not change the plan', duration: 2500, color: 'danger' });
+      void toast({ message: t('Could not change the plan'), duration: 2500, color: 'danger' });
     }
   }
 
@@ -257,7 +263,7 @@ function MyPlanPicker({ current }: { current?: string }) {
     return (
       <IonText color="medium">
         <p className="ion-text-center">
-          Build a plan in the Plans tab, then follow it here – or use My workouts below.
+          {t('Build a plan in the Plans tab, then follow it here – or use My workouts below.')}
         </p>
       </IonText>
     );
@@ -265,15 +271,15 @@ function MyPlanPicker({ current }: { current?: string }) {
   return (
     <IonSelect
       fill="outline"
-      label={current ? 'Change my plan' : 'Follow one of my plans'}
+      label={current ? t('Change my plan') : t('Follow one of my plans')}
       labelPlacement="stacked"
       interface="action-sheet"
-      interfaceOptions={{ header: 'Choose a plan' }}
+      interfaceOptions={{ header: t('Choose a plan') }}
       value={value}
       onIonChange={(e) => void change(String(e.detail.value))}
       style={{ margin: '8px 0 16px' }}
     >
-      <IonSelectOption value={NO_PLAN}>No plan</IonSelectOption>
+      <IonSelectOption value={NO_PLAN}>{t('No plan')}</IonSelectOption>
       {(plans.data ?? []).map((p) => (
         <IonSelectOption key={p.id} value={p.id}>
           {p.name}

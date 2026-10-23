@@ -33,6 +33,7 @@ import {
   macrosMismatch,
   type Activity,
 } from '../targets/estimate';
+import { tr, useT } from '../../i18n/i18n';
 
 const toInt = (v: string) => (v.trim() === '' ? NaN : Math.round(Number(v)));
 
@@ -51,6 +52,7 @@ export function TargetsTab({ client }: { client: Profile }) {
 }
 
 function TargetsEditor({ client }: { client: Profile }) {
+  const tx = useT();
   const { profile: me } = useAuth();
   const targets = useTargets(client.id);
   const weight = useLatestWeight(client.id);
@@ -124,7 +126,7 @@ function TargetsEditor({ client }: { client: Profile }) {
         set_by: me.id,
       });
       setEstimated(false);
-      void toast({ message: 'Targets saved', duration: 1800, position: 'top' });
+      void toast({ message: tx('Targets saved'), duration: 1800, position: 'top' });
     } catch {
       setError('Could not save the targets. Check your connection and try again.');
     }
@@ -132,18 +134,18 @@ function TargetsEditor({ client }: { client: Profile }) {
 
   function remove(id: string, when: string) {
     void alert({
-      header: 'Delete these targets?',
+      header: tx('Delete these targets?'),
       message: `The targets starting ${formatDate(when)} will be removed.`,
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: tx('Cancel'), role: 'cancel' },
         {
-          text: 'Delete',
+          text: tx('Delete'),
           role: 'destructive',
           handler: () => {
             deleteTarget.mutate(id, {
               onError: () =>
                 void toast({
-                  message: 'Could not delete',
+                  message: tx('Could not delete'),
                   duration: 2500,
                   color: 'danger',
                   position: 'top',
@@ -159,14 +161,14 @@ function TargetsEditor({ client }: { client: Profile }) {
     <>
       <IonCard className="trainer-card">
         <IonCardHeader>
-          <IonCardTitle>Set new targets</IonCardTitle>
+          <IonCardTitle>{tx('Set new targets')}</IonCardTitle>
         </IonCardHeader>
         <IonCardContent>
           <form className="trainer-form" onSubmit={save} noValidate>
             <div className="trainer-estimate">
               <IonSelect
                 fill="outline"
-                label="Activity level (for the estimate)"
+                label={tx('Activity level (for the estimate)')}
                 labelPlacement="stacked"
                 interface="action-sheet"
                 value={activity}
@@ -174,7 +176,7 @@ function TargetsEditor({ client }: { client: Profile }) {
               >
                 {(Object.keys(ACTIVITY_LABELS) as Activity[]).map((a) => (
                   <IonSelectOption key={a} value={a}>
-                    {ACTIVITY_LABELS[a]}
+                    {tr(ACTIVITY_LABELS[a])}
                   </IonSelectOption>
                 ))}
               </IonSelect>
@@ -182,18 +184,18 @@ function TargetsEditor({ client }: { client: Profile }) {
                 <>
                   <IonText color="medium">
                     <p className="trainer-note">
-                      Estimated: {estimate.calories} kcal · P {estimate.protein_g} g · C{' '}
-                      {estimate.carbs_g} g · F {estimate.fat_g} g
+                      {tx('Estimated:')} {estimate.calories} {tx('kcal · P')} {estimate.protein_g} g
+                      · C {estimate.carbs_g} g · F {estimate.fat_g} g
                     </p>
                   </IonText>
                   <IonButton size="small" fill="outline" onClick={applyEstimate}>
-                    Use estimate
+                    {tx('Use estimate')}
                   </IonButton>
                 </>
               ) : (
                 <IonText color="medium">
                   <p className="trainer-note">
-                    An estimate appears once the client has entered age, height and weight.
+                    {tx('An estimate appears once the client has entered age, height and weight.')}
                   </p>
                 </IonText>
               )}
@@ -201,7 +203,7 @@ function TargetsEditor({ client }: { client: Profile }) {
 
             <IonInput
               fill="outline"
-              label="Calories (kcal)"
+              label={tx('Calories (kcal)')}
               labelPlacement="floating"
               type="number"
               inputmode="numeric"
@@ -211,7 +213,7 @@ function TargetsEditor({ client }: { client: Profile }) {
             <div className="trainer-row">
               <IonInput
                 fill="outline"
-                label="Protein (g)"
+                label={tx('Protein (g)')}
                 labelPlacement="floating"
                 type="number"
                 inputmode="numeric"
@@ -220,7 +222,7 @@ function TargetsEditor({ client }: { client: Profile }) {
               />
               <IonInput
                 fill="outline"
-                label="Carbs (g)"
+                label={tx('Carbs (g)')}
                 labelPlacement="floating"
                 type="number"
                 inputmode="numeric"
@@ -229,7 +231,7 @@ function TargetsEditor({ client }: { client: Profile }) {
               />
               <IonInput
                 fill="outline"
-                label="Fat (g)"
+                label={tx('Fat (g)')}
                 labelPlacement="floating"
                 type="number"
                 inputmode="numeric"
@@ -240,19 +242,20 @@ function TargetsEditor({ client }: { client: Profile }) {
             {mismatch && (
               <IonText color="warning">
                 <p className="trainer-note">
-                  Protein, carbs and fat add up to {macroCalories(values)} kcal, which is quite
-                  different from {values.calories} kcal. You can still save.
+                  {tx('Protein, carbs and fat add up to')} {macroCalories(values)}{' '}
+                  {tx('kcal, which is quite different from')} {values.calories}{' '}
+                  {tx('kcal. You can still save.')}
                 </p>
               </IonText>
             )}
             {estimated && !mismatch && (
               <IonText color="medium">
-                <p className="trainer-note">These are estimates – adjust them if needed.</p>
+                <p className="trainer-note">{tx('These are estimates – adjust them if needed.')}</p>
               </IonText>
             )}
             <IonInput
               fill="outline"
-              label="Water per day (litres)"
+              label={tx('Water per day (litres)')}
               labelPlacement="floating"
               type="number"
               inputmode="decimal"
@@ -262,7 +265,7 @@ function TargetsEditor({ client }: { client: Profile }) {
             />
             <IonInput
               fill="outline"
-              label="Starts on"
+              label={tx('Starts on')}
               labelPlacement="stacked"
               type="date"
               value={from}
@@ -274,7 +277,7 @@ function TargetsEditor({ client }: { client: Profile }) {
               </IonText>
             )}
             <IonButton type="submit" expand="block" disabled={setTarget.isPending}>
-              {setTarget.isPending ? 'Saving…' : 'Save targets'}
+              {setTarget.isPending ? tx('Saving…') : tx('Save targets')}
             </IonButton>
           </form>
         </IonCardContent>
@@ -282,27 +285,29 @@ function TargetsEditor({ client }: { client: Profile }) {
 
       <IonList inset style={{ margin: '16px 0' }}>
         <IonListHeader>
-          <IonLabel>History</IonLabel>
+          <IonLabel>{tx('History')}</IonLabel>
         </IonListHeader>
         {(targets.data ?? []).length === 0 && (
           <IonItem lines="none">
-            <IonLabel color="medium">No targets yet</IonLabel>
+            <IonLabel color="medium">{tx('No targets yet')}</IonLabel>
           </IonItem>
         )}
         {(targets.data ?? []).map((t) => (
           <IonItem key={t.id}>
             <IonLabel>
               <h3>
-                {t.calories} kcal · P {t.protein_g} · C {t.carbs_g} · F {t.fat_g}
-                {t.id === current?.id && ' (current)'}
+                {t.calories} {tx('kcal · P')} {t.protein_g} · C {t.carbs_g} · F {t.fat_g}
+                {t.id === current?.id && tx(' (current)')}
               </h3>
-              <p>From {formatDate(t.effective_from)}</p>
+              <p>
+                {tx('From')} {formatDate(t.effective_from)}
+              </p>
             </IonLabel>
             <IonButton
               slot="end"
               fill="clear"
               color="medium"
-              aria-label="Delete these targets"
+              aria-label={tx('Delete these targets')}
               onClick={() => remove(t.id, t.effective_from)}
             >
               <IonIcon icon={trashOutline} />
