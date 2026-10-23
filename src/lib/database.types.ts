@@ -788,6 +788,7 @@ export type Database = {
           id: string
           injuries: string | null
           is_active: boolean
+          language: string
           last_app_version: string | null
           last_device: string | null
           last_platform: string | null
@@ -814,6 +815,7 @@ export type Database = {
           id: string
           injuries?: string | null
           is_active?: boolean
+          language?: string
           last_app_version?: string | null
           last_device?: string | null
           last_platform?: string | null
@@ -840,6 +842,7 @@ export type Database = {
           id?: string
           injuries?: string | null
           is_active?: boolean
+          language?: string
           last_app_version?: string | null
           last_device?: string | null
           last_platform?: string | null

@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { clearPersistedCache } from '../../lib/queryClient';
+import { setLanguage } from '../../i18n/i18n';
 import { touchClientInfo } from '../../lib/errorLog';
 import { forgetImpersonation, isImpersonating, stopImpersonation } from '../../lib/impersonation';
 import { supabase } from '../../lib/supabase';
@@ -29,6 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const userId = session?.user.id;
   const profileQuery = useProfile(userId);
+
+  // The account's language (set on Me) wins over this phone's last choice.
+  const language = profileQuery.data?.language;
+  useEffect(() => {
+    if (language === 'en' || language === 'kn') setLanguage(language);
+  }, [language]);
 
   // Which app version this person uses – for the admin's Diagnostics page.
   useEffect(() => {

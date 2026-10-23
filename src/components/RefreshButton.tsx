@@ -2,6 +2,7 @@ import { IonButton, IonIcon, IonSpinner, useIonAlert, useIonToast } from '@ionic
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { cloudOfflineOutline, refreshOutline } from 'ionicons/icons';
 import { useState } from 'react';
+import { tr } from '../i18n/i18n';
 
 import { useAuth } from '../features/auth/useAuth';
 import { useOnline } from '../lib/network';
@@ -40,7 +41,7 @@ export function RefreshButton() {
   const spinning = busy || (fetching && online);
   return (
     <IonButton
-      aria-label={online ? 'Refresh' : 'Offline'}
+      aria-label={online ? tr('Refresh') : tr('Offline')}
       className="refresh-button"
       onClick={() => void refresh()}
       disabled={spinning}
@@ -73,12 +74,15 @@ export function SyncStatusBar() {
         className="sync-bar sync-bar-error"
         onClick={() =>
           void alert({
-            header: "Couldn't save",
-            message: `${failed.length} item${failed.length === 1 ? '' : 's'} saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter ${failed.length === 1 ? 'it' : 'them'} again.`,
+            header: tr("Couldn't save"),
+            message: tr(
+              '{n} item(s) saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter them again.',
+              { n: failed.length },
+            ),
             buttons: [
-              { text: 'Keep for now', role: 'cancel' },
+              { text: tr('Keep for now'), role: 'cancel' },
               {
-                text: 'Discard',
+                text: tr('Discard'),
                 role: 'destructive',
                 handler: () => void Promise.all(failed.map((i) => removeQueued(i.id))),
               },
@@ -86,22 +90,22 @@ export function SyncStatusBar() {
           })
         }
       >
-        {failed.length} saved item{failed.length === 1 ? '' : 's'} couldn't sync – tap for details
+        {tr("{n} saved item(s) couldn't sync – tap for details", { n: failed.length })}
       </button>
     );
   }
   if (!online) {
     return (
       <div className="sync-bar">
-        You're offline – showing saved data.
-        {waiting > 0 ? ` ${waiting} new entr${waiting === 1 ? 'y' : 'ies'} will sync later.` : ''}
+        {tr("You're offline – showing saved data.")}
+        {waiting > 0 ? ' ' + tr('{n} new entries will sync later.', { n: waiting }) : ''}
       </div>
     );
   }
   if (waiting > 0) {
     return (
       <div className="sync-bar">
-        Syncing {waiting} saved entr{waiting === 1 ? 'y' : 'ies'}…
+        {tr('Syncing {n} saved entries…', { n: waiting })}
       </div>
     );
   }

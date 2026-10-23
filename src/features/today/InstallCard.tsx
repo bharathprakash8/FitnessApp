@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { isIOSWeb } from '../../lib/platform';
 import { IosInstallSteps } from '../notifications/IosInstallSteps';
 import '../notifications/notifications.css';
+import { useT } from '../../i18n/i18n';
 
 const DISMISS_KEY = 'fitcoach-install-card-dismissed';
 
@@ -22,6 +23,7 @@ function wasDismissed() {
 /** iPhone in Safari: suggest "Add to Home Screen" once (needed for reminders and offline). */
 export function InstallCard() {
   const [hidden, setHidden] = useState(() => !isIOSWeb || isStandalone() || wasDismissed());
+  const t = useT();
   if (hidden) return null;
 
   function dismiss() {
@@ -36,15 +38,15 @@ export function InstallCard() {
   return (
     <IonCard style={{ marginInline: 0 }}>
       <IonCardHeader>
-        <IonCardTitle>Add FitCoach to your Home Screen</IonCardTitle>
+        <IonCardTitle>{t('Add FitCoach to your Home Screen')}</IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <IosInstallSteps />
         <p className="notif-muted">
-          It then opens like an app, works with a weak signal and can send you reminders.
+          {t('It then opens like an app, works with a weak signal and can send you reminders.')}
         </p>
         <IonButton fill="clear" size="small" onClick={dismiss}>
-          Not now
+          {t('Not now')}
         </IonButton>
       </IonCardContent>
     </IonCard>

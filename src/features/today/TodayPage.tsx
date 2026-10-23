@@ -37,6 +37,7 @@ import { NextSessionCard } from '../sessions/NextSessionCard';
 import { LatestSummaryCard } from '../summaries/MySummariesPage';
 import { InstallCard } from './InstallCard';
 import './today.css';
+import { dateLocale, tr, useT } from '../../i18n/i18n';
 
 function greeting(timeZone = DEFAULT_TIMEZONE): string {
   const h = Number(
@@ -44,7 +45,7 @@ function greeting(timeZone = DEFAULT_TIMEZONE): string {
       new Date(),
     ),
   );
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  return h < 12 ? tr('Good morning') : h < 17 ? tr('Good afternoon') : tr('Good evening');
 }
 
 /**
@@ -56,12 +57,13 @@ export function TodayPage() {
   const { profile } = useAuth();
   const isTrainer = profile?.role === 'trainer';
   const needsSetup = isTrainer && !profile?.onboarded_at;
+  const t = useT();
 
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
-          <IonTitle>{isTrainer ? 'My fitness' : 'Today'}</IonTitle>
+          <IonTitle>{isTrainer ? t('My fitness') : t('Today')}</IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -86,7 +88,8 @@ function TodayContent() {
   const meals = useMealsOn(profile?.id, todayIn(tz));
   const trainer = useMyTrainer(isTrainer ? undefined : profile?.id);
   const firstName = (profile?.full_name || '').split(' ')[0];
-  const trainerName = trainer.data?.full_name || 'Your trainer';
+  const t = useT();
+  const trainerName = trainer.data?.full_name || t('Your trainer');
   const target = currentTarget(targets.data, tz);
 
   return (
@@ -105,7 +108,7 @@ function TodayContent() {
           {firstName ? `, ${firstName}` : ''}!
         </h2>
         <p className="today-date">
-          {new Intl.DateTimeFormat('en-IN', {
+          {new Intl.DateTimeFormat(dateLocale(), {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -116,15 +119,15 @@ function TodayContent() {
           <div className="today-links">
             <IonButton fill="outline" size="small" routerLink="/food">
               <IonIcon slot="start" icon={restaurant} />
-              Food log
+              {t('Food log')}
             </IonButton>
             <IonButton fill="outline" size="small" routerLink="/workouts">
               <IonIcon slot="start" icon={barbell} />
-              Workouts
+              {t('Workouts')}
             </IonButton>
             <IonButton fill="outline" size="small" routerLink="/trainer/my-targets">
               <IonIcon slot="start" icon={flag} />
-              My targets
+              {t('My targets')}
             </IonButton>
           </div>
         )}
@@ -137,13 +140,13 @@ function TodayContent() {
           <>
             <IonCard style={{ marginInline: 0 }}>
               <IonCardHeader>
-                <IonCardSubtitle>Food today</IonCardSubtitle>
+                <IonCardSubtitle>{t('Food today')}</IonCardSubtitle>
               </IonCardHeader>
               <IonCardContent>
                 <DayProgress totals={mealTotals(meals.data ?? [])} target={target} />
                 <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/food/new/photo">
                   <IonIcon slot="start" icon={camera} />
-                  Log a meal
+                  {t('Log a meal')}
                 </IonButton>
               </IonCardContent>
             </IonCard>
@@ -161,8 +164,8 @@ function TodayContent() {
                 upcoming={upcomingTarget(targets.data, tz)}
                 emptyText={
                   isTrainer
-                    ? 'Set your targets with “My targets” above.'
-                    : `${trainerName} hasn't set your targets yet.`
+                    ? t('Set your targets with “My targets” above.')
+                    : t("{name} hasn't set your targets yet.", { name: trainerName })
                 }
               />
             )}
@@ -179,19 +182,19 @@ function TodayContent() {
 
 /** A trainer who hasn't set up "My fitness" yet. */
 function TrainerSetupCard() {
+  const t = useT();
   return (
     <div style={{ maxWidth: 520, margin: '0 auto' }}>
       <IonCard style={{ marginInline: 0 }}>
         <IonCardHeader>
-          <IonCardTitle>Track your own fitness</IonCardTitle>
+          <IonCardTitle>{t('Track your own fitness')}</IonCardTitle>
         </IonCardHeader>
         <IonCardContent>
           <p>
-            Log your meals (photo or text), workouts and calories burnt – just like your clients.
-            Only you and the admin can see it.
+            {t('Log your meals (photo or text), workouts and calories burnt – just like your clients. Only you and the admin can see it.')}
           </p>
           <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/onboarding">
-            Set up My fitness (2 minutes)
+            {t('Set up My fitness (2 minutes)')}
           </IonButton>
         </IonCardContent>
       </IonCard>

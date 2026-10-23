@@ -1,4 +1,5 @@
 import { IonButton, IonContent, IonPage, IonSpinner } from '@ionic/react';
+import { useT } from '../i18n/i18n';
 
 interface Action {
   label: string;
@@ -15,6 +16,7 @@ interface StatusScreenProps {
 
 /** Full-screen loading or message state (e.g. checking session, account inactive). */
 export function StatusScreen({ loading, title, message, actions = [] }: StatusScreenProps) {
+  const t = useT();
   return (
     <IonPage>
       <IonContent className="ion-padding">
@@ -35,11 +37,11 @@ export function StatusScreen({ loading, title, message, actions = [] }: StatusSc
             <IonSpinner name="crescent" color="primary" aria-label="Loading" />
           ) : (
             <>
-              {title && <h2 style={{ margin: 0 }}>{title}</h2>}
-              {message && <p style={{ margin: 0, lineHeight: 1.4 }}>{message}</p>}
+              {title && <h2 style={{ margin: 0 }}>{t(title)}</h2>}
+              {message && <p style={{ margin: 0, lineHeight: 1.4 }}>{t(message)}</p>}
               {actions.map((a) => (
                 <IonButton key={a.label} expand="block" onClick={a.onClick}>
-                  {a.label}
+                  {t(a.label)}
                 </IonButton>
               ))}
             </>
