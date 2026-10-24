@@ -1,6 +1,23 @@
 // Kannada for every English text in the app (English text = key). Missing ones show in
 // English. Machine-assisted translation (23 Oct 2026) – a native speaker should review.
 export const kn: Record<string, string> = {
+  "The AI couldn't estimate this item. Enter the numbers yourself.":
+    'AI ಈ ಐಟಂ ಅಂದಾಜಿಸಲಾಗಲಿಲ್ಲ. ಸಂಖ್ಯೆಗಳನ್ನು ನೀವೇ ನಮೂದಿಸಿ.',
+  'Could not re-estimate': 'ಮತ್ತೆ ಅಂದಾಜಿಸಲಾಗಲಿಲ್ಲ',
+  'Re-estimating…': 'ಮತ್ತೆ ಅಂದಾಜಿಸಲಾಗುತ್ತಿದೆ…',
+  'Re-estimate “{name}”': '“{name}” ಮತ್ತೆ ಅಂದಾಜಿಸಿ',
+  'Almost done…': 'ಬಹುತೇಕ ಮುಗಿಯಿತು…',
+  'Preparing photo…': 'ಫೋಟೋ ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ…',
+  'Something went wrong.': 'ಏನೋ ತಪ್ಪಾಗಿದೆ.',
+  'Type it instead': 'ಬದಲಿಗೆ ಟೈಪ್ ಮಾಡಿ',
+  'How should the AI look at your photo?': 'AI ನಿಮ್ಮ ಫೋಟೋವನ್ನು ಹೇಗೆ ನೋಡಬೇಕು?',
+  'Detailed analysis': 'ವಿವರವಾದ ವಿಶ್ಲೇಷಣೆ',
+  'About 30 seconds – counts pieces, portions, oil and ghee for a closer estimate':
+    'ಸುಮಾರು 30 ಸೆಕೆಂಡ್ – ಹೆಚ್ಚು ನಿಖರ ಅಂದಾಜಿಗಾಗಿ ತುಂಡುಗಳು, ಪ್ರಮಾಣ, ಎಣ್ಣೆ ಮತ್ತು ತುಪ್ಪವನ್ನು ಎಣಿಸುತ್ತದೆ',
+  'Quick estimate': 'ತ್ವರಿತ ಅಂದಾಜು',
+  'About 20 seconds – a simple, high-level calculation': 'ಸುಮಾರು 20 ಸೆಕೆಂಡ್ – ಸರಳ, ಸ್ಥೂಲ ಲೆಕ್ಕಾಚಾರ',
+  'Looking closely at your meal…': 'ನಿಮ್ಮ ಊಟವನ್ನು ಸೂಕ್ಷ್ಮವಾಗಿ ನೋಡಲಾಗುತ್ತಿದೆ…',
+  'Estimating calories…': 'ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸಲಾಗುತ್ತಿದೆ…',
   '{n} days': '{n} ದಿನಗಳು',
   'Up to yesterday · {n} day(s) with food logged': 'ನಿನ್ನೆಯವರೆಗೆ · ಆಹಾರ ದಾಖಲಿಸಿದ ದಿನಗಳು: {n}',
   '{a} of {b}': '{b} ರಲ್ಲಿ {a}',

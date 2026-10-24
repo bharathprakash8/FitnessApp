@@ -18,7 +18,14 @@ import { useParams } from 'react-router-dom';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { DEFAULT_TIMEZONE, todayIn } from '../../lib/dates';
 import { useAuth } from '../auth/useAuth';
-import { itemsJson, useDeleteMeal, useMeal, usePhotoUrls, useSaveMeal } from './api';
+import {
+  itemsJson,
+  useDeleteMeal,
+  useMeal,
+  usePhotoUrls,
+  useSaveMeal,
+  reestimateItem,
+} from './api';
 import { MealEditor } from './MealEditor';
 import { itemsOf, localToIso, timeIn, totalsOf, type MealType } from './model';
 import './food.css';
@@ -69,6 +76,7 @@ export function EditMealPage() {
             <>
               {photo && <img src={photo} alt={tx('Your meal')} className="food-preview" />}
               <MealEditor
+                onReestimate={reestimateItem}
                 key={m.id}
                 initialItems={itemsOf(m)}
                 initialMealType={m.meal_type as MealType}

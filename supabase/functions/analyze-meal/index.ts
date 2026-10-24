@@ -1,5 +1,8 @@
 // analyze-meal: estimate the food items in a meal photo or description with Gemini.
 // Client callers only. Does NOT save the meal – the client reviews and saves it.
+//   detail: 'quick' (default, at most ~20 s) or 'detailed' (closer look, at most ~30 s)
+//   item: { name, portion } – re-estimate one item the client renamed or re-sized
+//         (counts against the follow-up allowance, not the main one)
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { z } from 'npm:zod@3';
 
@@ -47,8 +50,17 @@ const Body = z
     follow_up: z
       .object({ question: z.string().max(300), answer: z.string().trim().min(1).max(200) })
       .optional(),
+    detail: z.enum(['quick', 'detailed']).default('quick'),
+    item: z
+      .object({ name: z.string().trim().min(1).max(80), portion: z.string().trim().max(80) })
+      .optional(),
   })
-  .refine((b) => b.photo_path || b.text, { message: 'Add a photo or describe the meal' });
+  .refine((b) => b.photo_path || b.text || b.item, {
+    message: 'Add a photo or describe the meal',
+  });
+
+// Extra care for "Detailed" estimates.
+const DETAILED = `Take extra care with this estimate: look closely at every item, count pieces (chapatis, idlis, pieces of meat), judge each portion against the plate, bowl or hand size, include visible oil, ghee, butter, gravy, chutney and sugar, and think about common hidden ingredients for each dish. Make protein, carbohydrate and fat consistent with the calories (4/4/9 kcal per gram).`;
 
 const num = (max: number) =>
   z.coerce
@@ -105,9 +117,11 @@ serveJson(async (req) => {
   if (pErr) throw pErr;
   const day = todayIn(profile.timezone || 'Asia/Kolkata');
 
-  // Daily cap (follow-up answers have their own allowance).
-  const feature = body.follow_up ? 'analyze-meal-followup' : 'analyze-meal';
-  const cap = body.follow_up ? FOLLOW_UP_CAP : DAILY_CAP;
+  // Daily cap (follow-up answers and single-item re-estimates have their own allowance).
+  const secondary = Boolean(body.follow_up || body.item);
+  const feature = secondary ? 'analyze-meal-followup' : 'analyze-meal';
+  const cap = secondary ? FOLLOW_UP_CAP : DAILY_CAP;
+  const detailed = body.detail === 'detailed' && !body.item;
   const { data: usage } = await db
     .from('ai_usage')
     .select('count')
@@ -141,6 +155,11 @@ serveJson(async (req) => {
   }
   let prompt = `Diet preference: ${profile.diet_preference ?? 'not given'}. Meal type: ${body.meal_type}.`;
   if (body.text) prompt += `\nThe client describes the meal as: "${body.text}"`;
+  if (body.item) {
+    const portion = body.item.portion ? `, portion "${body.item.portion}"` : '';
+    prompt += `\nEstimate exactly one food item: "${body.item.name}"${portion}. Return exactly one item with this name and portion. Do not ask a follow-up question.`;
+  }
+  if (detailed) prompt += `\n${DETAILED}`;
   if (body.follow_up) {
     prompt += `\nYou asked: "${body.follow_up.question}" The client answered: "${body.follow_up.answer}". Use this answer and do not ask again.`;
   }
@@ -151,7 +170,19 @@ serveJson(async (req) => {
       system: SYSTEM,
       parts,
       schema: SCHEMA,
-      feature: body.follow_up ? 'meal-follow-up' : body.photo_path ? 'meal-photo' : 'meal-text',
+      feature: body.item
+        ? 'meal-reestimate'
+        : body.follow_up
+          ? 'meal-follow-up'
+          : body.photo_path
+            ? detailed
+              ? 'meal-photo-detailed'
+              : 'meal-photo'
+            : 'meal-text',
+      // Detailed: more careful reasoning, about 30 s; quick: about 20 s at most.
+      thinking: detailed ? 'medium' : 'low',
+      timeoutMs: detailed ? 22_000 : 10_000,
+      budgetMs: detailed ? 32_000 : 24_000,
     }),
   );
   if (!result.success) {
@@ -167,7 +198,7 @@ serveJson(async (req) => {
 
   // "Left today" always refers to the main allowance, also after a follow-up answer.
   let mainUsed = Number(newCount ?? 0);
-  if (body.follow_up) {
+  if (secondary) {
     const { data: main } = await db
       .from('ai_usage')
       .select('count')
@@ -179,7 +210,7 @@ serveJson(async (req) => {
   }
 
   const items = result.data.items;
-  const followUp = body.follow_up ? '' : result.data.follow_up_question.trim();
+  const followUp = secondary ? '' : result.data.follow_up_question.trim();
   return {
     items,
     total_calories: Math.round(items.reduce((s, i) => s + i.calories, 0)),

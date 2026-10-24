@@ -181,3 +181,49 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
 }
+.food-reestimate {
+  margin: 8px 0 0;
+}
+
+/* After a photo: Detailed / Quick choice and the countdown */
+.food-choose ion-button {
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  height: auto;
+  margin-bottom: 10px;
+}
+.food-choice {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  white-space: normal;
+  width: 100%;
+}
+.food-choice span {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+.food-countdown {
+  text-align: center;
+  padding: 20px 8px;
+}
+.food-countdown-number {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  min-height: 3rem;
+}
+.food-countdown-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fc-primary-soft);
+  overflow: hidden;
+  margin: 8px auto 0;
+  max-width: 320px;
+}
+.food-countdown-bar div {
+  height: 100%;
+  background: var(--ion-color-primary);
+  transition: width 0.25s linear;
+}

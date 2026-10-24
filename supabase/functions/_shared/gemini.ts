@@ -67,6 +67,10 @@ export async function generateJson(opts: {
   feature: string;
   /** Give up on one model after this long and try the next (default 20 s). */
   timeoutMs?: number;
+  /** How much the model may reason before answering (default 'low' = fast). */
+  thinking?: 'low' | 'medium' | 'high';
+  /** Total time for all models together (default 60 s); later models get what is left. */
+  budgetMs?: number;
 }): Promise<unknown> {
   const key = Deno.env.get('GEMINI_API_KEY');
   if (!key)
@@ -76,6 +80,8 @@ export async function generateJson(opts: {
       'ai_not_configured',
     );
 
+  const started = Date.now();
+  const budget = opts.budgetMs ?? 60_000;
   let thinking = true; // switched off if a model doesn't accept the setting
   // One attempt at one model; null when it took too long (then the next model is tried).
   const request = (model: string): Promise<Response | null> =>
@@ -89,12 +95,14 @@ export async function generateJson(opts: {
           temperature: opts.temperature ?? 0.2,
           responseMimeType: 'application/json',
           responseSchema: opts.schema,
-          // Little step-by-step "thinking": food estimates don't need it and it was
-          // making answers take 20+ seconds.
-          ...(thinking ? { thinkingConfig: { thinkingLevel: 'low' } } : {}),
+          // Little step-by-step "thinking" by default: quick estimates don't need it and it
+          // made answers take 20+ seconds. "Detailed" meal estimates ask for more.
+          ...(thinking ? { thinkingConfig: { thinkingLevel: opts.thinking ?? 'low' } } : {}),
         },
       }),
-      signal: AbortSignal.timeout(opts.timeoutMs ?? 20_000),
+      signal: AbortSignal.timeout(
+        Math.max(3_000, Math.min(opts.timeoutMs ?? 20_000, budget - (Date.now() - started))),
+      ),
     }).catch(() => null);
 
   let res: Response | null = null;
@@ -103,11 +111,12 @@ export async function generateJson(opts: {
   const now = Date.now();
   const models = modelList().filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
   lastTimings = [];
-  const started = Date.now();
   try {
-    for (const m of models.length ? models : modelList()) {
-      // Stay well inside the server's time limit: don't start another model after 60 s.
-      if (Date.now() - started > 60_000) break;
+    const queue = [...(models.length ? models : modelList())];
+    while (queue.length) {
+      const m = queue.shift()!;
+      // Stay inside the time budget (and well inside the server's limit).
+      if (Date.now() - started > budget - 3_000) break;
       model = m;
       const t0 = Date.now();
       res = await request(m);
@@ -117,6 +126,8 @@ export async function generateJson(opts: {
         console.error('Gemini model too slow:', m);
         lastQuota = 'timeout';
         exhaustedUntil.set(m, Date.now() + 60_000);
+        // Time is short now: try the fast Lite models next.
+        queue.sort((a, b) => Number(/lite/i.test(b)) - Number(/lite/i.test(a)));
         continue;
       }
       if (res.status === 400 && thinking) {

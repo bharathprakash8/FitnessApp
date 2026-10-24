@@ -14,7 +14,7 @@ import {
   useIonRouter,
   useIonToast,
 } from '@ionic/react';
-import { camera, images } from 'ionicons/icons';
+import { camera, images, text as textIcon } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 
@@ -23,13 +23,23 @@ import { DEFAULT_TIMEZONE } from '../../lib/dates';
 import { compressImage } from '../../lib/image';
 import { useOnline } from '../../lib/network';
 import { useAuth } from '../auth/useAuth';
-import { analyzeMeal, itemsJson, uploadMealPhoto, useSaveMeal, type Analysis } from './api';
+import {
+  analyzeMeal,
+  itemsJson,
+  uploadMealPhoto,
+  useSaveMeal,
+  type Analysis,
+  reestimateItem,
+} from './api';
+import { Countdown } from './Countdown';
 import { MealEditor, type MealEditorValues } from './MealEditor';
 import { localToIso, mealTypeForHour, nowIn, totalsOf, type MealSource } from './model';
 import './food.css';
 import { useT } from '../../i18n/i18n';
 
-type Stage = 'input' | 'working' | 'review';
+type Stage = 'input' | 'choose' | 'working' | 'review';
+type Detail = 'quick' | 'detailed';
+const SECONDS: Record<Detail, number> = { quick: 20, detailed: 30 };
 
 /** Log a meal: photo → AI estimate, text → AI estimate, or manual entry. */
 export function LogMealPage() {
@@ -57,6 +67,9 @@ export function LogMealPage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [answering, setAnswering] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  // Photo flow: the photo uploads while the client picks Quick or Detailed.
+  const upload = useRef<Promise<string> | null>(null);
+  const [countdown, setCountdown] = useState<Detail | null>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
 
@@ -74,19 +87,35 @@ export function LogMealPage() {
     if (!file) return;
     setError(null);
     setStage('working');
+    setCountdown(null);
     try {
-      setStatus('Preparing photo…');
+      setStatus(tx('Preparing photo…'));
       const small = await compressImage(file);
       setPreview(URL.createObjectURL(small));
-      setStatus('Uploading…');
-      const path = await uploadMealPhoto(clientId, day, small);
+      upload.current = uploadMealPhoto(clientId, day, small);
+      upload.current.catch(() => undefined); // reported when the estimate starts
+      setStage('choose');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : tx('Something went wrong.'));
+      setStage('input');
+    }
+  }
+
+  /** After the photo: Quick (~20 s) or Detailed (~30 s), with a countdown. */
+  async function estimatePhoto(detail: Detail) {
+    if (!upload.current) return;
+    setStage('working');
+    setCountdown(detail);
+    try {
+      const path = await upload.current;
       setPhotoPath(path);
-      setStatus('Estimating calories…');
-      setAnalysis(await analyzeMeal({ photo_path: path, meal_type: initialType }));
+      setAnalysis(await analyzeMeal({ photo_path: path, meal_type: initialType, detail }));
       setStage('review');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(err instanceof Error ? err.message : tx('Something went wrong.'));
       setStage('input');
+    } finally {
+      setCountdown(null);
     }
   }
 
@@ -230,7 +259,43 @@ export function LogMealPage() {
                 <IonIcon slot="start" icon={images} />
                 {tx('Choose from gallery')}
               </IonButton>
+              <IonButton
+                expand="block"
+                fill="outline"
+                routerLink={`/food/new/text${search}`}
+                routerDirection="forward"
+              >
+                <IonIcon slot="start" icon={textIcon} />
+                {tx('Type it instead')}
+              </IonButton>
             </>
+          )}
+
+          {stage === 'choose' && (
+            <div className="food-choose">
+              <p className="food-muted">{tx('How should the AI look at your photo?')}</p>
+              <IonButton expand="block" size="large" onClick={() => void estimatePhoto('detailed')}>
+                <div className="food-choice">
+                  <strong>{tx('Detailed analysis')}</strong>
+                  <span>
+                    {tx(
+                      'About 30 seconds – counts pieces, portions, oil and ghee for a closer estimate',
+                    )}
+                  </span>
+                </div>
+              </IonButton>
+              <IonButton
+                expand="block"
+                size="large"
+                fill="outline"
+                onClick={() => void estimatePhoto('quick')}
+              >
+                <div className="food-choice">
+                  <strong>{tx('Quick estimate')}</strong>
+                  <span>{tx('About 20 seconds – a simple, high-level calculation')}</span>
+                </div>
+              </IonButton>
+            </div>
           )}
 
           {stage === 'input' && source === 'text' && (
@@ -257,12 +322,22 @@ export function LogMealPage() {
             </>
           )}
 
-          {stage === 'working' && (
-            <div className="ion-text-center" style={{ padding: 24 }}>
-              <IonSpinner name="crescent" />
-              <p>{status}</p>
-            </div>
-          )}
+          {stage === 'working' &&
+            (countdown ? (
+              <Countdown
+                seconds={SECONDS[countdown]}
+                label={
+                  countdown === 'detailed'
+                    ? tx('Looking closely at your meal…')
+                    : tx('Estimating calories…')
+                }
+              />
+            ) : (
+              <div className="ion-text-center" style={{ padding: 24 }}>
+                <IonSpinner name="crescent" />
+                <p>{status}</p>
+              </div>
+            ))}
 
           {error && stage === 'input' && (
             <>
@@ -283,6 +358,7 @@ export function LogMealPage() {
                 </IonText>
               )}
               <MealEditor
+                onReestimate={reestimateItem}
                 key={editorKey}
                 initialItems={analysis?.items ?? []}
                 initialMealType={initialType}

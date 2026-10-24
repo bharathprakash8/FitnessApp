@@ -9,7 +9,7 @@ import {
   IonSpinner,
   IonText,
 } from '@ionic/react';
-import { add, closeOutline } from 'ionicons/icons';
+import { add, closeOutline, sparklesOutline } from 'ionicons/icons';
 import { useRef, useState } from 'react';
 
 import {
@@ -33,7 +33,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 interface Row {
   item: MealItem;
   factor: number;
+  /** Name and portion the numbers belong to – when the client changes them, offer Re-estimate. */
+  base: { name: string; portion: string };
 }
+
+const baseOf = (item: MealItem) => ({ name: item.name.trim(), portion: item.portion.trim() });
 
 export interface MealEditorValues {
   items: MealItem[];
@@ -58,6 +62,7 @@ export function MealEditor({
   busy,
   saveLabel,
   onSave,
+  onReestimate,
 }: {
   initialItems: MealItem[];
   initialMealType: MealType;
@@ -74,11 +79,21 @@ export function MealEditor({
   busy: boolean;
   saveLabel: string;
   onSave: (v: MealEditorValues) => void;
+  /** AI numbers for one renamed/re-sized item; null if it couldn't tell. */
+  onReestimate?: (
+    item: { name: string; portion: string },
+    mealType: MealType,
+  ) => Promise<MealItem | null>;
 }) {
   const tx = useT();
   const [rows, setRows] = useState<Row[]>(
-    (initialItems.length ? initialItems : [emptyItem()]).map((item) => ({ item, factor: 1 })),
+    (initialItems.length ? initialItems : [emptyItem()]).map((item) => ({
+      item,
+      factor: 1,
+      base: baseOf(item),
+    })),
   );
+  const [reestimating, setReestimating] = useState<number | null>(null);
   const [mealType, setMealType] = useState<MealType>(initialMealType);
   const [date, setDate] = useState(initialDate);
   const [time, setTime] = useState(initialTime);
@@ -106,9 +121,40 @@ export function MealEditor({
 
   function setFactor(i: number, factor: number) {
     setRows((rs) =>
-      rs.map((r, j) => (j === i ? { item: scaleItem(r.item, factor / r.factor), factor } : r)),
+      rs.map((r, j) =>
+        j === i ? { ...r, item: scaleItem(r.item, factor / r.factor), factor } : r,
+      ),
     );
     setEdited(true);
+  }
+
+  /** True when the client changed the name or portion after the numbers were set. */
+  const changed = (r: Row) =>
+    Boolean(r.item.name.trim()) &&
+    (r.item.name.trim() !== r.base.name || r.item.portion.trim() !== r.base.portion);
+
+  async function reestimate(i: number) {
+    const row = rows[i];
+    if (!row || !onReestimate) return;
+    setReestimating(i);
+    setError(null);
+    try {
+      const fresh = await onReestimate(baseOf(row.item), mealType);
+      if (!fresh)
+        throw new Error(tx("The AI couldn't estimate this item. Enter the numbers yourself."));
+      // Keep the client's own wording; take the AI's numbers.
+      const item = {
+        ...fresh,
+        name: row.item.name.trim(),
+        portion: row.item.portion.trim() || fresh.portion,
+      };
+      setRows((rs) => rs.map((r, j) => (j === i ? { item, factor: 1, base: baseOf(item) } : r)));
+      setEdited(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tx('Could not re-estimate'));
+    } finally {
+      setReestimating(null);
+    }
   }
 
   async function save() {
@@ -210,6 +256,19 @@ export function MealEditor({
             onIonInput={(e) => update(i, { portion: String(e.detail.value ?? '') })}
             style={{ marginTop: 8 }}
           />
+          {onReestimate && changed(r) && (
+            <IonButton
+              size="small"
+              className="food-reestimate"
+              disabled={reestimating !== null}
+              onClick={() => void reestimate(i)}
+            >
+              <IonIcon slot="start" icon={sparklesOutline} />
+              {reestimating === i
+                ? tx('Re-estimating…')
+                : tx('Re-estimate “{name}”', { name: r.item.name.trim() })}
+            </IonButton>
+          )}
           <div className="food-steps">
             {FACTORS.map((f) => (
               <IonChip
@@ -250,7 +309,7 @@ export function MealEditor({
         fill="clear"
         size="small"
         onClick={() => {
-          setRows((rs) => [...rs, { item: emptyItem(), factor: 1 }]);
+          setRows((rs) => [...rs, { item: emptyItem(), factor: 1, base: baseOf(emptyItem()) }]);
           setEdited(true);
         }}
       >

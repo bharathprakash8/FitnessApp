@@ -122,11 +122,24 @@ export interface Analysis {
   remaining_today: number;
 }
 
+/** New numbers for one item the client renamed or re-sized (AI, follow-up allowance). */
+export async function reestimateItem(
+  item: { name: string; portion: string },
+  meal_type: MealType,
+): Promise<MealItem | null> {
+  const result = await analyzeMeal({ item, meal_type });
+  return result.items[0] ?? null;
+}
+
 export async function analyzeMeal(input: {
   photo_path?: string;
   text?: string;
   meal_type: MealType;
   follow_up?: { question: string; answer: string };
+  /** 'detailed' = closer look (about 30 s), 'quick' = about 20 s. */
+  detail?: 'quick' | 'detailed';
+  /** Re-estimate just this one item (after the client renamed or re-sized it). */
+  item?: { name: string; portion: string };
 }): Promise<Analysis> {
   const { data, error } = await supabase.functions.invoke('analyze-meal', { body: input });
   if (error) {
