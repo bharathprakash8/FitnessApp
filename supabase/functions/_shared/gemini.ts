@@ -71,6 +71,8 @@ export async function generateJson(opts: {
   thinking?: 'low' | 'medium' | 'high';
   /** Total time for all models together (default 60 s); later models get what is left. */
   budgetMs?: number;
+  /** Try the Lite models first (fast, large free quota) – used for meal estimates. */
+  preferLite?: boolean;
 }): Promise<unknown> {
   const key = Deno.env.get('GEMINI_API_KEY');
   if (!key)
@@ -109,10 +111,13 @@ export async function generateJson(opts: {
   let model = '';
   let lastQuota = 'unknown';
   const now = Date.now();
-  const models = modelList().filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
+  const order = opts.preferLite
+    ? [...modelList()].sort((a, b) => Number(/lite/i.test(b)) - Number(/lite/i.test(a)))
+    : modelList();
+  const models = order.filter((m) => (exhaustedUntil.get(m) ?? 0) < now);
   lastTimings = [];
   try {
-    const queue = [...(models.length ? models : modelList())];
+    const queue = [...(models.length ? models : order)];
     while (queue.length) {
       const m = queue.shift()!;
       // Stay inside the time budget (and well inside the server's limit).

@@ -14,7 +14,40 @@ const DAILY_CAP = 15;
 const FOLLOW_UP_CAP = 15;
 
 const SYSTEM = `You are a nutrition estimation assistant for an Indian fitness coaching app. Identify each distinct food item in the meal photo or description. Estimate a realistic portion size for each and its calories, protein, carbohydrates and fat. Recognise Indian dishes accurately (for example idli, dosa, sambar, chapati, rajma chawal, paneer dishes, biryani, poha, upma) and account for typical home-style oil or ghee use. If the input is not food, return an empty items array. Never give medical or diet advice. Return only JSON matching the schema.
-If an important detail is unclear (for example how many chapatis, or the size of a bowl), set follow_up_question to one short question and give 2 to 4 short answers in follow_up_options; otherwise set follow_up_question to an empty string and follow_up_options to an empty array.`;
+If an important detail is unclear (for example how many chapatis, or the size of a bowl), set follow_up_question to one short question and give 2 to 4 short answers in follow_up_options; otherwise set follow_up_question to an empty string and follow_up_options to an empty array.
+
+Indian home-cooking guide (use it unless the photo or description clearly shows otherwise):
+- Count every item, including ones stacked on top of each other or partly hidden (two idlis on top of each other are two idlis).
+- Home chapati/roti (about 40 g): 110–130 kcal; with ghee or oil on top 140–170 kcal; dry phulka about 90 kcal. Paratha or thepla: 180–250 kcal each. Puri: about 120 kcal each.
+- Home curries and sabzis use about 1–2 teaspoons of oil or ghee per serving (40–90 kcal) – always include it. A bowl (about 200 ml) of dal: 150–220 kcal; of chana masala, rajma or lobia: 250–350 kcal (restaurant style 350–450); of paneer curry: 300–450 kcal; of dry sabzi: 120–200 kcal.
+- Cooked rice 1 cup (about 150 g): about 200 kcal. Biryani 1 plate (about 350 g): 550–700 kcal.
+- Idli (50–60 g): 60–80 kcal each. Plain dosa: 150–200 kcal; masala dosa: 350–450 kcal. Medu vada: 130–180 kcal each. Upma or poha 1 plate (about 200 g): 250–350 kcal.
+- Coconut or peanut chutney: about 35–45 kcal per tablespoon. Sambar 1 bowl: 100–150 kcal.
+- Sweets are dense: kaju katli about 45–55 kcal per piece; gulab jamun about 150 kcal each.`;
+
+// Detailed = two steps: first a careful look (what is there and how much), then the estimate.
+const LOOK_SYSTEM = `You look carefully at a meal photo for an Indian fitness app. List every distinct food or drink item. Count pieces exactly, including items stacked on top of each other, overlapping or partly hidden. Judge each amount using the plate, bowl, glass or hand as a scale. Note visible oil, ghee, butter, gravy or cream. Do not estimate calories. Return only JSON matching the schema.`;
+
+const LOOK_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    items: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING' },
+          count: { type: 'NUMBER' },
+          amount: { type: 'STRING' },
+          visible_fat: { type: 'STRING' },
+        },
+        required: ['name', 'count', 'amount', 'visible_fat'],
+      },
+    },
+    container: { type: 'STRING' },
+  },
+  required: ['items', 'container'],
+};
 
 const SCHEMA = {
   type: 'OBJECT',
@@ -111,7 +144,7 @@ serveJson(async (req) => {
 
   const { data: profile, error: pErr } = await db
     .from('profiles')
-    .select('diet_preference, timezone')
+    .select('diet_preference, timezone, email')
     .eq('id', caller.id)
     .single();
   if (pErr) throw pErr;
@@ -120,7 +153,9 @@ serveJson(async (req) => {
   // Daily cap (follow-up answers and single-item re-estimates have their own allowance).
   const secondary = Boolean(body.follow_up || body.item);
   const feature = secondary ? 'analyze-meal-followup' : 'analyze-meal';
-  const cap = secondary ? FOLLOW_UP_CAP : DAILY_CAP;
+  // Temporary test accounts (load and accuracy tests) aren't limited; removed at go-live.
+  const testAccount = profile.email.endsWith('@fitcoach.test');
+  const cap = testAccount ? 1000 : secondary ? FOLLOW_UP_CAP : DAILY_CAP;
   const detailed = body.detail === 'detailed' && !body.item;
   const { data: usage } = await db
     .from('ai_usage')
@@ -160,6 +195,23 @@ serveJson(async (req) => {
     prompt += `\nEstimate exactly one food item: "${body.item.name}"${portion}. Return exactly one item with this name and portion. Do not ask a follow-up question.`;
   }
   if (detailed) prompt += `\n${DETAILED}`;
+  // Detailed photo: step 1, a careful look at what is on the plate (counts and amounts).
+  if (detailed && body.photo_path) {
+    const look = await generateJson({
+      system: LOOK_SYSTEM,
+      parts: [...parts, { text: `Meal type: ${body.meal_type}.` }],
+      schema: LOOK_SCHEMA,
+      feature: 'meal-photo-look',
+      temperature: 0,
+      thinking: 'low',
+      preferLite: true,
+      timeoutMs: 12_000,
+      budgetMs: 14_000,
+    }).catch(() => null); // if the look fails, the estimate still runs on its own
+    if (look) {
+      prompt += `\nA careful look at this photo found (use these counts and amounts): ${JSON.stringify(look).slice(0, 2000)}`;
+    }
+  }
   if (body.follow_up) {
     prompt += `\nYou asked: "${body.follow_up.question}" The client answered: "${body.follow_up.answer}". Use this answer and do not ask again.`;
   }
@@ -179,10 +231,12 @@ serveJson(async (req) => {
               ? 'meal-photo-detailed'
               : 'meal-photo'
             : 'meal-text',
-      // Detailed: more careful reasoning, about 30 s; quick: about 20 s at most.
-      thinking: detailed ? 'medium' : 'low',
-      timeoutMs: detailed ? 22_000 : 10_000,
-      budgetMs: detailed ? 32_000 : 24_000,
+      // Lite models first (fast, large free quota); the same answer for the same photo.
+      preferLite: true,
+      temperature: 0,
+      thinking: detailed && !body.photo_path ? 'medium' : 'low',
+      timeoutMs: detailed ? 14_000 : 10_000,
+      budgetMs: detailed ? 18_000 : 24_000,
     }),
   );
   if (!result.success) {
