@@ -141,14 +141,23 @@ export async function analyzeMeal(input: {
   /** Re-estimate just this one item (after the client renamed or re-sized it). */
   item?: { name: string; portion: string };
 }): Promise<Analysis> {
-  const { data, error } = await supabase.functions.invoke('analyze-meal', { body: input });
-  if (error) {
+  // The AI is sometimes briefly busy (all free models slow or used up at that moment):
+  // try once more by itself before showing an error.
+  for (let attempt = 1; ; attempt++) {
+    const { data, error } = await supabase.functions.invoke('analyze-meal', { body: input });
+    if (!error) return (data as { data: Analysis }).data;
     if (error instanceof FunctionsHttpError) {
       const payload = (await (error.context as Response).json().catch(() => null)) as {
-        error?: { message?: string };
+        error?: { message?: string; code?: string };
       } | null;
+      const code = payload?.error?.code ?? '';
+      if (attempt === 1 && /^ai_(rate_limited|timeout|error)/.test(code)) {
+        await new Promise((r) => setTimeout(r, 1500));
+        continue;
+      }
       void logError('ai', payload?.error?.message ?? 'analyze-meal failed', {
-        code: (payload?.error as { code?: string } | undefined)?.code,
+        code,
+        attempts: attempt,
         input: input.photo_path ? 'photo' : input.follow_up ? 'follow-up' : 'text',
       });
       throw new Error(payload?.error?.message ?? 'The AI could not read this meal.');
@@ -156,7 +165,6 @@ export async function analyzeMeal(input: {
     void logError('ai', error, { input: input.photo_path ? 'photo' : 'text' });
     throw new Error('Could not reach the server. Check your connection and try again.');
   }
-  return (data as { data: Analysis }).data;
 }
 
 function invalidateMeals(qc: ReturnType<typeof useQueryClient>) {
