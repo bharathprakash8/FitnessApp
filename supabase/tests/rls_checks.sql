@@ -1281,9 +1281,35 @@ begin
   if n <> 1 then raise exception 'FAIL: client cannot accept the coach terms or set conditions'; end if;
 end $$;
 
+-- AI assistant (27 Oct 2026): trainer T1 sees coach changes and playbook pages of their own
+-- clients only, never the run reports or the shared playbook.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.coach_actions) <> 1 then
+    raise exception 'FAIL: trainer should see the coach change of their own client';
+  end if;
+  if (select count(*) from public.coach_runs) <> 0 then
+    raise exception 'FAIL: trainer can read head coach run reports';
+  end if;
+  if exists (select 1 from public.coach_playbook where client_id is null) then
+    raise exception 'FAIL: trainer can read the shared playbook';
+  end if;
+  if not exists (select 1 from public.coach_playbook where client_id = '00000000-0000-4000-a000-0000000000c1') then
+    raise exception 'FAIL: trainer cannot read their client''s playbook page';
+  end if;
+  update public.trainer_clients set ai_assist = true where client_id = '00000000-0000-4000-a000-0000000000c1';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: trainer switched the AI assistant directly (must use the coach function)'; end if;
+end $$;
+
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
 do $$
 begin
+  if exists (select 1 from public.coach_actions) then
+    raise exception 'FAIL: trainer T2 sees coach changes of T1''s client';
+  end if;
   if exists (select 1 from public.coach_notes where client_id = '00000000-0000-4000-a000-0000000000c1')
     or exists (select 1 from public.coach_queries where client_id = '00000000-0000-4000-a000-0000000000c1')
     or (select count(*) from public.coach_playbook) <> 0 then

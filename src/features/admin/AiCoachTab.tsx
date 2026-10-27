@@ -13,9 +13,12 @@ import { AiCoachView } from './AiCoachView';
 import { useCoachAdmin, useCoachOverview } from './coachAdminApi';
 import './admin.css';
 
-/** Admin → AI Coach. Approved / skipped cards disappear at once; the list refreshes behind. */
-export function AiCoachTab() {
-  const overview = useCoachOverview();
+/**
+ * Admin → AI Coach (everyone), or a trainer's AI assistant screen (trainerId: only their
+ * assisted clients). Approved / skipped cards disappear at once; the list refreshes behind.
+ */
+export function AiCoachTab({ trainerId }: { trainerId?: string } = {}) {
+  const overview = useCoachOverview(trainerId);
   const admin = useCoachAdmin();
   const [toast] = useIonToast();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -65,7 +68,7 @@ export function AiCoachTab() {
       </div>
     );
   }
-  if (!data?.coach) {
+  if (!data?.coach && !trainerId) {
     return (
       <div className="ion-padding admin-coach">
         <IonCard>
@@ -90,6 +93,7 @@ export function AiCoachTab() {
       </div>
     );
   }
+  if (!data) return null;
   return (
     <div className="ion-padding">
       <AiCoachView data={data} busy={admin.isPending} onAction={onAction} />

@@ -33,6 +33,7 @@ import {
   isRedFlag,
   latestWeight,
   mentionsSymptom,
+  loadCoachedPerson,
   loadPerson,
   localDate,
   localMinutes,
@@ -142,11 +143,8 @@ class Refused extends Error {}
 async function personOf(ctx: Ctx, clientId: string) {
   const known = ctx.people.get(clientId);
   if (known) return known;
-  if (!(await isCoached(ctx.db, ctx.coachId, clientId))) {
-    throw new Refused('This person is not on the AI coach');
-  }
-  const p = await loadPerson(ctx.db, clientId);
-  if (!p) throw new Refused('Person not found');
+  const p = await loadCoachedPerson(ctx.db, ctx.coachId, clientId);
+  if (!p) throw new Refused('This person is not on the AI coach');
   ctx.people.set(clientId, p);
   return p;
 }
@@ -392,6 +390,10 @@ async function runAction(ctx: Ctx, a: ActionInput, apply: boolean) {
 
     case 'assign_plan': {
       const p = await personOf(ctx, a.client_id);
+      // Assisted clients: their trainer owns the plan – the coach only picks days in it.
+      if (p.supervisor) throw new Refused(`${p.supervisor.name} manages this person's plan`);
+      // Assisted clients: their trainer owns the plan – the coach only picks days in it.
+      if (p.supervisor) throw new Refused();
       const { data: plan } = await db
         .from('workout_plans')
         .select('id, trainer_id')
@@ -428,11 +430,16 @@ async function runAction(ctx: Ctx, a: ActionInput, apply: boolean) {
 
     case 'flag': {
       let name = '';
-      if (a.client_id) name = (await personOf(ctx, a.client_id)).full_name ?? '';
+      let to: string[] | null = null;
+      if (a.client_id) {
+        const p = await personOf(ctx, a.client_id);
+        name = p.full_name ?? '';
+        if (p.supervisor) to = [p.supervisor.id];
+      }
       if (apply) {
         await push(
           db,
-          await adminIds(db),
+          to ?? (await adminIds(db)),
           `Coach flag${name ? `: ${name}` : ''}`,
           a.text,
           '/admin',
@@ -444,13 +451,38 @@ async function runAction(ctx: Ctx, a: ActionInput, apply: boolean) {
   }
 }
 
+/** Assisted clients: the trainer approves, unless they chose to let small changes apply. */
+async function needsTrainerOk(ctx: Ctx, input: ActionInput) {
+  let clientId: string | null = 'client_id' in input ? (input.client_id ?? null) : null;
+  if (!clientId && 'meal_id' in input) {
+    const { data } = await ctx.db
+      .from('meal_logs')
+      .select('client_id')
+      .eq('id', input.meal_id)
+      .maybeSingle();
+    clientId = data?.client_id ?? null;
+  }
+  if (!clientId && 'query_id' in input) {
+    const { data } = await ctx.db
+      .from('coach_queries')
+      .select('client_id')
+      .eq('id', input.query_id)
+      .maybeSingle();
+    clientId = data?.client_id ?? null;
+  }
+  if (!clientId) return false;
+  const p = await personOf(ctx, clientId).catch(() => null);
+  return Boolean(p?.supervisor && !p.supervisor.auto_apply);
+}
+
 async function recordAction(
   ctx: Ctx,
   runId: string | null,
   input: ActionInput,
   mode: 'dry_run' | 'live',
 ) {
-  const proposeOnly = mode === 'dry_run' || NEEDS_APPROVAL.has(input.kind);
+  const proposeOnly =
+    mode === 'dry_run' || NEEDS_APPROVAL.has(input.kind) || (await needsTrainerOk(ctx, input));
   try {
     const r = await runAction(ctx, input, !proposeOnly);
     const reason = 'reason' in input ? input.reason : 'note' in input ? (input.note ?? null) : null;
@@ -641,6 +673,8 @@ async function digest(db: Db, coachId: string) {
     out.push({
       client_id: p.id,
       today,
+      // "AI-only" (admin approves) or the human trainer the AI assists (they approve).
+      coached_by: p.supervisor ? `AI assistant to trainer ${p.supervisor.name}` : 'AI-only',
       summary,
       person_playbook: playbook.person,
       meals_to_check: toCheck,
@@ -804,11 +838,11 @@ async function recentChat(db: Db, clientId: string) {
 
 async function ask(db: Db, clientId: string, question: string) {
   const coach = await coachAccount(db);
-  if (!coach || !(await isCoached(db, coach.id, clientId))) {
+  const p = coach ? await loadCoachedPerson(db, coach.id, clientId) : null;
+  if (!p) {
     throw new HttpError(403, 'Ask the coach is for people on the AI coach.', 'forbidden');
   }
-  const p = await loadPerson(db, clientId);
-  if (!p?.coach_consent_at) {
+  if (!p.coach_consent_at) {
     throw new HttpError(403, 'Please accept the AI coach terms first.', 'no_consent');
   }
   const { count } = await db
@@ -901,7 +935,7 @@ async function ask(db: Db, clientId: string, question: string) {
     if (red || (r.data.escalate && !open)) {
       status = 'escalated';
       reason = r.data.reason || null;
-      if (!red) reply = `${reply}\n\n${escalatedLine(lang)}`;
+      if (!red) reply = `${reply}\n\n${escalatedLine(lang, p.supervisor?.name.split(' ')[0])}`;
     }
   }
 
@@ -920,14 +954,18 @@ async function ask(db: Db, clientId: string, question: string) {
     .single();
   if (error) throw error;
   if (status === 'escalated') {
+    // Assisted: the trainer answers (admins also hear about red flags). AI-only: the admins.
+    const to = p.supervisor
+      ? [p.supervisor.id, ...(red ? await adminIds(db) : [])]
+      : await adminIds(db);
     await push(
       db,
-      await adminIds(db),
+      to,
       red
         ? `⚠️ Red flag from ${p.full_name ?? 'a client'}`
-        : `Question for the head coach – ${p.full_name ?? ''}`,
+        : `Question for ${p.supervisor ? 'you' : 'the head coach'} – ${p.full_name ?? ''}`,
       question,
-      '/admin',
+      p.supervisor ? '/trainer/assistant' : '/admin',
       'coach-question',
     );
   }
@@ -1006,7 +1044,23 @@ const AdminBody = z.discriminatedUnion('action', [
     client_id: uuid,
     kind: z.enum(['morning', 'evening']),
   }),
+  z.object({ action: z.literal('set_assist'), client_id: uuid, on: z.boolean() }),
+  z.object({ action: z.literal('set_auto_apply'), on: z.boolean() }),
 ]);
+
+/** What a trainer may do (for their own clients only – checked in the handler). */
+const TRAINER_ACTIONS = new Set([
+  'approve',
+  'approve_many',
+  'reject',
+  'undo',
+  'answer',
+  'save_playbook',
+  'set_assist',
+  'set_auto_apply',
+]);
+
+type Actor = { role: 'admin' | 'trainer'; id: string | null };
 
 /** Apply one proposed change (safety rules are checked again at this moment). */
 async function approveOne(
@@ -1040,7 +1094,11 @@ async function approveOne(
   }
 }
 
-async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
+async function adminAction(
+  db: Db,
+  body: z.infer<typeof AdminBody>,
+  actor: Actor = { role: 'admin', id: null },
+) {
   if (body.action === 'setup') return await setup(db);
   if (body.action === 'set_mode') {
     await db
@@ -1092,7 +1150,7 @@ async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
         .from('coach_queries')
         .update({
           follow_up: body.text,
-          follow_up_by: 'admin',
+          follow_up_by: actor.role,
           followed_up_at: new Date().toISOString(),
           status: 'resolved',
         })
@@ -1115,12 +1173,12 @@ async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
       if (prev) {
         await db
           .from('coach_playbook')
-          .update({ body: body.body, updated_by: 'admin', updated_at: new Date().toISOString() })
+          .update({ body: body.body, updated_by: actor.role, updated_at: new Date().toISOString() })
           .eq('id', prev.id);
       } else {
         await db
           .from('coach_playbook')
-          .insert({ client_id: body.client_id, body: body.body, updated_by: 'admin' });
+          .insert({ client_id: body.client_id, body: body.body, updated_by: actor.role });
       }
       return { saved: true };
     }
@@ -1128,7 +1186,57 @@ async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
       const p = await personOf(ctx, body.client_id);
       return await writeNote(db, p, body.kind);
     }
+    case 'set_assist': {
+      // On/off for a client with a human trainer (not for people on the AI coach account).
+      const { data, error } = await db
+        .from('trainer_clients')
+        .update({ ai_assist: body.on })
+        .eq('client_id', body.client_id)
+        .neq('trainer_id', coach.id)
+        .select('client_id');
+      if (error) throw error;
+      if (!data?.length) throw new HttpError(400, 'This person has no human trainer', 'bad_state');
+      return { ai_assist: body.on };
+    }
+    case 'set_auto_apply': {
+      if (actor.role !== 'trainer' || !actor.id) {
+        throw new HttpError(400, 'This is a trainer setting', 'bad_state');
+      }
+      await db.from('profiles').update({ ai_auto_apply: body.on }).eq('id', actor.id);
+      return { ai_auto_apply: body.on };
+    }
   }
+}
+
+/** Every client this request touches belongs to the trainer. */
+async function trainerOwns(db: Db, trainerId: string, body: z.infer<typeof AdminBody>) {
+  const ids: string[] = [];
+  if ('action_ids' in body || 'action_id' in body) {
+    const list = 'action_ids' in body ? body.action_ids : [body.action_id];
+    const { data } = await db.from('coach_actions').select('client_id').in('id', list);
+    if ((data ?? []).length !== list.length) return false;
+    ids.push(...(data ?? []).map((r) => r.client_id as string | null).filter((x) => x !== null));
+    if (ids.length !== list.length) return false;
+  } else if ('query_id' in body) {
+    const { data } = await db
+      .from('coach_queries')
+      .select('client_id')
+      .eq('id', body.query_id)
+      .maybeSingle();
+    if (!data) return false;
+    ids.push(data.client_id);
+  } else if ('client_id' in body) {
+    if (!body.client_id) return false; // the shared playbook is admin-only
+    ids.push(body.client_id);
+  }
+  const unique = [...new Set(ids)];
+  if (!unique.length) return body.action === 'set_auto_apply';
+  const { data: links } = await db
+    .from('trainer_clients')
+    .select('client_id')
+    .eq('trainer_id', trainerId)
+    .in('client_id', unique);
+  return (links ?? []).length === unique.length;
 }
 
 // ---------------------------------------------------------------------------
@@ -1219,6 +1327,35 @@ serveJson(async (req) => {
             '/admin',
             'coach-report',
           );
+          // Each trainer hears how many suggestions wait for them (assisted clients).
+          const { data: waiting } = await db
+            .from('coach_actions')
+            .select('client_id')
+            .eq('run_id', runId)
+            .eq('status', 'proposed');
+          const clientIds = [...new Set((waiting ?? []).map((w) => w.client_id as string))];
+          if (clientIds.length) {
+            const { data: links } = await db
+              .from('trainer_clients')
+              .select('client_id, trainer_id')
+              .in('client_id', clientIds)
+              .eq('ai_assist', true);
+            const perTrainer = new Map<string, number>();
+            for (const w of waiting ?? []) {
+              const t = links?.find((l) => l.client_id === w.client_id)?.trainer_id;
+              if (t) perTrainer.set(t, (perTrainer.get(t) ?? 0) + 1);
+            }
+            for (const [trainerId, n] of perTrainer) {
+              await push(
+                db,
+                [trainerId],
+                `Your AI assistant has ${n} suggestion${n === 1 ? '' : 's'}`,
+                'Open AI assistant to approve or skip them.',
+                '/trainer/assistant',
+                'coach-suggestions',
+              );
+            }
+          }
         }
         return { finished: true };
       }
@@ -1305,9 +1442,16 @@ serveJson(async (req) => {
       throw new HttpError(400, 'Please type a question (up to 1,000 characters).', 'invalid_input');
     return await ask(db, caller.id, q.data);
   }
-  if (caller.role !== 'admin') throw new HttpError(403, 'Admins only', 'forbidden');
   const parsed = AdminBody.safeParse(body);
+  if (caller.role === 'trainer' && parsed.success && TRAINER_ACTIONS.has(parsed.data.action)) {
+    // A trainer approves and answers for their own (assisted) clients only.
+    if (!(await trainerOwns(db, caller.id, parsed.data))) {
+      throw new HttpError(403, 'This is not your client', 'forbidden');
+    }
+    return await adminAction(db, parsed.data, { role: 'trainer', id: caller.id });
+  }
+  if (caller.role !== 'admin') throw new HttpError(403, 'Admins only', 'forbidden');
   if (!parsed.success)
     throw new HttpError(400, parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid_input');
-  return await adminAction(db, parsed.data);
+  return await adminAction(db, parsed.data, { role: 'admin', id: caller.id });
 });

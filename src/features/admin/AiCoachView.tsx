@@ -68,7 +68,11 @@ export function AiCoachView({ data: d, busy, onAction }: AiCoachViewProps) {
 
   return (
     <div className="admin-coach">
-      <ModeBar mode={d.mode} busy={busy} onAction={onAction} />
+      {d.scope === 'trainer' ? (
+        <TrainerSettingBar mode={d.mode} busy={busy} onAction={onAction} />
+      ) : (
+        <ModeBar mode={d.mode} busy={busy} onAction={onAction} />
+      )}
       <IonSegment
         value={section}
         onIonChange={(e) => setSection(e.detail.value as Section)}
@@ -82,9 +86,11 @@ export function AiCoachView({ data: d, busy, onAction }: AiCoachViewProps) {
             )}
           </IonLabel>
         </IonSegmentButton>
-        <IonSegmentButton value="reports">
-          <IonLabel>Reports</IonLabel>
-        </IonSegmentButton>
+        {d.scope === 'admin' && (
+          <IonSegmentButton value="reports">
+            <IonLabel>Reports</IonLabel>
+          </IonSegmentButton>
+        )}
         <IonSegmentButton value="history">
           <IonLabel>History</IonLabel>
         </IonSegmentButton>
@@ -108,6 +114,46 @@ export function AiCoachView({ data: d, busy, onAction }: AiCoachViewProps) {
         <HistorySection d={d} busy={busy} onAction={onAction} nameOf={nameOf} />
       )}
       {section === 'people' && <PeopleSection d={d} busy={busy} onAction={onAction} />}
+    </div>
+  );
+}
+
+/** Trainer: approve every suggestion yourself, or let small changes apply automatically. */
+function TrainerSettingBar({
+  mode,
+  busy,
+  onAction,
+}: {
+  mode: string;
+  busy: boolean;
+  onAction: AiCoachViewProps['onAction'];
+}) {
+  return (
+    <div className="coach-mode coach-mode-dry_run">
+      <div className="coach-mode-text">
+        {mode === 'auto'
+          ? 'Small changes (meal fixes, today’s plan, notes, answers) apply at once – you can undo them. New targets still need you.'
+          : 'You approve every suggestion before your clients see it.'}
+      </div>
+      <IonSegment
+        value={mode}
+        disabled={busy}
+        onIonChange={(e) => {
+          if (e.detail.value !== mode) {
+            void onAction(
+              { action: 'set_auto_apply', on: e.detail.value === 'auto' },
+              'Setting saved',
+            );
+          }
+        }}
+      >
+        <IonSegmentButton value="review">
+          <IonLabel>I approve all</IonLabel>
+        </IonSegmentButton>
+        <IonSegmentButton value="auto">
+          <IonLabel>Auto small changes</IonLabel>
+        </IonSegmentButton>
+      </IonSegment>
     </div>
   );
 }
@@ -205,25 +251,29 @@ function TodoSection({
         />
       ))}
 
-      {[...groups.entries()].map(([who, list]) => (
-        <div key={who} className="coach-group">
-          <div className="coach-group-head">
-            <h3>{who === 'everyone' ? 'Everyone' : nameOf(who)}</h3>
-            {list.length > 1 && (
-              <IonButton
-                size="small"
-                disabled={busy}
-                onClick={() => void approveAll(list, `Approved ${list.length} changes`)}
-              >
-                Approve all {list.length}
-              </IonButton>
-            )}
+      {[...groups.entries()].map(([who, list]) => {
+        // Flags are information, not changes – "Approve all" leaves them for "Got it".
+        const changes = list.filter((a) => a.kind !== 'flag');
+        return (
+          <div key={who} className="coach-group">
+            <div className="coach-group-head">
+              <h3>{who === 'everyone' ? 'Everyone' : nameOf(who)}</h3>
+              {changes.length > 1 && (
+                <IonButton
+                  size="small"
+                  disabled={busy}
+                  onClick={() => void approveAll(changes, `Approved ${changes.length} changes`)}
+                >
+                  Approve all {changes.length}
+                </IonButton>
+              )}
+            </div>
+            {list.map((a) => (
+              <ProposalCard key={a.id} a={a} d={d} busy={busy} onAction={onAction} />
+            ))}
           </div>
-          {list.map((a) => (
-            <ProposalCard key={a.id} a={a} d={d} busy={busy} onAction={onAction} />
-          ))}
-        </div>
-      ))}
+        );
+      })}
       {checks.length > 0 && (
         <p className="admin-muted coach-checks">
           Also: {checks.length} meals looked right.{' '}
@@ -262,24 +312,38 @@ function ProposalCard({
           <span className="admin-muted">{when(a.created_at)}</span>
         </div>
         <ActionDetail a={a} d={d} />
-        <div className="coach-actions-row">
-          <IonButton
-            size="small"
-            disabled={busy}
-            onClick={() => void onAction({ action: 'approve', action_id: a.id }, 'Approved ✓')}
-          >
-            Approve
-          </IonButton>
-          <IonButton
-            size="small"
-            fill="outline"
-            color="medium"
-            disabled={busy}
-            onClick={() => void onAction({ action: 'reject', action_id: a.id }, 'Skipped')}
-          >
-            Skip
-          </IonButton>
-        </div>
+        {a.kind === 'flag' ? (
+          // A flag is information for you, not a change: just mark it as seen.
+          <div className="coach-actions-row">
+            <IonButton
+              size="small"
+              fill="outline"
+              disabled={busy}
+              onClick={() => void onAction({ action: 'reject', action_id: a.id }, 'Noted')}
+            >
+              Got it
+            </IonButton>
+          </div>
+        ) : (
+          <div className="coach-actions-row">
+            <IonButton
+              size="small"
+              disabled={busy}
+              onClick={() => void onAction({ action: 'approve', action_id: a.id }, 'Approved ✓')}
+            >
+              Approve
+            </IonButton>
+            <IonButton
+              size="small"
+              fill="outline"
+              color="medium"
+              disabled={busy}
+              onClick={() => void onAction({ action: 'reject', action_id: a.id }, 'Skipped')}
+            >
+              Skip
+            </IonButton>
+          </div>
+        )}
       </IonCardContent>
     </IonCard>
   );
@@ -572,7 +636,8 @@ function PeopleSection({
   busy: boolean;
   onAction: AiCoachViewProps['onAction'];
 }) {
-  const [page, setPage] = useState<string>('shared');
+  const admin = d.scope === 'admin';
+  const [page, setPage] = useState<string>(admin ? 'shared' : (d.people[0]?.id ?? ''));
   const [text, setText] = useState<string | null>(null);
   const row = d.playbook.find((b) =>
     page === 'shared' ? b.client_id === null : b.client_id === page,
@@ -584,7 +649,9 @@ function PeopleSection({
         <IonCardContent>
           {d.people.length === 0 && (
             <p className="admin-muted">
-              Nobody yet. Open a person in Users and choose “FitCoach AI Coach” as their trainer.
+              {admin
+                ? 'Nobody yet. Either choose “FitCoach AI Coach” as a person’s trainer (AI-only), or a trainer turns on the AI assistant on their client’s page.'
+                : 'Nobody yet. Open a client and switch on “AI assistant” on their Overview.'}
             </p>
           )}
           {d.people.map((p) => (
@@ -594,6 +661,11 @@ function PeopleSection({
                 <IonBadge color="success">agreed</IonBadge>
               ) : (
                 <IonBadge color="warning">not agreed yet</IonBadge>
+              )}
+              {admin && (
+                <IonBadge color={p.assisted_by ? 'tertiary' : 'primary'}>
+                  {p.assisted_by ? `assistant to ${p.assisted_by}` : 'AI-only'}
+                </IonBadge>
               )}
               <span className="admin-muted">
                 {p.language === 'kn' ? 'ಕನ್ನಡ' : 'English'}
@@ -616,7 +688,7 @@ function PeopleSection({
               setText(null);
             }}
           >
-            <IonSelectOption value="shared">Shared rules (everyone)</IonSelectOption>
+            {admin && <IonSelectOption value="shared">Shared rules (everyone)</IonSelectOption>}
             {d.people.map((p) => (
               <IonSelectOption key={p.id} value={p.id}>
                 {p.full_name || p.email}
@@ -634,8 +706,13 @@ function PeopleSection({
           />
           {row && (
             <p className="admin-muted">
-              Last changed by {row.updated_by === 'claude' ? 'the head coach' : 'an admin'} ·{' '}
-              {when(row.updated_at)}
+              Last changed by{' '}
+              {row.updated_by === 'claude'
+                ? 'the head coach'
+                : row.updated_by === 'trainer'
+                  ? 'the trainer'
+                  : 'an admin'}{' '}
+              · {when(row.updated_at)}
             </p>
           )}
           <IonButton

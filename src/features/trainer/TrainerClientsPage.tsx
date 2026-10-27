@@ -26,6 +26,7 @@ import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
 import { TRAINER_TABS } from '../../components/tabs';
 import { useAuth } from '../auth/useAuth';
+import { AiAssistantBanner } from './AiAssistantControls';
 import { goalText } from '../profile/options';
 import { useDashboard, useMyClients, type ClientFlag, type TrainerClient } from './api';
 import './trainer.css';
@@ -68,6 +69,7 @@ export function TrainerClientsPage() {
         >
           <IonRefresherContent />
         </IonRefresher>
+        {profile && <AiAssistantBanner trainerId={profile.id} />}
         {clients.isPending ? (
           <ListSkeleton rows={4} avatar />
         ) : clients.isError ? (

@@ -51,3 +51,18 @@
   font-weight: 600;
   color: var(--ion-color-medium-shade);
 }
+
+.ai-assist-card {
+  margin-inline: 0;
+  border-left: 4px solid var(--ion-color-tertiary);
+}
+
+.ai-assist-help {
+  margin: 6px 0 0;
+  color: var(--ion-color-medium-shade);
+  font-size: 0.88rem;
+}
+
+.ai-assist-banner ion-badge {
+  margin-right: 8px;
+}

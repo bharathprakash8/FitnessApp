@@ -15,6 +15,8 @@ export interface CoachPerson {
   coach_consent_at: string | null;
   health_conditions: string[];
   language: string;
+  /** Assisted mode: the human trainer the AI helps (null = AI-only). */
+  assisted_by?: string | null;
 }
 
 export interface CoachMeal {
@@ -28,7 +30,9 @@ export interface CoachMeal {
 
 export interface CoachOverview {
   coach: { id: string; full_name: string | null } | null;
+  /** Admin: off | dry_run | live. Trainer: auto | review (their own approval setting). */
   mode: string;
+  scope: 'admin' | 'trainer';
   people: CoachPerson[];
   runs: CoachRun[];
   proposed: CoachAction[];
@@ -44,10 +48,14 @@ export interface CoachOverview {
 
 const KEY = ['admin-coach'];
 
-/** Everything the AI Coach tab shows (admins read these tables directly through RLS). */
-export function useCoachOverview() {
+/**
+ * Everything the AI Coach screen shows. Admin: everyone on the AI coach (both ways).
+ * Trainer (`trainerId`): only their own clients with the AI assistant switched on – the
+ * database rules already limit what a trainer can read.
+ */
+export function useCoachOverview(trainerId?: string) {
   return useQuery({
-    queryKey: [...KEY, 'overview'],
+    queryKey: [...KEY, 'overview', trainerId ?? 'admin'],
     queryFn: async (): Promise<CoachOverview> => {
       const { data: coach } = await supabase
         .from('profiles')
@@ -55,16 +63,29 @@ export function useCoachOverview() {
         .eq('is_ai_coach', true)
         .maybeSingle();
       const [mode, links, runs, proposed, recent, questions, playbook, plans] = await Promise.all([
-        supabase.from('app_settings').select('value').eq('key', 'coach_mode').maybeSingle(),
-        coach
-          ? supabase
-              .from('trainer_clients')
-              .select(
-                'client_id, profiles!trainer_clients_client_id_fkey(id, full_name, email, coach_consent_at, health_conditions, language)',
-              )
-              .eq('trainer_id', coach.id)
+        trainerId
+          ? supabase.from('profiles').select('ai_auto_apply').eq('id', trainerId).maybeSingle()
+          : supabase.from('app_settings').select('value').eq('key', 'coach_mode').maybeSingle(),
+        // Trainers can't read the coach account itself – they don't need it.
+        coach || trainerId
+          ? (() => {
+              const q = supabase
+                .from('trainer_clients')
+                .select(
+                  'client_id, trainer_id, ai_assist, client:profiles!trainer_clients_client_id_fkey(id, full_name, email, coach_consent_at, health_conditions, language), trainer:profiles!trainer_clients_trainer_id_fkey(full_name)',
+                );
+              return trainerId
+                ? q.eq('trainer_id', trainerId).eq('ai_assist', true)
+                : q.or(`trainer_id.eq.${coach!.id},ai_assist.eq.true`);
+            })()
           : Promise.resolve({ data: [] }),
-        supabase.from('coach_runs').select('*').order('started_at', { ascending: false }).limit(14),
+        trainerId
+          ? Promise.resolve({ data: [] })
+          : supabase
+              .from('coach_runs')
+              .select('*')
+              .order('started_at', { ascending: false })
+              .limit(14),
         supabase
           .from('coach_actions')
           .select('*')
@@ -130,10 +151,24 @@ export function useCoachOverview() {
 
       return {
         coach,
-        mode: (mode.data?.value as string | undefined) ?? 'dry_run',
-        people: ((links.data ?? []) as unknown as { profiles: CoachPerson }[])
-          .map((l) => l.profiles)
-          .filter(Boolean),
+        scope: trainerId ? 'trainer' : 'admin',
+        mode: trainerId
+          ? (mode.data as { ai_auto_apply?: boolean } | null)?.ai_auto_apply
+            ? 'auto'
+            : 'review'
+          : (((mode.data as { value?: unknown } | null)?.value as string | undefined) ?? 'dry_run'),
+        people: (
+          (links.data ?? []) as unknown as {
+            trainer_id: string;
+            client: CoachPerson | null;
+            trainer: { full_name: string | null } | null;
+          }[]
+        )
+          .filter((l) => l.client)
+          .map((l) => ({
+            ...l.client!,
+            assisted_by: l.trainer_id === coach?.id ? null : (l.trainer?.full_name ?? 'Trainer'),
+          })),
         runs: (runs.data ?? []) as CoachRun[],
         proposed: (proposed.data ?? []) as CoachAction[],
         recent: (recent.data ?? []) as CoachAction[],

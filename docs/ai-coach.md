@@ -2,6 +2,20 @@
 
 Built 27 Oct 2026 (phases 1–3 of the AI coach plan).
 
+## Two ways to use it (27 Oct 2026)
+
+| | AI-only | Trainer + AI assistant |
+|---|---|---|
+| Set up | Admin → Users → person → Trainer = **FitCoach AI Coach** | Trainer → client → Overview → **AI assistant** on (or admin) |
+| Who approves the head coach's changes | Admin (Admin → AI Coach); in live mode small changes apply at once | **The trainer** (Clients → AI assistant). Setting: *I approve all* (default) or *Auto small changes* |
+| Escalated questions / flags go to | Admins | The trainer (red flags also to admins) |
+| Plan | Coach may propose one of its safe plans | The trainer's own plan – the coach only picks days, never assigns a plan |
+| Client sees | "Your AI coach" | "Ravi's AI assistant" |
+
+`trainer_clients.ai_assist`, `profiles.ai_auto_apply`. Trainers read coach changes and playbook
+pages of their own clients only (RLS); run reports and the shared playbook stay admin-only. The
+global mode (Off / Dry run / Live) still applies to everyone: in dry run every change waits.
+
 ## What it is
 
 - **FitCoach AI Coach** is a trainer account (`ai.coach@fitcoach.app`, nobody can log in as it).

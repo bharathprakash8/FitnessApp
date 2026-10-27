@@ -7,16 +7,40 @@ import { supabase } from '../../lib/supabase';
 import { profileKey } from '../auth/api';
 import type { Profile } from '../auth/roles';
 import type { MealItem, MealLog } from '../food/model';
-import { useMyTrainer } from '../profile/api';
-
 export type CoachDayPlan = Tables<'coach_day_plans'>;
 export type CoachNote = Tables<'coach_notes'>;
 export type CoachQuery = Tables<'coach_queries'>;
 
-/** The person is mapped to the AI coach (clients only). */
-export function useIsAiCoached(profile: Profile | null | undefined) {
-  const trainer = useMyTrainer(profile?.role === 'client' ? profile.id : undefined);
-  return Boolean(trainer.data?.is_ai_coach);
+/**
+ * Is this client on the AI coach, and how: AI-only (their trainer is the AI coach) or as
+ * their human trainer's AI assistant (`assistantOf` = the trainer's first name).
+ */
+export function useCoachLink(profile: Profile | null | undefined) {
+  const clientId = profile?.role === 'client' ? profile.id : undefined;
+  const link = useQuery({
+    queryKey: ['coach-link', clientId],
+    enabled: Boolean(clientId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('trainer_clients')
+        .select(
+          'ai_assist, trainer:profiles!trainer_clients_trainer_id_fkey(full_name, is_ai_coach)',
+        )
+        .eq('client_id', clientId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as {
+        ai_assist: boolean;
+        trainer: { full_name: string | null; is_ai_coach: boolean } | null;
+      } | null;
+    },
+  });
+  const aiOnly = Boolean(link.data?.trainer?.is_ai_coach);
+  const assisted = !aiOnly && Boolean(link.data?.ai_assist);
+  return {
+    coached: aiOnly || assisted,
+    assistantOf: assisted ? (link.data?.trainer?.full_name ?? '').split(' ')[0] || null : null,
+  };
 }
 
 /** Today's plan and notes from the coach. */

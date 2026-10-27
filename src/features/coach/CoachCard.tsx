@@ -12,18 +12,25 @@ import { chatbubblesOutline, sparkles } from 'ionicons/icons';
 
 import { todayIn } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
-import { useAcceptCoachConsent, useCoachDay, useIsAiCoached } from './api';
+import { useAcceptCoachConsent, useCoachDay, useCoachLink } from './api';
 import './coach.css';
 import { useT } from '../../i18n/i18n';
 
-/** Today: the AI coach's note and plan for today, and "Ask coach". Only for AI-coached clients. */
+/**
+ * Today: the AI coach's note and plan for today, and "Ask coach". For clients on the AI coach,
+ * either AI-only or as their trainer's AI assistant (then labelled with the trainer's name).
+ */
 export function CoachCard({ profile }: { profile: Profile }) {
   const t = useT();
-  const coached = useIsAiCoached(profile);
+  const { coached, assistantOf } = useCoachLink(profile);
+  const label = assistantOf
+    ? t("{name}'s AI assistant", { name: assistantOf })
+    : t('Your AI coach');
   const consented = Boolean(profile.coach_consent_at);
   const day = useCoachDay(profile.id, todayIn(profile.timezone), coached && consented);
   if (!coached) return null;
-  if (!consented) return <CoachConsentCard profile={profile} />;
+  if (!consented)
+    return <CoachConsentCard profile={profile} label={label} assistantOf={assistantOf} />;
 
   const notes = day.data?.notes ?? [];
   const morning = notes.find((n) => n.kind === 'head') ?? notes.find((n) => n.kind === 'morning');
@@ -34,7 +41,7 @@ export function CoachCard({ profile }: { profile: Profile }) {
     <IonCard className="coach-card">
       <IonCardHeader>
         <IonCardSubtitle>
-          <IonIcon icon={sparkles} /> {t('Your AI coach')}
+          <IonIcon icon={sparkles} /> {label}
         </IonCardSubtitle>
         <IonCardTitle>{t("Today's plan")}</IonCardTitle>
       </IonCardHeader>
@@ -72,7 +79,15 @@ export function CoachCard({ profile }: { profile: Profile }) {
   );
 }
 
-function CoachConsentCard({ profile }: { profile: Profile }) {
+function CoachConsentCard({
+  profile,
+  label,
+  assistantOf,
+}: {
+  profile: Profile;
+  label: string;
+  assistantOf: string | null;
+}) {
   const t = useT();
   const accept = useAcceptCoachConsent(profile);
   const [toast] = useIonToast();
@@ -80,14 +95,25 @@ function CoachConsentCard({ profile }: { profile: Profile }) {
     <IonCard className="coach-card">
       <IonCardHeader>
         <IonCardSubtitle>
-          <IonIcon icon={sparkles} /> {t('Your AI coach')}
+          <IonIcon icon={sparkles} /> {label}
         </IonCardSubtitle>
-        <IonCardTitle>{t('Meet your AI coach')}</IonCardTitle>
+        <IonCardTitle>
+          {assistantOf
+            ? t('{name} added an AI assistant', { name: assistantOf })
+            : t('Meet your AI coach')}
+        </IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
         <ul className="coach-terms">
           <li>
-            {t('Your coach is an AI, supervised by the admin, who can see and undo every change.')}
+            {assistantOf
+              ? t(
+                  'The assistant is an AI. {name} checks and approves its suggestions and can undo every change.',
+                  { name: assistantOf },
+                )
+              : t(
+                  'Your coach is an AI, supervised by the admin, who can see and undo every change.',
+                )}
           </li>
           <li>
             {t(

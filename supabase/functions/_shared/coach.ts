@@ -61,6 +61,14 @@ export interface CoachPerson {
   conditions_note: string | null;
   doctor_ok: boolean | null;
   coach_consent_at: string | null;
+  /** Assisted mode: the human trainer who approves (null = AI-only, the admin approves). */
+  supervisor?: Supervisor | null;
+}
+
+export interface Supervisor {
+  id: string;
+  name: string;
+  auto_apply: boolean;
 }
 
 const PERSON_COLS =
@@ -86,20 +94,62 @@ export async function coachMode(db: SupabaseClient): Promise<'off' | 'dry_run' |
   return v === 'live' || v === 'off' ? v : 'dry_run';
 }
 
-/** Active, consenting people mapped to the AI coach. */
+type Link = { client_id: string; trainer_id: string; ai_assist: boolean };
+
+/** Supervisors for assisted links: the human trainer's name and auto-apply setting. */
+async function supervisors(db: SupabaseClient, coachId: string, links: Link[]) {
+  const trainerIds = [
+    ...new Set(links.filter((l) => l.trainer_id !== coachId).map((l) => l.trainer_id)),
+  ];
+  if (!trainerIds.length) return new Map<string, Supervisor>();
+  const { data } = await db
+    .from('profiles')
+    .select('id, full_name, ai_auto_apply')
+    .in('id', trainerIds);
+  return new Map(
+    (data ?? []).map((t) => [
+      t.id as string,
+      {
+        id: t.id as string,
+        name: (t.full_name as string | null) ?? 'Your trainer',
+        auto_apply: Boolean(t.ai_auto_apply),
+      },
+    ]),
+  );
+}
+
+/**
+ * Everyone the AI coach looks after: people mapped to the AI coach account (AI-only), and
+ * people whose human trainer switched on the AI assistant (assisted – `supervisor` set).
+ */
 export async function coachedPeople(db: SupabaseClient, coachId: string, consentedOnly = true) {
   const { data: links, error } = await db
     .from('trainer_clients')
-    .select('client_id')
-    .eq('trainer_id', coachId);
+    .select('client_id, trainer_id, ai_assist')
+    .or(`trainer_id.eq.${coachId},ai_assist.eq.true`);
   if (error) throw error;
-  const ids = (links ?? []).map((l) => l.client_id as string);
-  if (!ids.length) return [];
-  let q = db.from('profiles').select(PERSON_COLS).in('id', ids).eq('is_active', true);
+  const list = (links ?? []) as Link[];
+  if (!list.length) return [];
+  let q = db
+    .from('profiles')
+    .select(PERSON_COLS)
+    .in(
+      'id',
+      list.map((l) => l.client_id),
+    )
+    .eq('is_active', true);
   if (consentedOnly) q = q.not('coach_consent_at', 'is', null);
   const { data, error: pErr } = await q;
   if (pErr) throw pErr;
-  return (data ?? []) as CoachPerson[];
+  const sup = await supervisors(db, coachId, list);
+  const byClient = new Map(list.map((l) => [l.client_id, l]));
+  return ((data ?? []) as CoachPerson[]).map((p) => {
+    const link = byClient.get(p.id);
+    return {
+      ...p,
+      supervisor: link && link.trainer_id !== coachId ? (sup.get(link.trainer_id) ?? null) : null,
+    };
+  });
 }
 
 export async function loadPerson(db: SupabaseClient, id: string) {
@@ -108,14 +158,32 @@ export async function loadPerson(db: SupabaseClient, id: string) {
   return data as CoachPerson | null;
 }
 
-export async function isCoached(db: SupabaseClient, coachId: string, clientId: string) {
+/** The link that puts this person on the AI coach (either way), or null. */
+async function coachLink(db: SupabaseClient, coachId: string, clientId: string) {
   const { data } = await db
     .from('trainer_clients')
-    .select('client_id')
-    .eq('trainer_id', coachId)
+    .select('client_id, trainer_id, ai_assist')
     .eq('client_id', clientId)
     .maybeSingle();
-  return Boolean(data);
+  const link = data as Link | null;
+  return link && (link.trainer_id === coachId || link.ai_assist) ? link : null;
+}
+
+export async function isCoached(db: SupabaseClient, coachId: string, clientId: string) {
+  return Boolean(await coachLink(db, coachId, clientId));
+}
+
+/** A coached person with their supervisor (null when not on the AI coach either way). */
+export async function loadCoachedPerson(db: SupabaseClient, coachId: string, clientId: string) {
+  const link = await coachLink(db, coachId, clientId);
+  if (!link) return null;
+  const p = await loadPerson(db, clientId);
+  if (!p) return null;
+  const sup = await supervisors(db, coachId, [link]);
+  return {
+    ...p,
+    supervisor: link.trainer_id !== coachId ? (sup.get(link.trainer_id) ?? null) : null,
+  };
 }
 
 export async function latestWeight(db: SupabaseClient, clientId: string) {
@@ -418,7 +486,12 @@ export function redFlagReply(language: string) {
     : 'Please stop what you are doing, sit down and contact your doctor now, or call 108. I have told your coach.';
 }
 
-export function escalatedLine(language: string) {
+export function escalatedLine(language: string, trainer?: string | null) {
+  if (trainer) {
+    return language === 'kn'
+      ? `ಈ ಪ್ರಶ್ನೆಯನ್ನು ${trainer} ಅವರಿಗೆ ಕಳುಹಿಸಿದ್ದೇನೆ – ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರ ಬರುತ್ತದೆ.`
+      : `I've passed this to ${trainer} – you'll hear back soon.`;
+  }
   return language === 'kn'
     ? 'ಈ ಪ್ರಶ್ನೆಯನ್ನು ನಿಮ್ಮ ಮುಖ್ಯ ಕೋಚ್‌ಗೆ ಕಳುಹಿಸಿದ್ದೇನೆ – ಶೀಘ್ರದಲ್ಲೇ ಉತ್ತರ ಬರುತ್ತದೆ.'
     : "I've passed this to your head coach – you'll hear back soon.";

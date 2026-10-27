@@ -94,6 +94,7 @@ function sample(): CoachOverview {
   return {
     coach: { id: 'c', full_name: 'FitCoach AI Coach' },
     mode: 'dry_run',
+    scope: 'admin',
     people: [
       {
         id: P1,

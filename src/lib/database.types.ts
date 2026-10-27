@@ -1061,6 +1061,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_auto_apply: boolean
           coach_consent_at: string | null
           conditions_note: string | null
           consent_at: string | null
@@ -1093,6 +1094,7 @@ export type Database = {
           timezone: string
         }
         Insert: {
+          ai_auto_apply?: boolean
           coach_consent_at?: string | null
           conditions_note?: string | null
           consent_at?: string | null
@@ -1125,6 +1127,7 @@ export type Database = {
           timezone?: string
         }
         Update: {
+          ai_auto_apply?: boolean
           coach_consent_at?: string | null
           conditions_note?: string | null
           consent_at?: string | null
@@ -1615,18 +1618,21 @@ export type Database = {
       }
       trainer_clients: {
         Row: {
+          ai_assist: boolean
           assigned_at: string
           assigned_by: string | null
           client_id: string
           trainer_id: string
         }
         Insert: {
+          ai_assist?: boolean
           assigned_at?: string
           assigned_by?: string | null
           client_id: string
           trainer_id: string
         }
         Update: {
+          ai_assist?: boolean
           assigned_at?: string
           assigned_by?: string | null
           client_id?: string

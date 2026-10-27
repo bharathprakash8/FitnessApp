@@ -37,6 +37,7 @@ import { StatsView } from '../stats/StatsView';
 import { LastSync } from '../activity/LastSync';
 import { TargetsTab } from './TargetsTab';
 import './trainer.css';
+import { AiAssistToggle } from './AiAssistantControls';
 import { useT } from '../../i18n/i18n';
 
 type Tab =
@@ -118,7 +119,10 @@ export function TrainerClientPage() {
               <p className="ion-text-center">{t("This client isn't assigned to you.")}</p>
             </IonText>
           ) : tab === 'overview' ? (
-            <Overview client={client.data} />
+            <>
+              <Overview client={client.data} />
+              <AiAssistToggle client={client.data} />
+            </>
           ) : tab === 'stats' ? (
             <StatsView person={client.data} />
           ) : tab === 'ideas' ? (

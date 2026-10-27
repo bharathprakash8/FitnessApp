@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
-import { useAskCoach, useCoachQueries, type CoachQuery } from './api';
+import { useAskCoach, useCoachLink, useCoachQueries, type CoachQuery } from './api';
 import './coach.css';
 import { dateLocale, useT } from '../../i18n/i18n';
 
@@ -35,6 +35,7 @@ export function CoachChatPage() {
   const { profile } = useAuth();
   const queries = useCoachQueries(profile?.id);
   const ask = useAskCoach(profile?.id);
+  const { assistantOf } = useCoachLink(profile);
   const [text, setText] = useState('');
   // The message being answered right now – shown at once, before the coach replies.
   const [pending, setPending] = useState<string | null>(null);
@@ -86,7 +87,9 @@ export function CoachChatPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/today" />
           </IonButtons>
-          <IonTitle>{t('Ask coach')}</IonTitle>
+          <IonTitle>
+            {assistantOf ? t("{name}'s AI assistant", { name: assistantOf }) : t('Ask coach')}
+          </IonTitle>
           <IonButtons slot="end">
             <RefreshButton />
           </IonButtons>
@@ -118,6 +121,7 @@ export function CoachChatPage() {
               key={q.id}
               q={q}
               time={time(q.created_at)}
+              assistantOf={assistantOf}
               day={
                 i === 0 || dayOf(list[i - 1]!.created_at) !== dayOf(q.created_at)
                   ? dayOf(q.created_at)
@@ -184,7 +188,17 @@ export function CoachChatPage() {
   );
 }
 
-function Exchange({ q, time, day }: { q: CoachQuery; time: string; day: string | null }) {
+function Exchange({
+  q,
+  time,
+  day,
+  assistantOf,
+}: {
+  q: CoachQuery;
+  time: string;
+  day: string | null;
+  assistantOf: string | null;
+}) {
   const t = useT();
   return (
     <>
@@ -197,14 +211,23 @@ function Exchange({ q, time, day }: { q: CoachQuery; time: string; day: string |
         <div className={`coach-bubble coach-ai${q.red_flag ? ' coach-red' : ''}`}>
           {q.answer}
           {q.status === 'escalated' && !q.follow_up && (
-            <span className="coach-tag">⏳ {t('Sent to your head coach')}</span>
+            <span className="coach-tag">
+              ⏳{' '}
+              {assistantOf
+                ? t('Sent to {name}', { name: assistantOf })
+                : t('Sent to your head coach')}
+            </span>
           )}
         </div>
       )}
       {q.follow_up && (
         <div className="coach-bubble coach-ai coach-head">
           <span className="coach-from">
-            {q.follow_up_by === 'admin' ? t('Admin') : t('Head coach')}
+            {q.follow_up_by === 'admin'
+              ? t('Admin')
+              : q.follow_up_by === 'trainer'
+                ? (assistantOf ?? t('Your trainer'))
+                : t('Head coach')}
           </span>
           {q.follow_up}
         </div>

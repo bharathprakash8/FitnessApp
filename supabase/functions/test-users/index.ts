@@ -290,6 +290,30 @@ serveJson(async (req) => {
       await db.from('app_settings').upsert({ key: 'coach_mode', value: mode });
       return { mode };
     }
+    case 'assist_setup': {
+      // Both AI coach modes: clients 1–4 AI-only, 5–6 trainer 1 + assistant, 7–8 trainer 2 + assistant.
+      const mapped = await mapToCoach(db, 8);
+      const users = await testUsers(db);
+      const id = (name: string) => users.find((u) => u.email === `${name}${DOMAIN}`)?.id;
+      for (const [client, trainer] of [
+        ['test.client5', 'test.trainer1'],
+        ['test.client6', 'test.trainer1'],
+        ['test.client7', 'test.trainer2'],
+        ['test.client8', 'test.trainer2'],
+      ] as const) {
+        const { error } = await db
+          .from('trainer_clients')
+          .upsert(
+            { client_id: id(client)!, trainer_id: id(trainer)!, ai_assist: true },
+            { onConflict: 'client_id' },
+          );
+        if (error) throw error;
+      }
+      return {
+        ...mapped,
+        assisted: ['client5', 'client6 → trainer1', 'client7', 'client8 → trainer2'],
+      };
+    }
     case 'map_to_coach':
       return await mapToCoach(db, Number((body as { n?: number }).n ?? 2));
     default:

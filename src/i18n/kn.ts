@@ -991,4 +991,18 @@ export const kn: Record<string, string> = {
   'Hi! I know your plan, targets and what you logged today. Ask me anything about food, workouts or your routine.':
     'ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಯೋಜನೆ, ಗುರಿಗಳು ಮತ್ತು ಇಂದು ನೀವು ದಾಖಲಿಸಿದ್ದು ನನಗೆ ತಿಳಿದಿದೆ. ಆಹಾರ, ವ್ಯಾಯಾಮ ಅಥವಾ ದಿನಚರಿಯ ಬಗ್ಗೆ ಏನು ಬೇಕಾದರೂ ಕೇಳಿ.',
   'Coach is typing…': 'ಕೋಚ್ ಉತ್ತರಿಸುತ್ತಿದ್ದಾರೆ…',
+  'AI assistant': 'AI ಸಹಾಯಕ',
+  "{name}'s AI assistant": '{name} ಅವರ AI ಸಹಾಯಕ',
+  '{name} added an AI assistant': '{name} ಅವರು AI ಸಹಾಯಕವನ್ನು ಸೇರಿಸಿದ್ದಾರೆ',
+  'The assistant is an AI. {name} checks and approves its suggestions and can undo every change.':
+    'ಈ ಸಹಾಯಕ ಒಂದು AI. ಅದರ ಸಲಹೆಗಳನ್ನು {name} ಪರಿಶೀಲಿಸಿ ಒಪ್ಪುತ್ತಾರೆ ಮತ್ತು ಪ್ರತಿಯೊಂದು ಬದಲಾವಣೆಯನ್ನು ರದ್ದು ಮಾಡಬಹುದು.',
+  'Sent to {name}': '{name} ಅವರಿಗೆ ಕಳುಹಿಸಲಾಗಿದೆ',
+  '{n} waiting for you': '{n} ನಿಮಗಾಗಿ ಕಾಯುತ್ತಿವೆ',
+  'All done – nothing waiting': 'ಎಲ್ಲಾ ಮುಗಿದಿದೆ – ಏನೂ ಬಾಕಿ ಇಲ್ಲ',
+  'Every morning the AI checks their meals and photos and plans their day. You approve its suggestions in AI assistant; they can chat with it on Today.':
+    'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ AI ಅವರ ಊಟ ಮತ್ತು ಫೋಟೋಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ದಿನವನ್ನು ಯೋಜಿಸುತ್ತದೆ. ಅದರ ಸಲಹೆಗಳನ್ನು ನೀವು AI ಸಹಾಯಕದಲ್ಲಿ ಒಪ್ಪುತ್ತೀರಿ; ಅವರು ಇಂದು ಪುಟದಲ್ಲಿ ಅದರೊಂದಿಗೆ ಚಾಟ್ ಮಾಡಬಹುದು.',
+  'Waiting for them to agree in the app (a card on their Today page).':
+    'ಅವರು ಆ್ಯಪ್‌ನಲ್ಲಿ ಒಪ್ಪುವುದಕ್ಕಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ (ಅವರ ಇಂದು ಪುಟದಲ್ಲಿ ಒಂದು ಕಾರ್ಡ್).',
+  'Switch on to let the AI check their meals and photos every morning, suggest today’s plan and answer their questions – you approve everything.':
+    'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ AI ಅವರ ಊಟ ಮತ್ತು ಫೋಟೋಗಳನ್ನು ಪರಿಶೀಲಿಸಲು, ಇಂದಿನ ಯೋಜನೆ ಸೂಚಿಸಲು ಮತ್ತು ಅವರ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಲು ಆನ್ ಮಾಡಿ – ಎಲ್ಲವನ್ನೂ ನೀವು ಒಪ್ಪುತ್ತೀರಿ.',
 };

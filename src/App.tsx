@@ -46,6 +46,7 @@ import { ReportProblemPage } from './features/support/ReportProblemPage';
 import { MealIdeasPage } from './features/mealIdeas/MealIdeasPage';
 import { CoachChatPage } from './features/coach/CoachChatPage';
 import { AiCoachPreviewPage } from './features/admin/AiCoachPreview';
+import { AiAssistantPage } from './features/trainer/AiAssistantPage';
 
 const KNOWN_PATHS = [
   '/login',
@@ -60,6 +61,7 @@ const KNOWN_PATHS = [
   '/trainer/plans/:id',
   '/trainer/exercises',
   '/trainer/me',
+  '/trainer/assistant',
   '/trainer/my-targets',
   '/trainer/sessions',
   '/trainer/sessions/new',
@@ -144,6 +146,7 @@ export function App() {
               element={guarded('trainer', <ExerciseLibraryPage />)}
             />
             <Route path="/trainer/me" element={guarded('trainer', <MePage />)} />
+            <Route path="/trainer/assistant" element={guarded('trainer', <AiAssistantPage />)} />
             <Route path="/trainer/my-targets" element={guarded('trainer', <MyTargetsPage />)} />
             <Route path="/trainer/sessions" element={guarded('trainer', <SessionsPage />)} />
             <Route
