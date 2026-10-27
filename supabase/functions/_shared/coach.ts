@@ -340,6 +340,46 @@ export async function personSummary(db: SupabaseClient, p: CoachPerson, today: s
   };
 }
 
+/** A small version of personSummary for chat: fewer tokens = faster answers on Groq. */
+export function chatSummary(s: Awaited<ReturnType<typeof personSummary>>) {
+  const todayPlan = s.coach_day_plans.find(
+    (d) => d.plan_date === s.today.date && d.status === 'active',
+  );
+  const lastWorkout =
+    s.workouts_last_7_days
+      .map((w) => w.day)
+      .sort()
+      .at(-1) ?? null;
+  const act = s.activity_last_7_days.find((a) => a.day === s.today.date);
+  return {
+    name: s.name,
+    age: s.age,
+    sex: s.sex,
+    goal: s.goal,
+    diet: s.diet,
+    foods_to_avoid: s.foods_to_avoid,
+    conditions: s.conditions,
+    doctor_ok: s.doctor_ok,
+    weight_kg: s.weight_kg,
+    target: s.target,
+    today: {
+      eaten_kcal: s.today.kcal,
+      protein_g: s.today.protein_g,
+      left_kcal: s.target ? s.target.kcal - s.today.kcal : null,
+      left_protein_g: s.target ? s.target.protein_g - s.today.protein_g : null,
+      meals: s.today.meals.map((m) => `${m.type}: ${m.items}`),
+      water_ml: s.today.water_ml,
+      steps: act?.steps ?? null,
+      coach_plan: todayPlan
+        ? `${todayPlan.kind}${todayPlan.note ? ` – ${todayPlan.note}` : ''}`
+        : null,
+    },
+    yesterday: { kcal: s.yesterday.kcal, protein_g: s.yesterday.protein_g },
+    workout_plan: s.plan ? `${s.plan.name}: ${s.plan.days.map((d) => d.title).join(', ')}` : null,
+    last_workout: lastWorkout,
+  };
+}
+
 export async function playbookFor(db: SupabaseClient, clientId: string) {
   const { data } = await db
     .from('coach_playbook')
@@ -367,6 +407,11 @@ const RED_FLAGS = [
 
 export const isRedFlag = (text: string) => RED_FLAGS.some((r) => r.test(text));
 
+/** Broader: the message talks about the body or a symptom at all (for the AI's own red flags). */
+const SYMPTOM_WORDS =
+  /pain|ache|hurt|chest|heart|breath|faint|dizz|giddy|sugar|bleed|vomit|numb|swell|fever|blood|pressure|palpitat|sweat|tired|weak|ನೋವು|ಎದೆ|ಹೃದಯ|ಉಸಿರು|ತಲೆ|ಸಕ್ಕರೆ|ಜ್ವರ|ರಕ್ತ|ಸುಸ್ತು|ವಾಂತಿ/i;
+export const mentionsSymptom = (text: string) => isRedFlag(text) || SYMPTOM_WORDS.test(text);
+
 export function redFlagReply(language: string) {
   return language === 'kn'
     ? 'ದಯವಿಟ್ಟು ಈಗಲೇ ನಿಲ್ಲಿಸಿ, ಕುಳಿತುಕೊಳ್ಳಿ ಮತ್ತು ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ ಅಥವಾ 108 ಗೆ ಕರೆ ಮಾಡಿ. ನಾನು ನಿಮ್ಮ ಕೋಚ್‌ಗೆ ತಿಳಿಸಿದ್ದೇನೆ.'
@@ -382,7 +427,18 @@ export function escalatedLine(language: string) {
 // ---------------------------------------------------------------------------
 // Day coach prompts
 // ---------------------------------------------------------------------------
-export const ASK_SYSTEM = `You are the day coach in FitCoach, an Indian fitness coaching app for family and friends, many of them older adults. You answer one message from one person using their profile, plan and recent numbers below, and the coach playbook (follow it). Be warm, simple and short (2–5 sentences), practical, with everyday Indian foods that fit their diet preference and never their foods to avoid. Exercise suggestions must be gentle and suit their age and conditions. Never give medical advice: never comment on medicines, dosages, diagnoses, test results or supplements, and never tell someone to start, stop or change a medicine – say their doctor is the right person. If the message mentions chest pain or tightness, breathlessness, fainting or dizziness, very low or high sugar, or any emergency, set red_flag true and tell them to stop, sit down and contact their doctor or call 108 now. Set escalate true when the question needs the head coach or a doctor (health conditions, pain that continues, medicines, supplements, big plan or target changes) or when you are not sure. Reply in the language the message is written in: Kannada (Kannada script) for a Kannada message, otherwise English. Return only JSON matching the schema.`;
+export const ASK_SYSTEM = `You are the day coach in FitCoach, an Indian fitness coaching app for family and friends, many of them older adults. You are chatting with one person. You get their profile, today's numbers, the coach playbook (follow it) and the conversation so far.
+
+How to reply:
+- Read the conversation so far first. The new message often continues it ("and for dinner?", "what about tomorrow?", "ok, how much?", "why?") – answer in that context, never as if it were a new chat, and never repeat advice you already gave unless asked. A short follow-up like "how many calories?" or "how much protein?" is about the food or exercise just discussed, not the whole day – unless they say "today" or "left".
+- Answer the actual question in your first sentence, then add only what helps. Use their real numbers (calories and protein left today, their target, what they ate) when relevant. No greetings, no "Great question", no filler.
+- If the message is unclear, ask one short question back instead of guessing.
+- 2–5 short sentences. Simple words. Everyday Indian home food that fits their diet preference, never their foods to avoid, with rough kcal and protein when you suggest food.
+- Exercise: gentle and suited to their age, conditions and today's plan.
+
+Safety: never give medical advice – never comment on medicines, doses, diagnoses, test results or supplements (including protein powder, creatine, vitamins), and never tell someone to start, stop or change a medicine; say their doctor decides that. Suggest real food only. Set red_flag true only when the NEW message itself reports chest pain or tightness, breathlessness, fainting, dizziness, very low or high sugar or another emergency – then tell them to stop, sit down and contact their doctor or call 108 now. If an earlier message had such a symptom but the new one is about something else, answer the new message normally and add one short line asking them to see their doctor about it.
+
+Set escalate true only when the head coach or a doctor really must see it: medicines, supplements, new or continuing pain or illness, decisions about a health condition, or asks for a new plan or target. Do not escalate normal food, exercise or motivation questions. Reply in the reply language given. Return only JSON matching the schema.`;
 
 export const ASK_SCHEMA = {
   type: 'object',

@@ -45,6 +45,7 @@ import { StatsPage } from './features/stats/StatsPage';
 import { ReportProblemPage } from './features/support/ReportProblemPage';
 import { MealIdeasPage } from './features/mealIdeas/MealIdeasPage';
 import { CoachChatPage } from './features/coach/CoachChatPage';
+import { AiCoachPreviewPage } from './features/admin/AiCoachPreview';
 
 const KNOWN_PATHS = [
   '/login',
@@ -86,6 +87,7 @@ const KNOWN_PATHS = [
   '/me/notifications',
   '/me/report',
   '/coach',
+  ...(import.meta.env.DEV ? ['/dev/ai-coach'] : []),
 ];
 
 /**
@@ -180,6 +182,8 @@ export function App() {
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
             <Route path="/me/report" element={guarded(SELF, <ReportProblemPage />)} />
             <Route path="/coach" element={guarded('client', <CoachChatPage />)} />
+            {/* Development only: the admin AI Coach screen with sample data. */}
+            {import.meta.env.DEV && <Route path="/dev/ai-coach" element={<AiCoachPreviewPage />} />}
           </IonRouterOutlet>
           <RootRedirect />
           <StuckPageRescue />

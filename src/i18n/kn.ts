@@ -984,4 +984,11 @@ export const kn: Record<string, string> = {
   'Heart condition': 'ಹೃದಯ ಸಮಸ್ಯೆ',
   Thyroid: 'ಥೈರಾಯ್ಡ್',
   Pregnant: 'ಗರ್ಭಿಣಿ',
+  'How am I doing today?': 'ಇಂದು ನಾನು ಹೇಗಿದ್ದೇನೆ?',
+  'What should I eat for dinner?': 'ರಾತ್ರಿ ಊಟಕ್ಕೆ ಏನು ತಿನ್ನಲಿ?',
+  'How can I get more protein?': 'ಹೆಚ್ಚು ಪ್ರೋಟೀನ್ ಹೇಗೆ ಪಡೆಯಲಿ?',
+  'Give me an easy 10-minute workout': 'ಸುಲಭವಾದ 10 ನಿಮಿಷದ ವ್ಯಾಯಾಮ ಹೇಳಿ',
+  'Hi! I know your plan, targets and what you logged today. Ask me anything about food, workouts or your routine.':
+    'ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಯೋಜನೆ, ಗುರಿಗಳು ಮತ್ತು ಇಂದು ನೀವು ದಾಖಲಿಸಿದ್ದು ನನಗೆ ತಿಳಿದಿದೆ. ಆಹಾರ, ವ್ಯಾಯಾಮ ಅಥವಾ ದಿನಚರಿಯ ಬಗ್ಗೆ ಏನು ಬೇಕಾದರೂ ಕೇಳಿ.',
+  'Coach is typing…': 'ಕೋಚ್ ಉತ್ತರಿಸುತ್ತಿದ್ದಾರೆ…',
 };

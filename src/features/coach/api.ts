@@ -67,22 +67,32 @@ export function useAskCoach(clientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (question: string): Promise<CoachQuery> => {
-      const { data, error } = await supabase.functions.invoke('coach', {
-        body: { action: 'ask', question },
-      });
-      if (!error) return (data as { data: CoachQuery }).data;
-      if (error instanceof FunctionsHttpError) {
-        const payload = (await (error.context as Response).json().catch(() => null)) as {
-          error?: { message?: string; code?: string };
-        } | null;
-        void logError('ai', payload?.error?.message ?? 'coach ask failed', {
-          code: payload?.error?.code ?? '',
+      // If every AI model is busy for a moment, try once more by itself before showing an error.
+      for (let attempt = 1; ; attempt++) {
+        const { data, error } = await supabase.functions.invoke('coach', {
+          body: { action: 'ask', question },
         });
-        throw new Error(payload?.error?.message ?? 'The coach could not answer just now.');
+        if (!error) return (data as { data: CoachQuery }).data;
+        if (error instanceof FunctionsHttpError) {
+          const payload = (await (error.context as Response).json().catch(() => null)) as {
+            error?: { message?: string; code?: string };
+          } | null;
+          const code = payload?.error?.code ?? '';
+          if (attempt === 1 && /^ai_(rate_limited|timeout|error)/.test(code)) {
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          void logError('ai', payload?.error?.message ?? 'coach ask failed', { code });
+          throw new Error(payload?.error?.message ?? 'The coach could not answer just now.');
+        }
+        throw new Error('Could not reach the server. Check your connection and try again.');
       }
-      throw new Error('Could not reach the server. Check your connection and try again.');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['coach-queries', clientId] }),
+    // Show the answer the moment it arrives; refresh the list quietly afterwards.
+    onSuccess: (row) => {
+      qc.setQueryData<CoachQuery[]>(['coach-queries', clientId], (old) => [...(old ?? []), row]);
+      void qc.invalidateQueries({ queryKey: ['coach-queries', clientId] });
+    },
   });
 }
 

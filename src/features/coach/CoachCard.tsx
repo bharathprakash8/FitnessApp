@@ -109,16 +109,14 @@ function CoachConsentCard({ profile }: { profile: Profile }) {
           expand="block"
           disabled={accept.isPending}
           onClick={() =>
-            accept
-              .mutateAsync()
-              .catch(() =>
-                toast({
-                  message: t('Could not save'),
-                  duration: 2500,
-                  color: 'danger',
-                  position: 'top',
-                }),
-              )
+            accept.mutateAsync().catch(() =>
+              toast({
+                message: t('Could not save'),
+                duration: 2500,
+                color: 'danger',
+                position: 'top',
+              }),
+            )
           }
         >
           {accept.isPending ? t('Saving…') : t('I agree – start my AI coach')}

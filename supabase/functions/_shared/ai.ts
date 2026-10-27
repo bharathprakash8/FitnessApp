@@ -12,6 +12,9 @@ const GROQ = 'https://api.groq.com/openai/v1/chat/completions';
 /** Fast text answers (chat, notes, summaries): Groq first, Gemini as the safety net. */
 export const TEXT_CHAIN = ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b', 'gemini'];
 
+/** Kannada text: Qwen writes poor Kannada, so GPT-OSS 120B then Gemini. */
+export const KANNADA_CHAIN = ['groq:openai/gpt-oss-120b', 'gemini'];
+
 /** Groq models skipped until this time after a limit or failure (per running server). */
 const restUntil = new Map<string, number>();
 
@@ -102,6 +105,8 @@ export async function generateJsonVia<T>(opts: {
   /** Upper bound on the answer length for Groq (its free tier limits tokens per minute). */
   maxTokens?: number;
   timeoutMs?: number;
+  /** Total time for the Gemini fallback (default 40 s). */
+  budgetMs?: number;
 }): Promise<{ data: T; model: string }> {
   let lastError: unknown = null;
   for (const entry of opts.chain) {
@@ -113,7 +118,7 @@ export async function generateJsonVia<T>(opts: {
           schema: opts.schema,
           feature: opts.feature,
           timeoutMs: opts.timeoutMs ?? 20_000,
-          budgetMs: 40_000,
+          budgetMs: opts.budgetMs ?? 40_000,
           preferLite: true,
         });
         const data = opts.accept(json);

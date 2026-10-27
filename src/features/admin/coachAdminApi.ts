@@ -8,13 +8,47 @@ export type CoachAction = Tables<'coach_actions'>;
 export type CoachRun = Tables<'coach_runs'>;
 export type CoachQueryRow = Tables<'coach_queries'>;
 
+export interface CoachPerson {
+  id: string;
+  full_name: string | null;
+  email: string;
+  coach_consent_at: string | null;
+  health_conditions: string[];
+  language: string;
+}
+
+export interface CoachMeal {
+  id: string;
+  meal_type: string;
+  eaten_at: string;
+  photo_path: string | null;
+  items: { name: string; portion: string; calories: number }[];
+  total_calories: number;
+}
+
+export interface CoachOverview {
+  coach: { id: string; full_name: string | null } | null;
+  mode: string;
+  people: CoachPerson[];
+  runs: CoachRun[];
+  proposed: CoachAction[];
+  recent: CoachAction[];
+  questions: CoachQueryRow[];
+  playbook: { client_id: string | null; body: string; updated_by: string; updated_at: string }[];
+  plans: Map<string, { name: string; days: string[] }>;
+  /** Meals and questions the listed changes refer to (for photos and context). */
+  meals: Map<string, CoachMeal>;
+  queryText: Map<string, string>;
+  photoUrls: Record<string, string>;
+}
+
 const KEY = ['admin-coach'];
 
 /** Everything the AI Coach tab shows (admins read these tables directly through RLS). */
 export function useCoachOverview() {
   return useQuery({
     queryKey: [...KEY, 'overview'],
-    queryFn: async () => {
+    queryFn: async (): Promise<CoachOverview> => {
       const { data: coach } = await supabase
         .from('profiles')
         .select('id, full_name')
@@ -30,19 +64,19 @@ export function useCoachOverview() {
               )
               .eq('trainer_id', coach.id)
           : Promise.resolve({ data: [] }),
-        supabase.from('coach_runs').select('*').order('started_at', { ascending: false }).limit(10),
+        supabase.from('coach_runs').select('*').order('started_at', { ascending: false }).limit(14),
         supabase
           .from('coach_actions')
           .select('*')
           .eq('status', 'proposed')
-          .order('created_at', { ascending: false })
-          .limit(100),
+          .order('created_at', { ascending: true })
+          .limit(200),
         supabase
           .from('coach_actions')
           .select('*')
           .in('status', ['applied', 'undone', 'refused', 'rejected'])
           .order('created_at', { ascending: false })
-          .limit(60),
+          .limit(80),
         supabase
           .from('coach_queries')
           .select('*')
@@ -51,21 +85,53 @@ export function useCoachOverview() {
           .limit(50),
         supabase.from('coach_playbook').select('client_id, body, updated_by, updated_at'),
         coach
-          ? supabase.from('workout_plans').select('id, name').eq('trainer_id', coach.id)
+          ? supabase
+              .from('workout_plans')
+              .select('id, name, plan_days(title, day_index)')
+              .eq('trainer_id', coach.id)
           : Promise.resolve({ data: [] }),
       ]);
-      type Person = {
-        id: string;
-        full_name: string | null;
-        email: string;
-        coach_consent_at: string | null;
-        health_conditions: string[];
-        language: string;
-      };
+
+      const actions = [...(proposed.data ?? []), ...(recent.data ?? [])] as CoachAction[];
+      const mealIds = [
+        ...new Set(
+          actions
+            .filter((a) => /meal/.test(a.kind) && a.target_id)
+            .map((a) => a.target_id as string),
+        ),
+      ];
+      const queryIds = [
+        ...new Set(
+          actions
+            .filter((a) => a.kind === 'answer')
+            .map((a) => String((a.after as { query_id?: string } | null)?.query_id ?? '')),
+        ),
+      ].filter(Boolean);
+      const [meals, qs] = await Promise.all([
+        mealIds.length
+          ? supabase
+              .from('meal_logs')
+              .select('id, meal_type, eaten_at, photo_path, items, total_calories')
+              .in('id', mealIds)
+          : Promise.resolve({ data: [] }),
+        queryIds.length
+          ? supabase.from('coach_queries').select('id, question').in('id', queryIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+      const mealRows = (meals.data ?? []) as unknown as CoachMeal[];
+      const paths = mealRows.flatMap((m) => (m.photo_path ? [m.photo_path] : []));
+      const photoUrls: Record<string, string> = {};
+      if (paths.length) {
+        const { data: signed } = await supabase.storage
+          .from('meal-photos')
+          .createSignedUrls(paths, 3600);
+        for (const s of signed ?? []) if (s.path && s.signedUrl) photoUrls[s.path] = s.signedUrl;
+      }
+
       return {
         coach,
         mode: (mode.data?.value as string | undefined) ?? 'dry_run',
-        people: ((links.data ?? []) as unknown as { profiles: Person }[])
+        people: ((links.data ?? []) as unknown as { profiles: CoachPerson }[])
           .map((l) => l.profiles)
           .filter(Boolean),
         runs: (runs.data ?? []) as CoachRun[],
@@ -74,8 +140,25 @@ export function useCoachOverview() {
         questions: (questions.data ?? []) as CoachQueryRow[],
         playbook: playbook.data ?? [],
         plans: new Map(
-          ((plans.data ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name]),
+          (
+            (plans.data ?? []) as {
+              id: string;
+              name: string;
+              plan_days: { title: string; day_index: number }[];
+            }[]
+          ).map((p) => [
+            p.id,
+            {
+              name: p.name,
+              days: [...p.plan_days].sort((a, b) => a.day_index - b.day_index).map((d) => d.title),
+            },
+          ]),
         ),
+        meals: new Map(mealRows.map((m) => [m.id, m])),
+        queryText: new Map(
+          ((qs.data ?? []) as { id: string; question: string }[]).map((q) => [q.id, q.question]),
+        ),
+        photoUrls,
       };
     },
   });

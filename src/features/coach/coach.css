@@ -114,6 +114,61 @@
   font-weight: 600;
 }
 
+.coach-day {
+  align-self: center;
+  margin: 12px 0 4px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: var(--ion-color-light);
+  color: var(--ion-color-medium-shade);
+  font-size: 0.75rem;
+}
+
+.coach-typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ion-color-medium-shade);
+  font-style: italic;
+}
+
+.coach-welcome {
+  margin: 24px 8px;
+  text-align: center;
+  color: var(--ion-color-medium-shade);
+}
+
+.coach-welcome ion-icon {
+  font-size: 2rem;
+  color: var(--ion-color-tertiary);
+}
+
+.coach-starters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 8px 0;
+  scrollbar-width: none;
+}
+
+.coach-starter {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid var(--ion-color-primary);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ion-color-primary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.coach-send {
+  --padding-start: 10px;
+  --padding-end: 10px;
+  margin: 0 0 4px;
+  min-height: 44px;
+}
+
 .coach-input {
   display: flex;
   align-items: flex-end;

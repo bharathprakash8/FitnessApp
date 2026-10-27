@@ -14,7 +14,7 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
-import { generateJsonVia, TEXT_CHAIN } from '../_shared/ai.ts';
+import { generateJsonVia, KANNADA_CHAIN, TEXT_CHAIN } from '../_shared/ai.ts';
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import {
   activePlan,
@@ -23,6 +23,7 @@ import {
   ASK_SCHEMA,
   ASK_SYSTEM,
   calorieFloor,
+  chatSummary,
   coachAccount,
   coachedPeople,
   coachMode,
@@ -31,6 +32,7 @@ import {
   isCoached,
   isRedFlag,
   latestWeight,
+  mentionsSymptom,
   loadPerson,
   localDate,
   localMinutes,
@@ -470,11 +472,14 @@ async function recordAction(
     return data;
   } catch (err) {
     if (!(err instanceof Refused)) throw err;
+    // Only keep the person link when they really are on the coach (an unknown id would
+    // break the insert).
+    const cid = 'client_id' in input ? (input.client_id ?? null) : null;
     const { data } = await ctx.db
       .from('coach_actions')
       .insert({
         run_id: runId,
-        client_id: 'client_id' in input ? (input.client_id ?? null) : null,
+        client_id: cid && ctx.people.has(cid) ? cid : null,
         kind: input.kind,
         after: input,
         status: 'refused',
@@ -482,7 +487,7 @@ async function recordAction(
       })
       .select('id, kind, status, refused_reason')
       .single();
-    return data;
+    return data ?? { kind: input.kind, status: 'refused', refused_reason: err.message };
   }
 }
 
@@ -671,7 +676,7 @@ async function writeNote(db: Db, p: CoachPerson, kind: 'morning' | 'evening') {
     playbookFor(db, p.id),
   ]);
   const { data, model } = await generateJsonVia({
-    chain: TEXT_CHAIN,
+    chain: p.language === 'kn' ? KANNADA_CHAIN : TEXT_CHAIN,
     system: NOTE_SYSTEM,
     parts: [
       {
@@ -770,6 +775,33 @@ async function tick(db: Db) {
   return { written };
 }
 
+/** The last messages with the coach (3 days), so follow-up questions make sense. */
+async function recentChat(db: Db, clientId: string) {
+  const { data } = await db
+    .from('coach_queries')
+    .select('question, answer, follow_up, follow_up_by, created_at')
+    .eq('client_id', clientId)
+    .gte('created_at', new Date(Date.now() - 3 * 86_400_000).toISOString())
+    .order('created_at', { ascending: false })
+    .limit(10);
+  return (data ?? [])
+    .reverse()
+    .map((q) => {
+      const answer = String(q.answer ?? '')
+        .replace(escalatedLine('en'), '')
+        .replace(escalatedLine('kn'), '')
+        .trim();
+      return [
+        `Person: ${q.question}`,
+        answer ? `Coach: ${answer}` : '',
+        q.follow_up ? `${q.follow_up_by === 'admin' ? 'Admin' : 'Head coach'}: ${q.follow_up}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+    })
+    .join('\n');
+}
+
 async function ask(db: Db, clientId: string, question: string) {
   const coach = await coachAccount(db);
   if (!coach || !(await isCoached(db, coach.id, clientId))) {
@@ -806,21 +838,35 @@ async function ask(db: Db, clientId: string, question: string) {
     reason = 'Red-flag words in the message';
   } else {
     const today = localDate(p.timezone || IST);
-    const [summary, playbook] = await Promise.all([
+    const [summary, playbook, history] = await Promise.all([
       personSummary(db, p, today),
       playbookFor(db, p.id),
+      recentChat(db, p.id),
     ]);
     const r = await generateJsonVia({
-      chain: TEXT_CHAIN,
+      // Qwen writes poor Kannada (26–27 Oct tests): Kannada goes GPT-OSS 120B → Gemini.
+      chain: lang === 'kn' ? KANNADA_CHAIN : TEXT_CHAIN,
       system: ASK_SYSTEM,
       parts: [
         {
-          text: `Coach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nPerson: ${JSON.stringify(summary)}\nReply language: ${lang === 'kn' ? 'Kannada (Kannada script)' : 'English'} – the language of this message, whatever the app language is.\nMessage: "${question}"`,
+          text: [
+            `Coach playbook (shared):\n${playbook.shared}`,
+            `Coach playbook (this person):\n${playbook.person || '(empty)'}`,
+            `Person and today's numbers: ${JSON.stringify(chatSummary(summary))}`,
+            history
+              ? `Conversation so far (oldest first) – the new message may continue it:\n${history}`
+              : 'Conversation so far: (this is the first message)',
+            `Reply language: ${lang === 'kn' ? 'Kannada (Kannada script)' : 'English'} – the language of the new message.`,
+            `New message from ${summary.name}: "${question}"`,
+          ].join('\n\n'),
         },
       ],
       schema: ASK_SCHEMA,
       feature: 'coach-ask',
-      maxTokens: 600,
+      maxTokens: 450,
+      // Chat must feel quick: give up on a slow model sooner.
+      timeoutMs: 10_000,
+      budgetMs: 22_000,
       accept: (j) => {
         const o = j as {
           reply?: unknown;
@@ -840,9 +886,19 @@ async function ask(db: Db, clientId: string, question: string) {
       },
     });
     model = r.model;
-    red = r.data.red;
+    // The emergency reply only when this message itself is about a symptom (models sometimes
+    // flag a normal question because an earlier message mentioned one).
+    red = r.data.red && mentionsSymptom(question);
     reply = red ? redFlagReply(lang) : r.data.reply;
-    if (red || r.data.escalate) {
+    // Pass a topic up once: if the head coach already has an open question from the last
+    // 12 hours, don't repeat "I've passed this on" under every answer.
+    const { count: open } = await db
+      .from('coach_queries')
+      .select('id', { count: 'exact', head: true })
+      .eq('client_id', clientId)
+      .eq('status', 'escalated')
+      .gte('created_at', new Date(Date.now() - 12 * 3_600_000).toISOString());
+    if (red || (r.data.escalate && !open)) {
       status = 'escalated';
       reason = r.data.reason || null;
       if (!red) reply = `${reply}\n\n${escalatedLine(lang)}`;
@@ -932,6 +988,7 @@ const AdminBody = z.discriminatedUnion('action', [
   z.object({ action: z.literal('setup') }),
   z.object({ action: z.literal('set_mode'), mode: z.enum(['off', 'dry_run', 'live']) }),
   z.object({ action: z.literal('approve'), action_id: uuid }),
+  z.object({ action: z.literal('approve_many'), action_ids: z.array(uuid).min(1).max(200) }),
   z.object({ action: z.literal('reject'), action_id: uuid }),
   z.object({ action: z.literal('undo'), action_id: uuid }),
   z.object({
@@ -951,6 +1008,38 @@ const AdminBody = z.discriminatedUnion('action', [
   }),
 ]);
 
+/** Apply one proposed change (safety rules are checked again at this moment). */
+async function approveOne(
+  ctx: Ctx,
+  id: string,
+): Promise<{ status: 'applied' } | { status: 'refused' | 'bad_state'; reason: string }> {
+  const { db } = ctx;
+  const { data: a } = await db.from('coach_actions').select('*').eq('id', id).maybeSingle();
+  if (!a || a.status !== 'proposed') return { status: 'bad_state', reason: 'Already decided' };
+  const input = Action.parse(a.after);
+  try {
+    const r = await runAction(ctx, input, true);
+    await db
+      .from('coach_actions')
+      .update({
+        status: 'applied',
+        kind: r.kind,
+        before: r.before ?? null,
+        after: { ...input, ...('extra' in r ? r.extra : {}) },
+        decided_at: new Date().toISOString(),
+      })
+      .eq('id', a.id);
+    return { status: 'applied' };
+  } catch (err) {
+    if (!(err instanceof Refused)) throw err;
+    await db
+      .from('coach_actions')
+      .update({ status: 'refused', refused_reason: err.message })
+      .eq('id', a.id);
+    return { status: 'refused', reason: err.message };
+  }
+}
+
 async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
   if (body.action === 'setup') return await setup(db);
   if (body.action === 'set_mode') {
@@ -965,35 +1054,22 @@ async function adminAction(db: Db, body: z.infer<typeof AdminBody>) {
 
   switch (body.action) {
     case 'approve': {
-      const { data: a } = await db
-        .from('coach_actions')
-        .select('*')
-        .eq('id', body.action_id)
-        .maybeSingle();
-      if (!a || a.status !== 'proposed')
-        throw new HttpError(400, 'Nothing to approve', 'bad_state');
-      const input = Action.parse(a.after);
-      try {
-        const r = await runAction(ctx, input, true);
-        await db
-          .from('coach_actions')
-          .update({
-            status: 'applied',
-            kind: r.kind,
-            before: r.before ?? null,
-            after: { ...input, ...('extra' in r ? r.extra : {}) },
-            decided_at: new Date().toISOString(),
-          })
-          .eq('id', a.id);
-        return { status: 'applied' };
-      } catch (err) {
-        if (!(err instanceof Refused)) throw err;
-        await db
-          .from('coach_actions')
-          .update({ status: 'refused', refused_reason: err.message })
-          .eq('id', a.id);
-        throw new HttpError(400, err.message, 'refused');
+      const r = await approveOne(ctx, body.action_id);
+      if (r.status !== 'applied') throw new HttpError(400, r.reason, r.status);
+      return r;
+    }
+    case 'approve_many': {
+      // One request for "Approve all": each change is still checked on its own.
+      // Several at a time (each one is a few small queries).
+      const results: ({ id: string } & Awaited<ReturnType<typeof approveOne>>)[] = [];
+      for (let i = 0; i < body.action_ids.length; i += 6) {
+        const batch = body.action_ids.slice(i, i + 6);
+        results.push(
+          ...(await Promise.all(batch.map(async (id) => ({ id, ...(await approveOne(ctx, id)) })))),
+        );
       }
+      const failed = results.filter((r) => r.status !== 'applied');
+      return { applied: results.length - failed.length, failed };
     }
     case 'reject':
       await db
@@ -1133,14 +1209,17 @@ serveJson(async (req) => {
             error: body.error ? String(body.error).slice(0, 2000) : null,
           })
           .eq('id', runId);
-        await push(
-          db,
-          await adminIds(db),
-          'Head coach report is ready',
-          report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
-          '/admin',
-          'coach-report',
-        );
+        // Test runs (report starting with "TEST") don't notify the admins.
+        if (!report.startsWith('TEST')) {
+          await push(
+            db,
+            await adminIds(db),
+            'Head coach report is ready',
+            report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
+            '/admin',
+            'coach-report',
+          );
+        }
         return { finished: true };
       }
       default:
@@ -1155,6 +1234,67 @@ serveJson(async (req) => {
       throw new HttpError(401, 'Not allowed', 'unauthorized');
     }
     return await tick(db);
+  }
+
+  // TEMPORARY (remove at go-live with the test users): admin actions on test accounts only,
+  // so approve / reject / undo / answer can be tested without an admin login.
+  const testSecret = req.headers.get('x-test-secret');
+  if (testSecret !== null) {
+    if (!sameSecret(testSecret, Deno.env.get('TEST_USERS_SECRET') ?? '')) {
+      throw new HttpError(401, 'Not allowed', 'unauthorized');
+    }
+    const parsed = AdminBody.safeParse(body);
+    if (!parsed.success) throw new HttpError(400, 'Invalid input', 'invalid_input');
+    const b = parsed.data;
+    let clientId: string | null = null;
+    if ('action_ids' in b) {
+      const { data } = await db.from('coach_actions').select('client_id').in('id', b.action_ids);
+      const ids = [...new Set((data ?? []).map((r) => r.client_id as string | null))];
+      for (const id of ids) {
+        const p = id ? await loadPerson(db, id) : null;
+        if (!p?.email.endsWith('@fitcoach.test')) {
+          throw new HttpError(403, 'Test accounts only', 'forbidden');
+        }
+      }
+      return await adminAction(db, b);
+    }
+    if ('action_id' in b) {
+      const { data } = await db
+        .from('coach_actions')
+        .select('client_id')
+        .eq('id', b.action_id)
+        .maybeSingle();
+      clientId = data?.client_id ?? null;
+    } else if ('query_id' in b) {
+      const { data } = await db
+        .from('coach_queries')
+        .select('client_id')
+        .eq('id', b.query_id)
+        .maybeSingle();
+      clientId = data?.client_id ?? null;
+    } else if ('client_id' in b) {
+      clientId = b.client_id;
+    }
+    // Cleaning up after a test run: proposals from a run whose report starts with "TEST"
+    // may be rejected for anyone (a real person on the coach also gets test proposals).
+    let testRunProposal = false;
+    if (b.action === 'reject') {
+      const { data: a } = await db
+        .from('coach_actions')
+        .select('status, coach_runs(report)')
+        .eq('id', b.action_id)
+        .maybeSingle();
+      const report = (a as { coach_runs?: { report?: string | null } | null } | null)?.coach_runs
+        ?.report;
+      testRunProposal = a?.status === 'proposed' && Boolean(report?.startsWith('TEST'));
+    }
+    if (b.action !== 'set_mode' && b.action !== 'setup' && !testRunProposal) {
+      const p = clientId ? await loadPerson(db, clientId) : null;
+      if (!p?.email.endsWith('@fitcoach.test')) {
+        throw new HttpError(403, 'Test accounts only', 'forbidden');
+      }
+    }
+    return await adminAction(db, b);
   }
 
   // People in the app

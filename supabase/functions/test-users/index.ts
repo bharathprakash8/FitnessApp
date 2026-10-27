@@ -154,6 +154,97 @@ async function cleanup(db: Admin) {
 }
 
 /** Put the first n test clients on the AI coach (with conditions for the safety checks). */
+const PERSONAS = [
+  {
+    full_name: 'Test Amma',
+    date_of_birth: '1964-05-10',
+    sex: 'female',
+    diet_preference: 'veg',
+    goal: 'get_fitter',
+    health_conditions: ['knee', 'bp'],
+    doctor_ok: true,
+    language: 'kn',
+    foods_to_avoid: 'brinjal',
+  },
+  {
+    full_name: 'Test Ravi',
+    date_of_birth: '1988-02-01',
+    sex: 'male',
+    diet_preference: 'veg',
+    goal: 'lose_weight',
+    health_conditions: [],
+    doctor_ok: null,
+    language: 'en',
+    foods_to_avoid: null,
+  },
+  {
+    full_name: 'Test Appa',
+    date_of_birth: '1960-08-20',
+    sex: 'male',
+    diet_preference: 'egg',
+    goal: 'maintain',
+    health_conditions: ['diabetes'],
+    doctor_ok: true,
+    language: 'en',
+    foods_to_avoid: null,
+  },
+  {
+    full_name: 'Test Priya',
+    date_of_birth: '1995-11-12',
+    sex: 'female',
+    diet_preference: 'vegan',
+    goal: 'build_muscle',
+    health_conditions: [],
+    doctor_ok: null,
+    language: 'en',
+    foods_to_avoid: 'peanuts',
+  },
+  {
+    full_name: 'Test Ajji',
+    date_of_birth: '1952-03-03',
+    sex: 'female',
+    diet_preference: 'veg',
+    goal: 'maintain',
+    health_conditions: ['knee', 'back', 'thyroid'],
+    doctor_ok: false,
+    language: 'kn',
+    foods_to_avoid: null,
+  },
+  {
+    full_name: 'Test Kiran',
+    date_of_birth: '1990-06-30',
+    sex: 'male',
+    diet_preference: 'non_veg',
+    goal: 'build_muscle',
+    health_conditions: ['back'],
+    doctor_ok: true,
+    language: 'en',
+    foods_to_avoid: null,
+  },
+  {
+    full_name: 'Test Meena',
+    date_of_birth: '1978-09-09',
+    sex: 'female',
+    diet_preference: 'egg',
+    goal: 'lose_weight',
+    health_conditions: ['bp', 'thyroid'],
+    doctor_ok: true,
+    language: 'kn',
+    foods_to_avoid: 'mushroom',
+  },
+  {
+    full_name: 'Test Suresh',
+    date_of_birth: '1970-01-15',
+    sex: 'male',
+    diet_preference: 'non_veg',
+    goal: 'lose_weight',
+    health_conditions: ['heart'],
+    doctor_ok: true,
+    language: 'en',
+    foods_to_avoid: null,
+  },
+];
+
 async function mapToCoach(db: Admin, n: number) {
   const { data: coach } = await db
     .from('profiles')
@@ -169,20 +260,10 @@ async function mapToCoach(db: Admin, n: number) {
       .from('trainer_clients')
       .upsert({ client_id: u.id, trainer_id: coach.id }, { onConflict: 'client_id' });
     if (error) throw error;
-    // Client 1: 62-year-old with knee pain and BP, Kannada. Client 2: 38, no conditions.
+    // Different people for the coach tests (ages, diets, conditions, languages).
     await db
       .from('profiles')
-      .update(
-        i === 0
-          ? {
-              date_of_birth: '1964-05-10',
-              sex: 'female',
-              health_conditions: ['knee', 'bp'],
-              doctor_ok: true,
-              language: 'kn',
-            }
-          : { health_conditions: [], language: 'en' },
-      )
+      .update({ ...PERSONAS[i % PERSONAS.length], coach_consent_at: new Date().toISOString() })
       .eq('id', u.id);
     mapped.push(u.email);
   }
