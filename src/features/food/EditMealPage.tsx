@@ -26,6 +26,7 @@ import {
   useSaveMeal,
   reestimateItem,
 } from './api';
+import { MealSuggestionCard } from '../coach/MealCoachNote';
 import { MealEditor } from './MealEditor';
 import { itemsOf, localToIso, timeIn, totalsOf, type MealType } from './model';
 import './food.css';
@@ -75,9 +76,10 @@ export function EditMealPage() {
           ) : (
             <>
               {photo && <img src={photo} alt={tx('Your meal')} className="food-preview" />}
+              <MealSuggestionCard meal={m} />
               <MealEditor
                 onReestimate={reestimateItem}
-                key={m.id}
+                key={`${m.id}-${m.total_calories}`}
                 initialItems={itemsOf(m)}
                 initialMealType={m.meal_type as MealType}
                 initialDate={m.eaten_on}

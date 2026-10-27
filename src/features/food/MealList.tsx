@@ -2,6 +2,7 @@ import { IonItem, IonItemDivider, IonLabel, IonList, IonNote } from '@ionic/reac
 import { restaurantOutline } from 'ionicons/icons';
 
 import { EmptyState } from '../../components/EmptyState';
+import { MealCoachLine } from '../coach/MealCoachNote';
 import { usePhotoUrls } from './api';
 import { MEAL_LABELS, MEAL_TYPES, itemsOf, timeIn, type MealLog } from './model';
 import './food.css';
@@ -68,6 +69,7 @@ export function MealList({
                           : tx('Estimated')}
                       {m.photo_deleted ? tx(' · photo deleted after 7 days') : ''}
                     </p>
+                    {!waiting && <MealCoachLine meal={m} />}
                     {waiting && <p className="offline-badge">{tx('Saved offline – will sync')}</p>}
                   </IonLabel>
                 </IonItem>

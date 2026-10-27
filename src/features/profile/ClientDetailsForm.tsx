@@ -1,5 +1,6 @@
 import {
   IonButton,
+  IonChip,
   IonInput,
   IonLabel,
   IonSegment,
@@ -14,7 +15,16 @@ import { useState, type FormEvent } from 'react';
 import { todayIn } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
 import type { ClientDetails } from './api';
-import { DIET_LABELS, GOAL_LABELS, SEX_LABELS, type Diet, type Goal, type Sex } from './options';
+import {
+  CONDITION_LABELS,
+  DIET_LABELS,
+  GOAL_LABELS,
+  SEX_LABELS,
+  type Condition,
+  type Diet,
+  type Goal,
+  type Sex,
+} from './options';
 import './profile.css';
 import { tr, useT } from '../../i18n/i18n';
 
@@ -40,6 +50,10 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
   const [diet, setDiet] = useState(profile.diet_preference ?? '');
   const [injuries, setInjuries] = useState(profile.injuries ?? '');
   const [avoid, setAvoid] = useState(profile.foods_to_avoid ?? '');
+  const [conditions, setConditions] = useState<string[]>(profile.health_conditions ?? []);
+  const [doctorOk, setDoctorOk] = useState<string>(
+    profile.doctor_ok === null ? '' : profile.doctor_ok ? 'yes' : 'no',
+  );
   const [error, setError] = useState<string | null>(null);
 
   const today = todayIn(profile.timezone);
@@ -73,6 +87,8 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
       diet_preference: diet,
       injuries: injuries.trim() || null,
       foods_to_avoid: avoid.trim().slice(0, 300) || null,
+      health_conditions: conditions,
+      doctor_ok: conditions.length && doctorOk ? doctorOk === 'yes' : null,
     });
   }
 
@@ -174,6 +190,45 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         value={injuries}
         onIonInput={(e) => setInjuries(String(e.detail.value ?? ''))}
       />
+
+      <div>
+        <IonText color="medium">
+          <p className="profile-label">{t('Health conditions (optional)')}</p>
+        </IonText>
+        <div className="profile-chips">
+          {(Object.keys(CONDITION_LABELS) as Condition[]).map((c) => {
+            const on = conditions.includes(c);
+            return (
+              <IonChip
+                key={c}
+                color={on ? 'primary' : 'medium'}
+                outline={!on}
+                onClick={() =>
+                  setConditions(on ? conditions.filter((x) => x !== c) : [...conditions, c])
+                }
+              >
+                {on ? '✓ ' : ''}
+                {tr(CONDITION_LABELS[c])}
+              </IonChip>
+            );
+          })}
+        </div>
+        {conditions.length > 0 && (
+          <>
+            <IonText color="medium">
+              <p className="profile-label">{t('Has your doctor said exercise is OK for you?')}</p>
+            </IonText>
+            <IonSegment value={doctorOk} onIonChange={(e) => setDoctorOk(String(e.detail.value))}>
+              <IonSegmentButton value="yes">
+                <IonLabel>{t('Yes')}</IonLabel>
+              </IonSegmentButton>
+              <IonSegmentButton value="no">
+                <IonLabel>{t('Not yet')}</IonLabel>
+              </IonSegmentButton>
+            </IonSegment>
+          </>
+        )}
+      </div>
 
       <IonTextarea
         fill="outline"

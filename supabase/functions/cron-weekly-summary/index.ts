@@ -10,7 +10,7 @@ import { z } from 'npm:zod@3';
 
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
-import { generateJson } from '../_shared/gemini.ts';
+import { generateJsonVia, TEXT_CHAIN } from '../_shared/ai.ts';
 import { handleJson, HttpError } from '../_shared/http.ts';
 
 const SYSTEM = `Write a short, encouraging, factual summary for a personal trainer about one client's past week, using only the numbers provided. 4–6 lines. Mention consistency, nutrition vs target, activity, and one thing to focus on next week. Do not give medical advice or diagnose. If intake is far below target or falling sharply, add a neutral note for the trainer to check in. Use simple Indian English. Numbers that are null were not recorded – say so briefly instead of guessing. Return only JSON matching the schema.`;
@@ -242,18 +242,22 @@ function plainSummary(name: string, s: Stats) {
 async function writeSummary(c: ClientInfo, stats: Stats): Promise<string> {
   const name = (c.full_name || 'The client').split(' ')[0]!;
   try {
-    const r = (await generateJson({
+    // Groq first (fast), Gemini as backup – see _shared/ai.ts.
+    const { data: text } = await generateJsonVia({
+      chain: TEXT_CHAIN,
       system: SYSTEM,
       parts: [
         { text: `Client first name: ${name}\nWeek numbers (JSON):\n${JSON.stringify(stats)}` },
       ],
       schema: SCHEMA,
-      temperature: 0.4,
       feature: 'weekly-summary',
-      timeoutMs: 40_000,
-    })) as { summary?: unknown };
-    const text = typeof r.summary === 'string' ? r.summary.trim() : '';
-    if (text.length >= 20) return text.slice(0, 2000);
+      maxTokens: 600,
+      accept: (j) => {
+        const t = String((j as { summary?: unknown } | null)?.summary ?? '').trim();
+        return t.length >= 20 ? t : null;
+      },
+    });
+    return text.slice(0, 2000);
   } catch (err) {
     console.error('Summary AI failed:', err instanceof Error ? err.message : String(err));
   }

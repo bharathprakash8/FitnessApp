@@ -467,3 +467,6 @@ verify_jwt = false
 
 [functions.ai-bench]
 verify_jwt = false
+
+[functions.coach]
+verify_jwt = false

@@ -83,6 +83,8 @@ export interface ClientDetails {
   diet_preference: string;
   injuries: string | null;
   foods_to_avoid: string | null;
+  health_conditions: string[];
+  doctor_ok: boolean | null;
 }
 
 /**
@@ -119,6 +121,8 @@ export function useSaveClientDetails(profile: Profile | null) {
         diet_preference: details.diet_preference,
         injuries: details.injuries,
         foods_to_avoid: details.foods_to_avoid,
+        health_conditions: details.health_conditions,
+        doctor_ok: details.doctor_ok,
       };
       if (finishOnboarding) changes.onboarded_at = new Date().toISOString();
       const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id);

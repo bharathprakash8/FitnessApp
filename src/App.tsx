@@ -44,6 +44,7 @@ import { WorkoutsPage } from './features/workouts/WorkoutsPage';
 import { StatsPage } from './features/stats/StatsPage';
 import { ReportProblemPage } from './features/support/ReportProblemPage';
 import { MealIdeasPage } from './features/mealIdeas/MealIdeasPage';
+import { CoachChatPage } from './features/coach/CoachChatPage';
 
 const KNOWN_PATHS = [
   '/login',
@@ -84,6 +85,7 @@ const KNOWN_PATHS = [
   '/me/health',
   '/me/notifications',
   '/me/report',
+  '/coach',
 ];
 
 /**
@@ -177,6 +179,7 @@ export function App() {
             <Route path="/me/progress/new" element={guarded(SELF, <AddMeasurementPage />)} />
             <Route path="/me/notifications" element={guarded(SELF, <NotificationsPage />)} />
             <Route path="/me/report" element={guarded(SELF, <ReportProblemPage />)} />
+            <Route path="/coach" element={guarded('client', <CoachChatPage />)} />
           </IonRouterOutlet>
           <RootRedirect />
           <StuckPageRescue />

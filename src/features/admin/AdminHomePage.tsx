@@ -22,12 +22,13 @@ import { useState } from 'react';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useAuth } from '../auth/useAuth';
 import { useAdminUsers } from './api';
+import { AiCoachTab } from './AiCoachTab';
 import { AppHealthTab } from './AppHealthTab';
 import { AssignmentsView } from './AssignmentsView';
 import { ProblemsTab } from './ProblemsTab';
 import { UsersList } from './UsersList';
 
-type Tab = 'users' | 'problems' | 'assignments' | 'health';
+type Tab = 'users' | 'problems' | 'assignments' | 'coach' | 'health';
 
 export function AdminHomePage() {
   const { signOut } = useAuth();
@@ -70,6 +71,9 @@ export function AdminHomePage() {
             <IonSegmentButton value="assignments">
               <IonLabel>Assignments</IonLabel>
             </IonSegmentButton>
+            <IonSegmentButton value="coach">
+              <IonLabel>AI Coach</IonLabel>
+            </IonSegmentButton>
             <IonSegmentButton value="health">
               <IonLabel>App health</IonLabel>
             </IonSegmentButton>
@@ -94,6 +98,8 @@ export function AdminHomePage() {
           <ProblemsTab users={users.data ?? []} />
         ) : tab === 'assignments' ? (
           <AssignmentsView query={users} />
+        ) : tab === 'coach' ? (
+          <AiCoachTab />
         ) : (
           <AppHealthTab />
         )}

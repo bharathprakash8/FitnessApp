@@ -2,7 +2,7 @@
  * Consent text shown during onboarding. If the wording changes, bump CONSENT_VERSION:
  * profiles.consent_version records which version each client accepted.
  */
-export const CONSENT_VERSION = '2026-10-17';
+export const CONSENT_VERSION = '2026-10-27';
 
 export function consentSections(role: string): { title: string; points: string[] }[] {
   return CONSENT_SECTIONS.map((s) =>
@@ -26,6 +26,7 @@ const CONSENT_SECTIONS: { title: string; points: string[] }[] = [
     points: [
       'Your trainer and the admin. Nobody else.',
       'Food photos are analysed by Google’s Gemini AI to estimate calories, and may be used by Google to improve its services. Please photograph only your food.',
+      'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Claude AI (Anthropic) and Groq AI to coach you. You will be asked to agree to this separately.',
       'Meal photos are deleted automatically after 7 days.',
       'You can ask for all your data to be deleted at any time.',
     ],

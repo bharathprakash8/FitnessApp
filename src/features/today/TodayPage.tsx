@@ -36,6 +36,7 @@ import { WaterCard } from '../progress/WaterCard';
 import { NextSessionCard } from '../sessions/NextSessionCard';
 import { LatestSummaryCard } from '../summaries/MySummariesPage';
 import { InstallCard } from './InstallCard';
+import { CoachCard } from '../coach/CoachCard';
 import './today.css';
 import { dateLocale, tr, useT } from '../../i18n/i18n';
 
@@ -132,6 +133,7 @@ function TodayContent() {
           </div>
         )}
         <InstallCard />
+        {profile && !isTrainer && <CoachCard profile={profile} />}
         {targets.isPending || meals.isPending ? (
           <div className="ion-text-center">
             <IonSpinner name="crescent" />

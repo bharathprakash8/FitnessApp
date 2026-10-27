@@ -3,6 +3,8 @@ import { tr } from '../../i18n/i18n';
 export type Sex = 'male' | 'female' | 'unspecified';
 export type Goal = 'lose_weight' | 'build_muscle' | 'get_fitter' | 'maintain' | 'other';
 export type Diet = 'veg' | 'egg' | 'non_veg' | 'vegan';
+export type Condition =
+  'knee' | 'back' | 'bp' | 'diabetes' | 'heart' | 'thyroid' | 'pregnancy' | 'other';
 
 export const SEX_LABELS: Record<Sex, string> = {
   male: 'Male',
@@ -23,6 +25,17 @@ export const DIET_LABELS: Record<Diet, string> = {
   egg: 'Eggetarian',
   non_veg: 'Non-vegetarian',
   vegan: 'Vegan',
+};
+
+export const CONDITION_LABELS: Record<Condition, string> = {
+  knee: 'Knee pain',
+  back: 'Back pain',
+  bp: 'High BP',
+  diabetes: 'Diabetes / sugar',
+  heart: 'Heart condition',
+  thyroid: 'Thyroid',
+  pregnancy: 'Pregnant',
+  other: 'Other',
 };
 
 export function goalText(goal: string | null, other: string | null): string {

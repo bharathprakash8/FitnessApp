@@ -934,4 +934,54 @@ export const kn: Record<string, string> = {
     '✅ ಸಂಪರ್ಕಿತವಾಗಿದೆ. ನೀವು ಆ್ಯಪ್ ತೆರೆದಾಗಲೆಲ್ಲಾ FitCoach ಕಳೆದ 7 ದಿನಗಳನ್ನು ಸಿಂಕ್ ಮಾಡುತ್ತದೆ.',
   '✅ Notifications are on for this device.': '✅ ಈ ಸಾಧನದಲ್ಲಿ ನೋಟಿಫಿಕೇಶನ್‌ಗಳು ಆನ್ ಆಗಿವೆ.',
   '🥗 Food ideas for your week from your trainer': '🥗 ನಿಮ್ಮ ಟ್ರೈನರ್‌ರಿಂದ ಈ ವಾರದ ಆಹಾರ ಸಲಹೆಗಳು',
+  'Your AI coach': 'ನಿಮ್ಮ AI ಕೋಚ್',
+  "Today's plan": 'ಇಂದಿನ ಯೋಜನೆ',
+  'Rest day 🌿': 'ವಿಶ್ರಾಂತಿ ದಿನ 🌿',
+  'Light day 🚶': 'ಹಗುರ ದಿನ 🚶',
+  'Workout day 💪': 'ವ್ಯಾಯಾಮದ ದಿನ 💪',
+  '+{n} kcal today': 'ಇಂದು +{n} kcal',
+  '{n} kcal today': 'ಇಂದು {n} kcal',
+  'Your coach will send today’s note in the morning.':
+    'ನಿಮ್ಮ ಕೋಚ್ ಬೆಳಿಗ್ಗೆ ಇಂದಿನ ಸಂದೇಶ ಕಳುಹಿಸುತ್ತಾರೆ.',
+  'Ask coach': 'ಕೋಚ್‌ನನ್ನು ಕೇಳಿ',
+  'Meet your AI coach': 'ನಿಮ್ಮ AI ಕೋಚ್ ಪರಿಚಯ',
+  'Your coach is an AI, supervised by the admin, who can see and undo every change.':
+    'ನಿಮ್ಮ ಕೋಚ್ ಒಂದು AI. ಅಡ್ಮಿನ್ ಇದನ್ನು ಗಮನಿಸುತ್ತಾರೆ ಮತ್ತು ಪ್ರತಿಯೊಂದು ಬದಲಾವಣೆಯನ್ನು ನೋಡಿ ರದ್ದು ಮಾಡಬಹುದು.',
+  'Each morning Claude AI (Anthropic) reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.':
+    'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ Claude AI (Anthropic) ನಿಮ್ಮ ಊಟ ಮತ್ತು ಊಟದ ಫೋಟೋಗಳು, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ, ಕ್ಯಾಲೊರಿ ಅಂದಾಜುಗಳನ್ನು ಸರಿಪಡಿಸಬಹುದು, ಇಂದಿನ ವ್ಯಾಯಾಮವನ್ನು ಆರಿಸುತ್ತದೆ ಮತ್ತು ನಿಮಗೆ ಒಂದು ಸಂದೇಶ ಬರೆಯುತ್ತದೆ.',
+  'Quick answers and notes during the day come from Groq and Google Gemini AI. Your profile, health conditions and logs are shared with them for this.':
+    'ದಿನದ ತ್ವರಿತ ಉತ್ತರಗಳು ಮತ್ತು ಸಂದೇಶಗಳು Groq ಮತ್ತು Google Gemini AI ಯಿಂದ ಬರುತ್ತವೆ. ಇದಕ್ಕಾಗಿ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್, ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳು ಮತ್ತು ದಾಖಲೆಗಳನ್ನು ಅವುಗಳೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ.',
+  'The coach is not a doctor and never gives medical advice. For health problems talk to your doctor; in an emergency call 108.':
+    'ಕೋಚ್ ವೈದ್ಯರಲ್ಲ, ವೈದ್ಯಕೀಯ ಸಲಹೆ ನೀಡುವುದಿಲ್ಲ. ಆರೋಗ್ಯ ಸಮಸ್ಯೆಗಳಿಗೆ ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ; ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ 108 ಗೆ ಕರೆ ಮಾಡಿ.',
+  'I agree – start my AI coach': 'ನಾನು ಒಪ್ಪುತ್ತೇನೆ – ನನ್ನ AI ಕೋಚ್ ಪ್ರಾರಂಭಿಸಿ',
+  'AI coach – not a doctor. In an emergency call 108.':
+    'AI ಕೋಚ್ – ವೈದ್ಯರಲ್ಲ. ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ 108 ಗೆ ಕರೆ ಮಾಡಿ.',
+  'Ask anything about your food, workouts or routine':
+    'ನಿಮ್ಮ ಆಹಾರ, ವ್ಯಾಯಾಮ ಅಥವಾ ದಿನಚರಿಯ ಬಗ್ಗೆ ಏನು ಬೇಕಾದರೂ ಕೇಳಿ',
+  'For example: “What can I eat for dinner to get more protein?”':
+    'ಉದಾಹರಣೆಗೆ: “ಹೆಚ್ಚು ಪ್ರೋಟೀನ್‌ಗಾಗಿ ರಾತ್ರಿ ಊಟಕ್ಕೆ ಏನು ತಿನ್ನಬಹುದು?”',
+  'Sent to your head coach': 'ನಿಮ್ಮ ಮುಖ್ಯ ಕೋಚ್‌ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ',
+  'Head coach': 'ಮುಖ್ಯ ಕೋಚ್',
+  'Type your question…': 'ನಿಮ್ಮ ಪ್ರಶ್ನೆ ಟೈಪ್ ಮಾಡಿ…',
+  'Your question': 'ನಿಮ್ಮ ಪ್ರಶ್ನೆ',
+  '💡 Your coach has a suggestion – tap to see': '💡 ನಿಮ್ಮ ಕೋಚ್‌ನ ಸಲಹೆ ಇದೆ – ನೋಡಲು ಒತ್ತಿ',
+  '✓ Coach adjusted: {a} → {b} kcal': '✓ ಕೋಚ್ ಸರಿಪಡಿಸಿದ್ದಾರೆ: {a} → {b} kcal',
+  '✓ Checked by coach': '✓ ಕೋಚ್ ಪರಿಶೀಲಿಸಿದ್ದಾರೆ',
+  'Your coach changed this meal from {a} to {b} kcal:':
+    'ನಿಮ್ಮ ಕೋಚ್ ಈ ಊಟವನ್ನು {a} ರಿಂದ {b} kcal ಗೆ ಬದಲಿಸಿದ್ದಾರೆ:',
+  'Your coach suggests {b} kcal instead of {a}': 'ನಿಮ್ಮ ಕೋಚ್ {a} ಬದಲಿಗೆ {b} kcal ಸೂಚಿಸುತ್ತಾರೆ',
+  Accept: 'ಒಪ್ಪಿಕೊಳ್ಳಿ',
+  'Keep mine': 'ನನ್ನದೇ ಇರಲಿ',
+  'Health conditions (optional)': 'ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳು (ಐಚ್ಛಿಕ)',
+  'Has your doctor said exercise is OK for you?':
+    'ವ್ಯಾಯಾಮ ಮಾಡಬಹುದು ಎಂದು ನಿಮ್ಮ ವೈದ್ಯರು ಹೇಳಿದ್ದಾರೆಯೇ?',
+  Yes: 'ಹೌದು',
+  'Not yet': 'ಇನ್ನೂ ಇಲ್ಲ',
+  'Knee pain': 'ಮಂಡಿ ನೋವು',
+  'Back pain': 'ಬೆನ್ನು ನೋವು',
+  'High BP': 'ಹೆಚ್ಚು ರಕ್ತದೊತ್ತಡ (BP)',
+  'Diabetes / sugar': 'ಮಧುಮೇಹ / ಸಕ್ಕರೆ',
+  'Heart condition': 'ಹೃದಯ ಸಮಸ್ಯೆ',
+  Thyroid: 'ಥೈರಾಯ್ಡ್',
+  Pregnant: 'ಗರ್ಭಿಣಿ',
 };

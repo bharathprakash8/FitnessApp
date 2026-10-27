@@ -43,3 +43,6 @@ Thumbs.db
 
 # Voice clips for the AI comparison test (personal recordings)
 voice-test/
+
+# Head coach working folder (private meal photos, deleted after each run)
+coach-work/

@@ -4,6 +4,7 @@
 //   { action: 'create' }            2 test trainers + 8 test clients (onboarded, with targets)
 //   { action: 'login', email }      a session for one test account (no email, no code)
 //   { action: 'cleanup' }           delete all test accounts and their data
+//   { action: 'map_to_coach', n }   put the first n test clients on the AI coach
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { adminClient } from '../_shared/auth.ts';
@@ -152,6 +153,42 @@ async function cleanup(db: Admin) {
   return { deleted: ids.length };
 }
 
+/** Put the first n test clients on the AI coach (with conditions for the safety checks). */
+async function mapToCoach(db: Admin, n: number) {
+  const { data: coach } = await db
+    .from('profiles')
+    .select('id')
+    .eq('is_ai_coach', true)
+    .maybeSingle();
+  if (!coach) throw new HttpError(400, 'Set up the AI coach first', 'no_coach');
+  const users = (await testUsers(db)).filter((u) => u.email.startsWith('test.client'));
+  users.sort((a, b) => a.email.localeCompare(b.email));
+  const mapped = [];
+  for (const [i, u] of users.slice(0, Math.min(8, n)).entries()) {
+    const { error } = await db
+      .from('trainer_clients')
+      .upsert({ client_id: u.id, trainer_id: coach.id }, { onConflict: 'client_id' });
+    if (error) throw error;
+    // Client 1: 62-year-old with knee pain and BP, Kannada. Client 2: 38, no conditions.
+    await db
+      .from('profiles')
+      .update(
+        i === 0
+          ? {
+              date_of_birth: '1964-05-10',
+              sex: 'female',
+              health_conditions: ['knee', 'bp'],
+              doctor_ok: true,
+              language: 'kn',
+            }
+          : { health_conditions: [], language: 'en' },
+      )
+      .eq('id', u.id);
+    mapped.push(u.email);
+  }
+  return { mapped };
+}
+
 serveJson(async (req) => {
   const secret = Deno.env.get('TEST_USERS_SECRET') ?? '';
   if (!secret || !sameSecret(req.headers.get('x-test-secret') ?? '', secret)) {
@@ -166,6 +203,14 @@ serveJson(async (req) => {
       return await login(db, String(body.email ?? ''));
     case 'cleanup':
       return await cleanup(db);
+    case 'coach_mode': {
+      // Testing only: switch the AI coach between dry_run and live.
+      const mode = (body as { mode?: string }).mode === 'live' ? 'live' : 'dry_run';
+      await db.from('app_settings').upsert({ key: 'coach_mode', value: mode });
+      return { mode };
+    }
+    case 'map_to_coach':
+      return await mapToCoach(db, Number((body as { n?: number }).n ?? 2));
     default:
       throw new HttpError(400, 'Unknown action', 'invalid_input');
   }

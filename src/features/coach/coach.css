@@ -1,0 +1,157 @@
+.coach-card {
+  margin-inline: 0;
+  border-left: 4px solid var(--ion-color-tertiary);
+}
+
+.coach-card ion-card-subtitle ion-icon {
+  vertical-align: -2px;
+  color: var(--ion-color-tertiary);
+}
+
+.coach-plan {
+  margin: 0 0 8px;
+}
+
+.coach-adjust {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: var(--ion-color-light);
+  font-size: 0.85em;
+}
+
+.coach-note {
+  margin: 8px 0 0;
+  white-space: pre-line;
+  line-height: 1.45;
+}
+
+.coach-note-evening {
+  padding-top: 8px;
+  border-top: 1px solid var(--ion-color-light-shade);
+}
+
+.coach-muted,
+.coach-disclaimer {
+  color: var(--ion-color-medium-shade);
+}
+
+.coach-disclaimer {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.coach-terms {
+  margin: 0 0 12px;
+  padding-left: 18px;
+}
+
+.coach-terms li {
+  margin-bottom: 6px;
+}
+
+.coach-chat {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.coach-bubble {
+  max-width: 85%;
+  margin: 4px 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  white-space: pre-line;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.coach-me {
+  margin-left: auto;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  border-bottom-right-radius: 4px;
+}
+
+.coach-ai {
+  margin-right: auto;
+  background: var(--ion-card-background, var(--ion-background-color, #fff));
+  border: 1px solid var(--ion-color-light-shade);
+  color: var(--ion-text-color);
+  border-bottom-left-radius: 4px;
+}
+
+.coach-red {
+  background: var(--ion-color-danger);
+  color: var(--ion-color-danger-contrast);
+  font-weight: 600;
+}
+
+.coach-head {
+  border: 1px solid var(--ion-color-tertiary);
+}
+
+.coach-from {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ion-color-tertiary);
+}
+
+.coach-time,
+.coach-tag {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.coach-tag {
+  font-weight: 600;
+}
+
+.coach-input {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 4px 8px;
+}
+
+.coach-input ion-textarea {
+  flex: 1;
+  --padding-start: 10px;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+  max-height: 120px;
+}
+
+.coach-meal-note {
+  color: var(--ion-color-tertiary-shade);
+  font-size: 0.85rem;
+}
+
+.coach-suggest {
+  margin: 0 0 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--ion-color-light);
+  border-left: 4px solid var(--ion-color-tertiary);
+}
+
+.coach-suggest p {
+  margin: 0 0 8px;
+}
+
+.coach-suggest-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.coach-suggest-buttons ion-button {
+  flex: 1;
+  margin: 0;
+}

@@ -26,3 +26,9 @@
 .profile-note {
   margin: 0;
 }
+
+.profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 0 8px -4px;
+}

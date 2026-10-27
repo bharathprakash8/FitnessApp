@@ -10,7 +10,7 @@ const API = 'https://generativelanguage.googleapis.com/v1beta/models';
 export type Part = { text: string } | { inline_data: { mime_type: string; data: string } };
 
 /** Add one answer's token counts to the App health numbers (never fails the request). */
-async function recordTokens(
+export async function recordTokens(
   feature: string,
   model: string,
   usage: Record<string, number> | undefined,

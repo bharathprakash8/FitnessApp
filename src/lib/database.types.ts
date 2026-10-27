@@ -219,6 +219,279 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_actions: {
+        Row: {
+          after: Json | null
+          before: Json | null
+          client_id: string | null
+          created_at: string
+          decided_at: string | null
+          id: string
+          kind: string
+          reason: string | null
+          refused_reason: string | null
+          run_id: string | null
+          status: string
+          target_id: string | null
+        }
+        Insert: {
+          after?: Json | null
+          before?: Json | null
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          kind: string
+          reason?: string | null
+          refused_reason?: string | null
+          run_id?: string | null
+          status: string
+          target_id?: string | null
+        }
+        Update: {
+          after?: Json | null
+          before?: Json | null
+          client_id?: string | null
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          kind?: string
+          reason?: string | null
+          refused_reason?: string | null
+          run_id?: string | null
+          status?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "coach_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_day_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          kcal_adjust: number
+          kind: string
+          note: string | null
+          plan_date: string
+          plan_day_id: string | null
+          status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          kcal_adjust?: number
+          kind: string
+          note?: string | null
+          plan_date: string
+          plan_day_id?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          kcal_adjust?: number
+          kind?: string
+          note?: string | null
+          plan_date?: string
+          plan_day_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_day_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_day_plans_plan_day_id_fkey"
+            columns: ["plan_day_id"]
+            isOneToOne: false
+            referencedRelation: "plan_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_notes: {
+        Row: {
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          kind: string
+          note_date: string
+          source: string
+          status: string
+        }
+        Insert: {
+          body: string
+          client_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          note_date: string
+          source: string
+          status?: string
+        }
+        Update: {
+          body?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          note_date?: string
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_notes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_playbook: {
+        Row: {
+          body: string
+          client_id: string | null
+          id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          body?: string
+          client_id?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          body?: string
+          client_id?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_playbook_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_queries: {
+        Row: {
+          answer: string | null
+          client_id: string
+          created_at: string
+          escalate_reason: string | null
+          follow_up: string | null
+          follow_up_by: string | null
+          followed_up_at: string | null
+          id: string
+          model: string | null
+          question: string
+          red_flag: boolean
+          status: string
+        }
+        Insert: {
+          answer?: string | null
+          client_id: string
+          created_at?: string
+          escalate_reason?: string | null
+          follow_up?: string | null
+          follow_up_by?: string | null
+          followed_up_at?: string | null
+          id?: string
+          model?: string | null
+          question: string
+          red_flag?: boolean
+          status?: string
+        }
+        Update: {
+          answer?: string | null
+          client_id?: string
+          created_at?: string
+          escalate_reason?: string | null
+          follow_up?: string | null
+          follow_up_by?: string | null
+          followed_up_at?: string | null
+          id?: string
+          model?: string | null
+          question?: string
+          red_flag?: boolean
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_queries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_runs: {
+        Row: {
+          actions: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          mode: string
+          people: number
+          photos: number
+          report: string | null
+          source: string
+          started_at: string
+        }
+        Insert: {
+          actions?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          mode: string
+          people?: number
+          photos?: number
+          report?: string | null
+          source?: string
+          started_at?: string
+        }
+        Update: {
+          actions?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          people?: number
+          photos?: number
+          report?: string | null
+          source?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       custom_reminders: {
         Row: {
           body: string | null
@@ -293,6 +566,7 @@ export type Database = {
           log_type: string
           muscle_group: string | null
           name: string
+          safety_tags: string[]
           trainer_id: string | null
         }
         Insert: {
@@ -305,6 +579,7 @@ export type Database = {
           log_type?: string
           muscle_group?: string | null
           name: string
+          safety_tags?: string[]
           trainer_id?: string | null
         }
         Update: {
@@ -317,6 +592,7 @@ export type Database = {
           log_type?: string
           muscle_group?: string | null
           name?: string
+          safety_tags?: string[]
           trainer_id?: string | null
         }
         Relationships: [
@@ -436,6 +712,10 @@ export type Database = {
         Row: {
           carbs_g: number
           client_id: string
+          coach_checked_at: string | null
+          coach_original: Json | null
+          coach_reason: string | null
+          coach_suggestion: Json | null
           created_at: string
           eaten_at: string
           eaten_on: string
@@ -454,6 +734,10 @@ export type Database = {
         Insert: {
           carbs_g?: number
           client_id: string
+          coach_checked_at?: string | null
+          coach_original?: Json | null
+          coach_reason?: string | null
+          coach_suggestion?: Json | null
           created_at?: string
           eaten_at?: string
           eaten_on?: string
@@ -472,6 +756,10 @@ export type Database = {
         Update: {
           carbs_g?: number
           client_id?: string
+          coach_checked_at?: string | null
+          coach_original?: Json | null
+          coach_reason?: string | null
+          coach_suggestion?: Json | null
           created_at?: string
           eaten_at?: string
           eaten_on?: string
@@ -773,21 +1061,26 @@ export type Database = {
       }
       profiles: {
         Row: {
+          coach_consent_at: string | null
+          conditions_note: string | null
           consent_at: string | null
           consent_version: string | null
           created_at: string
           date_of_birth: string | null
           diet_preference: string | null
+          doctor_ok: boolean | null
           email: string
           foods_to_avoid: string | null
           full_name: string | null
           goal: string | null
           goal_other: string | null
+          health_conditions: string[]
           health_sync_token_hash: string | null
           height_cm: number | null
           id: string
           injuries: string | null
           is_active: boolean
+          is_ai_coach: boolean
           language: string
           last_app_version: string | null
           last_device: string | null
@@ -800,21 +1093,26 @@ export type Database = {
           timezone: string
         }
         Insert: {
+          coach_consent_at?: string | null
+          conditions_note?: string | null
           consent_at?: string | null
           consent_version?: string | null
           created_at?: string
           date_of_birth?: string | null
           diet_preference?: string | null
+          doctor_ok?: boolean | null
           email: string
           foods_to_avoid?: string | null
           full_name?: string | null
           goal?: string | null
           goal_other?: string | null
+          health_conditions?: string[]
           health_sync_token_hash?: string | null
           height_cm?: number | null
           id: string
           injuries?: string | null
           is_active?: boolean
+          is_ai_coach?: boolean
           language?: string
           last_app_version?: string | null
           last_device?: string | null
@@ -827,21 +1125,26 @@ export type Database = {
           timezone?: string
         }
         Update: {
+          coach_consent_at?: string | null
+          conditions_note?: string | null
           consent_at?: string | null
           consent_version?: string | null
           created_at?: string
           date_of_birth?: string | null
           diet_preference?: string | null
+          doctor_ok?: boolean | null
           email?: string
           foods_to_avoid?: string | null
           full_name?: string | null
           goal?: string | null
           goal_other?: string | null
+          health_conditions?: string[]
           health_sync_token_hash?: string | null
           height_cm?: number | null
           id?: string
           injuries?: string | null
           is_active?: boolean
+          is_ai_coach?: boolean
           language?: string
           last_app_version?: string | null
           last_device?: string | null
@@ -1570,6 +1873,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      seed_coach_plans: { Args: { coach: string }; Returns: number }
       self_workout_owner: { Args: { w: string }; Returns: string }
       session_owner: { Args: { s: string }; Returns: string }
       set_foods_to_avoid: {

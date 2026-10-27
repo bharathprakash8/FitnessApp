@@ -15,6 +15,7 @@ import { z } from 'npm:zod@3';
 
 import { adminClient, requireCaller, type Caller } from '../_shared/auth.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
+import { generateJsonVia, TEXT_CHAIN } from '../_shared/ai.ts';
 import { generateJson } from '../_shared/gemini.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 
@@ -114,17 +115,18 @@ async function insights(db: SupabaseClient, caller: Caller, body: z.infer<typeof
       ? '\nWrite the observations and the focus in simple Kannada (Kannada script).'
       : ''
   }`;
-  const parsed = InsightsOut.safeParse(
-    await generateJson({
-      system: INSIGHTS_SYSTEM,
-      parts: [{ text: prompt }],
-      schema: INSIGHTS_SCHEMA,
-      feature: 'stats-insights',
-    }),
-  );
-  if (!parsed.success) {
-    throw new HttpError(502, 'The AI gave an unreadable answer. Try again later.', 'ai_invalid');
-  }
+  const { data: parsed } = await generateJsonVia({
+    chain: TEXT_CHAIN,
+    system: INSIGHTS_SYSTEM,
+    parts: [{ text: prompt }],
+    schema: INSIGHTS_SCHEMA,
+    feature: 'stats-insights',
+    maxTokens: 700,
+    accept: (j) => {
+      const p = InsightsOut.safeParse(j);
+      return p.success ? p : null;
+    },
+  });
   const row = {
     client_id: person.id,
     made_on: day,

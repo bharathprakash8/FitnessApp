@@ -1224,6 +1224,85 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- AI coach (27 Oct 2026): playbook, day plans, notes, questions, runs, actions
+-- ---------------------------------------------------------------------------
+reset role;
+insert into public.coach_playbook (client_id, body) values ('00000000-0000-4000-a000-0000000000c1', 'C1 page');
+insert into public.coach_day_plans (client_id, plan_date, kind, status) values
+  ('00000000-0000-4000-a000-0000000000c1', current_date, 'light', 'active'),
+  ('00000000-0000-4000-a000-0000000000c1', current_date + 1, 'rest', 'proposed'),
+  ('00000000-0000-4000-a000-0000000000c2', current_date, 'rest', 'active');
+insert into public.coach_notes (client_id, note_date, kind, body, source, status) values
+  ('00000000-0000-4000-a000-0000000000c1', current_date, 'head', 'shared note', 'claude', 'shared'),
+  ('00000000-0000-4000-a000-0000000000c1', current_date, 'evening', 'proposed note', 'ai', 'proposed'),
+  ('00000000-0000-4000-a000-0000000000c2', current_date, 'head', 'C2 note', 'claude', 'shared');
+insert into public.coach_queries (client_id, question, answer) values
+  ('00000000-0000-4000-a000-0000000000c1', 'q1', 'a1'),
+  ('00000000-0000-4000-a000-0000000000c2', 'q2', 'a2');
+insert into public.coach_runs (mode) values ('dry_run');
+insert into public.coach_actions (client_id, kind, status) values
+  ('00000000-0000-4000-a000-0000000000c1', 'note', 'proposed');
+set local role authenticated;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare n int;
+begin
+  if (select count(*) from public.coach_playbook) <> 0
+    or (select count(*) from public.coach_runs) <> 0
+    or (select count(*) from public.coach_actions) <> 0 then
+    raise exception 'FAIL: client can read the coach playbook, runs or actions';
+  end if;
+  if (select count(*) from public.coach_day_plans) <> 1 then
+    raise exception 'FAIL: client should see only their own active day plan';
+  end if;
+  if (select count(*) from public.coach_notes) <> 1 then
+    raise exception 'FAIL: client should see only their own shared note';
+  end if;
+  if (select count(*) from public.coach_queries) <> 1 then
+    raise exception 'FAIL: client should see only their own questions';
+  end if;
+  begin
+    insert into public.coach_queries (client_id, question) values ('00000000-0000-4000-a000-0000000000c1', 'x');
+    raise exception 'FAIL: client wrote a question directly (must go through the coach function)';
+  exception when insufficient_privilege then null;
+  end;
+  update public.coach_notes set body = 'hacked';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: client changed a coach note'; end if;
+  begin
+    update public.profiles set is_ai_coach = true where id = '00000000-0000-4000-a000-0000000000c1';
+    raise exception 'FAIL: client made themselves the AI coach';
+  exception when insufficient_privilege then null;
+  end;
+  update public.profiles set coach_consent_at = now(), health_conditions = array['knee']
+  where id = '00000000-0000-4000-a000-0000000000c1';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: client cannot accept the coach terms or set conditions'; end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f2","role":"authenticated"}', true);
+do $$
+begin
+  if exists (select 1 from public.coach_notes where client_id = '00000000-0000-4000-a000-0000000000c1')
+    or exists (select 1 from public.coach_queries where client_id = '00000000-0000-4000-a000-0000000000c1')
+    or (select count(*) from public.coach_playbook) <> 0 then
+    raise exception 'FAIL: trainer T2 sees coach data of T1''s client';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);
+do $$
+begin
+  if not exists (select 1 from public.coach_playbook where client_id = '00000000-0000-4000-a000-0000000000c1')
+    or not exists (select 1 from public.coach_actions where client_id = '00000000-0000-4000-a000-0000000000c1')
+    or not exists (select 1 from public.coach_runs)
+    or (select count(*) from public.coach_day_plans where client_id in ('00000000-0000-4000-a000-0000000000c1', '00000000-0000-4000-a000-0000000000c2')) <> 3 then
+    raise exception 'FAIL: admin cannot read all coach data';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Admin A
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-00000000000a","role":"authenticated"}', true);

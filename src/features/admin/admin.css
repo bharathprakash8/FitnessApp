@@ -179,3 +179,42 @@
   word-break: break-word;
   margin: 4px 0 0;
 }
+
+/* AI Coach tab */
+.admin-coach {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.admin-coach ion-card {
+  margin-inline: 0;
+}
+
+.admin-muted {
+  color: var(--ion-color-medium-shade);
+  font-size: 0.9rem;
+}
+
+.admin-coach-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+}
+
+.admin-coach-row p {
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.admin-coach-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-coach-report {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: var(--ion-color-light);
+  padding: 10px;
+  border-radius: 8px;
+}
