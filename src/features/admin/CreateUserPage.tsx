@@ -161,6 +161,15 @@ function ShareInstructions({ user, onAnother }: { user: AdminUser; onAnother: ()
 
   return (
     <>
+      {user.welcome && (
+        <IonCard color={user.welcome.sent ? 'success' : 'warning'}>
+          <IonCardContent>
+            {user.welcome.sent
+              ? `✅ Welcome email sent to ${user.email} with the app links and the Android and iPhone setup guides.`
+              : `Welcome email not sent: ${user.welcome.reason}. You can send it later from the user's page, or share the text below.`}
+          </IonCardContent>
+        </IonCard>
+      )}
       <IonCard>
         <IonCardHeader>
           <IonCardTitle>Share login instructions</IonCardTitle>

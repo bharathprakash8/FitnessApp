@@ -15,6 +15,8 @@ export interface AdminUser {
   created_at: string;
   /** For clients: their trainer's id. */
   trainer_id: string | null;
+  /** Only on a create result: whether the welcome email went out. */
+  welcome?: { sent: true } | { sent: false; reason: string };
 }
 
 export const adminUsersKey = ['admin', 'users'] as const;
@@ -61,7 +63,7 @@ export type AdminAction =
       trainer_id?: string;
     }
   | { action: 'assign'; client_id: string; trainer_id: string }
-  | { action: 'deactivate' | 'reactivate' | 'delete' | 'purge'; user_id: string };
+  | { action: 'deactivate' | 'reactivate' | 'delete' | 'purge' | 'welcome'; user_id: string };
 
 /** Calls the admin-users Edge Function and turns its { error } into a readable Error. */
 async function callAdminUsers(body: AdminAction): Promise<AdminUser | { id: string }> {
@@ -114,5 +116,7 @@ export function loginInstructions(user: Pick<AdminUser, 'full_name' | 'email'>):
     '',
     'iPhone: open the link in Safari, tap Share, then "Add to Home Screen".',
     `Android: install the FitCoach app from ${ANDROID_APP_URL} (allow "install from this source" when asked).`,
+    '',
+    `Setup guides: ${link}/guides/iphone.html (iPhone) · ${link}/guides/android.html (Android)`,
   ].join('\n');
 }

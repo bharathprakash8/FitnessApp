@@ -1,13 +1,17 @@
 // admin-users: everything the Admin console does to users. Admin callers only.
 // POST { action: 'create' | 'update' | 'assign' | 'deactivate' | 'reactivate' | 'delete' |
-//        'purge' | 'impersonate', ... }
+//        'purge' | 'impersonate' | 'welcome', ... }
+// create also sends the welcome email (app links + setup guides) unless send_welcome is false;
+// welcome sends it again. The email never blocks creating the user – its result is returned.
 // impersonate: a session for an active client/trainer so the admin can use the app as them
 // (never another admin). Recorded in impersonation_log (admin-only); the person isn't told.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
 import { adminClient, requireAdmin } from '../_shared/auth.ts';
+import { EmailNotConfigured } from '../_shared/email.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sendWelcome } from '../_shared/welcome.ts';
 
 const BAN_FOREVER = '876000h'; // 100 years
 
@@ -29,6 +33,7 @@ const Body = z.discriminatedUnion('action', [
     phone: phone.optional(),
     role,
     trainer_id: id.optional(),
+    send_welcome: z.boolean().default(true),
   }),
   z.object({
     action: z.literal('update'),
@@ -46,6 +51,7 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('purge'), user_id: id }),
   // Admin support: log in as this person.
   z.object({ action: z.literal('impersonate'), user_id: id }),
+  z.object({ action: z.literal('welcome'), user_id: id }),
 ]);
 
 type Admin = ReturnType<typeof adminClient>;
@@ -114,6 +120,37 @@ async function setMapping(db: Admin, clientId: string, trainerId: string, by: st
   if (error) throw error;
 }
 
+type WelcomeResult = { sent: true } | { sent: false; reason: string };
+
+/** Sends the welcome email; reports a failure instead of throwing. */
+async function welcome(db: Admin, userId: string): Promise<WelcomeResult> {
+  try {
+    const p = await getProfile(db, userId);
+    let trainerName: string | null = null;
+    if (p.role === 'client') {
+      const { data: map } = await db
+        .from('trainer_clients')
+        .select('trainer_id')
+        .eq('client_id', userId)
+        .maybeSingle();
+      if (map) {
+        const { data: t } = await db
+          .from('profiles')
+          .select('full_name, is_ai_coach')
+          .eq('id', map.trainer_id)
+          .maybeSingle();
+        trainerName = t?.is_ai_coach ? 'the FitCoach AI coach' : (t?.full_name ?? null);
+      }
+    }
+    await sendWelcome(p, trainerName);
+    return { sent: true };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'Email failed';
+    if (!(err instanceof EmailNotConfigured)) console.error('welcome email failed:', reason);
+    return { sent: false, reason };
+  }
+}
+
 async function result(db: Admin, userId: string) {
   const profile = await getProfile(db, userId);
   const { data } = await db
@@ -172,7 +209,8 @@ serveJson(async (req) => {
         await db.auth.admin.deleteUser(userId); // don't leave a half-created user
         throw err;
       }
-      return await result(db, userId);
+      const created = await result(db, userId);
+      return body.send_welcome ? { ...created, welcome: await welcome(db, userId) } : created;
     }
 
     case 'update': {
@@ -298,6 +336,15 @@ serveJson(async (req) => {
       const { error } = await db.auth.admin.deleteUser(body.user_id);
       if (error) throw error;
       return { id: body.user_id, deleted: true };
+    }
+    case 'welcome': {
+      const target = await getProfile(db, body.user_id);
+      if (!target.is_active) {
+        throw new HttpError(409, 'This account is deactivated – reactivate it first', 'inactive');
+      }
+      const sent = await welcome(db, target.id);
+      if (!sent.sent) throw new HttpError(502, sent.reason, 'email_failed');
+      return { id: target.id, welcome: sent };
     }
     case 'impersonate': {
       const target = await getProfile(db, body.user_id);

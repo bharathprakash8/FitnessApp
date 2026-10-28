@@ -292,6 +292,18 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
       )}
 
       <div className="admin-actions">
+        {user.is_active && (
+          <IonButton
+            fill="outline"
+            expand="block"
+            disabled={action.isPending}
+            onClick={() =>
+              void run({ action: 'welcome', user_id: user.id }, `Welcome email sent to ${user.email}`)
+            }
+          >
+            Send welcome email
+          </IonButton>
+        )}
         <IonButton fill="outline" expand="block" onClick={() => void copyInstructions()}>
           Copy login instructions
         </IonButton>
