@@ -45,6 +45,7 @@ import {
   requiredTags,
   type CoachPerson,
 } from '../_shared/coach.ts';
+import { clientBackground } from '../_shared/background.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 import { sameSecret } from '../_shared/util.ts';
@@ -621,13 +622,15 @@ async function undo(ctx: Ctx, id: string) {
 // ---------------------------------------------------------------------------
 async function digest(db: Db, coachId: string) {
   const people = await coachedPeople(db, coachId);
-  const out = [];
   let photos = 0;
-  for (const p of people) {
+  // Several people at a time (each needs ~20 small queries); 50 people stay well inside the
+  // function time limit.
+  const one = async (p: CoachPerson) => {
     const today = localDate(p.timezone || IST);
-    const [summary, playbook, meals, questions] = await Promise.all([
+    const [summary, playbook, background, meals, questions] = await Promise.all([
       personSummary(db, p, today),
       playbookFor(db, p.id),
+      clientBackground(db, p, today),
       db
         .from('meal_logs')
         .select(
@@ -664,16 +667,21 @@ async function digest(db: Db, coachId: string) {
         photo_url,
       });
     }
-    out.push({
+    return {
       client_id: p.id,
       today,
       // "AI-only" (admin approves) or the human trainer the AI assists (they approve).
       coached_by: p.supervisor ? `AI assistant to trainer ${p.supervisor.name}` : 'AI-only',
       summary,
+      background,
       person_playbook: playbook.person,
       meals_to_check: toCheck,
       questions_last_3_days: questions.data ?? [],
-    });
+    };
+  };
+  const out = [];
+  for (let i = 0; i < people.length; i += 5) {
+    out.push(...(await Promise.all(people.slice(i, i + 5).map(one))));
   }
   const { data: shared } = await db
     .from('coach_playbook')
@@ -699,16 +707,17 @@ async function digest(db: Db, coachId: string) {
 // ---------------------------------------------------------------------------
 async function writeNote(db: Db, p: CoachPerson, kind: 'morning' | 'evening') {
   const today = localDate(p.timezone || IST);
-  const [summary, playbook] = await Promise.all([
+  const [summary, playbook, background] = await Promise.all([
     personSummary(db, p, today),
     playbookFor(db, p.id),
+    clientBackground(db, p, today),
   ]);
   const { data, model } = await generateJsonVia({
     chain: p.language === 'kn' ? KANNADA_CHAIN : TEXT_CHAIN,
     system: NOTE_SYSTEM,
     parts: [
       {
-        text: `Note type: ${kind}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nPerson: ${JSON.stringify(chatSummary(summary))}`,
+        text: `Note type: ${kind}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nClient background (last 30–90 days): ${JSON.stringify(background)}\nPerson today: ${JSON.stringify(chatSummary(summary))}`,
       },
     ],
     schema: NOTE_SCHEMA,
@@ -866,10 +875,11 @@ async function ask(db: Db, clientId: string, question: string) {
     reason = 'Red-flag words in the message';
   } else {
     const today = localDate(p.timezone || IST);
-    const [summary, playbook, history] = await Promise.all([
+    const [summary, playbook, history, background] = await Promise.all([
       personSummary(db, p, today),
       playbookFor(db, p.id),
       recentChat(db, p.id),
+      clientBackground(db, p, today),
     ]);
     const r = await generateJsonVia({
       // Qwen writes poor Kannada (26–27 Oct tests): Kannada goes GPT-OSS 120B → Gemini.
@@ -880,6 +890,7 @@ async function ask(db: Db, clientId: string, question: string) {
           text: [
             `Coach playbook (shared):\n${playbook.shared}`,
             `Coach playbook (this person):\n${playbook.person || '(empty)'}`,
+            `Client background (last 30–90 days): ${JSON.stringify(background)}`,
             `Person and today's numbers: ${JSON.stringify(chatSummary(summary))}`,
             history
               ? `Conversation so far (oldest first) – the new message may continue it:\n${history}`

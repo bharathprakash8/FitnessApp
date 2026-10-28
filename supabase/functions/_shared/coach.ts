@@ -59,6 +59,8 @@ export interface CoachPerson {
   conditions_note: string | null;
   doctor_ok: boolean | null;
   coach_consent_at: string | null;
+  goal_other?: string | null;
+  created_at?: string;
   /** Assisted mode: the human trainer who approves (null = AI-only, the admin approves). */
   supervisor?: Supervisor | null;
 }
@@ -70,7 +72,7 @@ export interface Supervisor {
 }
 
 const PERSON_COLS =
-  'id, full_name, email, timezone, language, date_of_birth, sex, height_cm, goal, diet_preference, foods_to_avoid, injuries, health_conditions, conditions_note, doctor_ok, coach_consent_at';
+  'id, full_name, email, timezone, language, date_of_birth, sex, height_cm, goal, diet_preference, foods_to_avoid, injuries, health_conditions, conditions_note, doctor_ok, coach_consent_at, goal_other, created_at';
 
 export async function coachAccount(db: SupabaseClient) {
   const { data, error } = await db
@@ -297,7 +299,9 @@ export async function personSummary(db: SupabaseClient, p: CoachPerson, today: s
         'id, eaten_on, eaten_at, meal_type, source, items, total_calories, protein_g, edited, photo_path, coach_checked_at',
       )
       .eq('client_id', p.id)
-      .in('eaten_on', [yesterday, today])
+      // The last 7 days (incl. today) so the coaches can talk about the whole week.
+      .gte('eaten_on', addDays(today, -6))
+      .lte('eaten_on', today)
       .order('eaten_at'),
     db
       .from('workout_logs')
@@ -377,6 +381,21 @@ export async function personSummary(db: SupabaseClient, p: CoachPerson, today: s
       ...dayTotals(yesterday),
       water_ml: water.data?.find((w) => w.habit_date === yesterday)?.water_ml ?? 0,
     },
+    meals_last_7_days: last7Days(today).map((day) => {
+      const d = dayTotals(day);
+      return {
+        day,
+        kcal: d.kcal,
+        protein_g: d.protein_g,
+        // Compact: "breakfast: Idli, Sambar 260" – names and calories only (fewer tokens).
+        meals: (meals.data ?? [])
+          .filter((m) => m.eaten_on === day)
+          .map(
+            (m) =>
+              `${m.meal_type}: ${((m.items ?? []) as { name?: string }[]).map((i) => i.name).join(', ')} ${m.total_calories}`,
+          ),
+      };
+    }),
     workouts_last_7_days: [...workouts.entries()].map(([day, ex]) => ({
       day,
       exercises: [...ex.entries()].map(([n, sets]) => `${n} ×${sets} sets`).join(', '),
@@ -407,6 +426,11 @@ export async function personSummary(db: SupabaseClient, p: CoachPerson, today: s
 }
 
 /** A small version of personSummary for chat: fewer tokens = faster answers on Groq. */
+/** The 7 dates up to and including today, oldest first. */
+function last7Days(today: string) {
+  return Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+}
+
 export function chatSummary(s: Awaited<ReturnType<typeof personSummary>>) {
   const todayPlan = s.coach_day_plans.find(
     (d) => d.plan_date === s.today.date && d.status === 'active',
@@ -441,6 +465,8 @@ export function chatSummary(s: Awaited<ReturnType<typeof personSummary>>) {
         : null,
     },
     yesterday: { kcal: s.yesterday.kcal, protein_g: s.yesterday.protein_g },
+    // Earlier days of the week (today is above): what they ate, calories and protein per day.
+    last_7_days_food: s.meals_last_7_days.filter((d) => d.day !== s.today.date),
     workout_plan: s.plan ? `${s.plan.name}: ${s.plan.days.map((d) => d.title).join(', ')}` : null,
     last_workout: lastWorkout,
     health_sync: s.health_sync,
@@ -503,6 +529,8 @@ export const ASK_SYSTEM = `You are the day coach in FitCoach, an Indian fitness 
 
 How to reply:
 - Read the conversation so far first. The new message often continues it ("and for dinner?", "what about tomorrow?", "ok, how much?", "why?") – answer in that context, never as if it were a new chat, and never repeat advice you already gave unless asked. A short follow-up like "how many calories?" or "how much protein?" is about the food or exercise just discussed, not the whole day – unless they say "today" or "left".
+- You know this person well: the client background has their history (weight trend, targets, 30-day food habits and favourite foods, training, sleep, steps, sessions, the latest weekly summary and your recent notes). Use it to personalise every answer – mention what you know when it helps, never invent what is not there.
+- For questions about earlier days or the week ("what did I eat on Monday?", "how was my week?"), use last_7_days_food (each day's meals, kcal and protein) with today's numbers.
 - Answer the actual question in your first sentence, then add only what helps. Use their real numbers (calories and protein left today, their target, what they ate) when relevant. No greetings, no "Great question", no filler.
 - If the message is unclear, ask one short question back instead of guessing.
 - 2–5 short sentences. Simple words. Everyday Indian home food that fits their diet preference, never their foods to avoid, with rough kcal and protein when you suggest food.
@@ -523,7 +551,7 @@ export const ASK_SCHEMA = {
   required: ['reply', 'escalate', 'red_flag', 'reason'],
 };
 
-export const NOTE_SYSTEM = `You are the day coach in FitCoach, an Indian fitness coaching app for family and friends. Write one short personal note (3–5 short sentences) for the person below, using only the numbers given and following the coach playbook. Morning note: today's plan in simple words and one practical food tip for today. Evening note: how today went against the targets and one small thing for tomorrow. Warm and encouraging, never preachy, no medical advice, foods must fit their diet preference and never their foods to avoid. If health_sync.last_sync_hours_ago is more than 36, kindly ask them to open the app (or run the Sync shortcut on iPhone) so their calories burnt are up to date. Language: if language is "kn" write in simple Kannada (Kannada script), otherwise in simple Indian English. Return only JSON matching the schema.`;
+export const NOTE_SYSTEM = `You are the day coach in FitCoach, an Indian fitness coaching app for family and friends. Write one short personal note (3–5 short sentences) for the person below, using only the numbers given (today and the client background) and following the coach playbook. Morning note: today's plan in simple words and one practical food tip for today. Evening note: how today went against the targets and one small thing for tomorrow. Warm and encouraging, never preachy, no medical advice, foods must fit their diet preference and never their foods to avoid. If health_sync.last_sync_hours_ago is more than 36, kindly ask them to open the app (or run the Sync shortcut on iPhone) so their calories burnt are up to date. Language: if language is "kn" write in simple Kannada (Kannada script), otherwise in simple Indian English. Return only JSON matching the schema.`;
 
 export const NOTE_SCHEMA = {
   type: 'object',
