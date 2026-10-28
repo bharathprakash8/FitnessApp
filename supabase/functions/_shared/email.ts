@@ -85,6 +85,12 @@ export async function sendEmail(mail: Mail): Promise<void> {
 
   const conn = await Deno.connectTls({ hostname: 'smtp.gmail.com', port: 465 });
   let buffer = '';
+  let stage = 'greeting';
+
+  // A socket write may send only part of a big buffer (the PDFs), so loop until all is sent.
+  async function writeAll(bytes: Uint8Array) {
+    for (let off = 0; off < bytes.length;) off += await conn.write(bytes.subarray(off));
+  }
 
   // Reads one (possibly multi-line) reply and checks its code.
   async function reply(expect: number): Promise<string> {
@@ -99,18 +105,27 @@ export async function sendEmail(mail: Mail): Promise<void> {
         const code = Number(text.slice(text.lastIndexOf('\n') + 1).slice(0, 3));
         if (code !== expect) {
           // Only the reply code and Google's short reason – never the credentials.
-          throw new Error(`Mail server said ${code}: ${text.split('\n').pop()?.slice(4, 160)}`);
+          throw new Error(
+            `Mail server said ${code} (${stage}): ${text.split('\n').pop()?.slice(4, 160)}`,
+          );
         }
         return text;
       }
-      if (Date.now() > deadline) throw new Error('Mail server did not answer');
-      const n = await conn.read(chunk);
+      const left = deadline - Date.now();
+      if (left <= 0) throw new Error(`Mail server did not answer (${stage})`);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const n = await Promise.race([
+        conn.read(chunk),
+        new Promise<'timeout'>((r) => (timer = setTimeout(() => r('timeout'), left))),
+      ]).finally(() => clearTimeout(timer));
+      if (n === 'timeout') throw new Error(`Mail server did not answer (${stage})`);
       if (n === null) throw new Error('Mail server closed the connection');
       buffer += dec.decode(chunk.subarray(0, n));
     }
   }
   async function send(line: string, expect: number) {
-    await conn.write(enc.encode(line + '\r\n'));
+    stage = line.split(' ')[0].split(':')[0].toLowerCase();
+    await writeAll(enc.encode(line + '\r\n'));
     return await reply(expect);
   }
 
@@ -123,7 +138,8 @@ export async function sendEmail(mail: Mail): Promise<void> {
     await send('DATA', 354);
     // Dot-stuffing: a line that starts with "." gets another one.
     const body = buildMessage(user, fromName, mail).replace(/\r\n\./g, '\r\n..');
-    await conn.write(enc.encode(body + '\r\n.\r\n'));
+    stage = 'message';
+    await writeAll(enc.encode(body + '\r\n.\r\n'));
     await reply(250);
     await send('QUIT', 221).catch(() => undefined);
   } finally {

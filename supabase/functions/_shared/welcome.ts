@@ -2,7 +2,10 @@
 // the two setup guides (PDFs from the web app's /guides folder) attached.
 import { type Attachment, sendEmail } from './email.ts';
 
-const APP_URL = (Deno.env.get('APP_URL') ?? 'https://fitcoach-ten-nu.vercel.app').replace(/\/$/, '');
+const APP_URL = (Deno.env.get('APP_URL') ?? 'https://fitcoach-ten-nu.vercel.app').replace(
+  /\/$/,
+  '',
+);
 const ANDROID_URL =
   'https://github.com/bharathprakash8/FitnessApp/releases/latest/download/FitCoach.apk';
 const GUIDES = [
@@ -22,7 +25,9 @@ const esc = (s: string) =>
 async function guides(): Promise<Attachment[]> {
   return await Promise.all(
     GUIDES.map(async (g) => {
-      const res = await fetch(`${APP_URL}/guides/${g.file}`);
+      const res = await fetch(`${APP_URL}/guides/${g.file}`, {
+        signal: AbortSignal.timeout(15_000),
+      });
       if (!res.ok) throw new Error(`Could not load ${g.file} (${res.status})`);
       return {
         filename: g.file,
