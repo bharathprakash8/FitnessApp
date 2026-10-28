@@ -127,24 +127,59 @@ async function login(db: Admin, email: string) {
   };
 }
 
+/** Every file under a folder (meal photos sit in date sub-folders: {user}/{date}/{file}). */
+async function filesUnder(db: Admin, bucket: string, folder: string): Promise<string[]> {
+  const { data } = await db.storage.from(bucket).list(folder, { limit: 1000 });
+  const out: string[] = [];
+  for (const f of data ?? []) {
+    const path = `${folder}/${f.name}`;
+    // Folders have no id; files do.
+    if (f.id) out.push(path);
+    else out.push(...(await filesUnder(db, bucket, path)));
+  }
+  return out;
+}
+
 async function cleanup(db: Admin) {
   const users = await testUsers(db);
   const ids = users.map((u) => u.id);
+  const problems: string[] = [];
+  let photos = 0;
   if (ids.length) {
-    // Photos first (storage isn't removed by deleting the user).
-    for (const bucket of ['meal-photos', 'progress-photos']) {
+    // Photos first (storage isn't removed by deleting the user). Only the test accounts' own
+    // folders are touched.
+    for (const bucket of ['meal-photos', 'progress-photos', 'problem-shots']) {
       for (const id of ids) {
-        const { data: files } = await db.storage.from(bucket).list(id, { limit: 1000 });
-        const paths = (files ?? []).map((f) => `${id}/${f.name}`);
-        if (paths.length) await db.storage.from(bucket).remove(paths);
+        const paths = await filesUnder(db, bucket, id);
+        if (paths.length) {
+          const { error } = await db.storage.from(bucket).remove(paths);
+          if (error) problems.push(`${bucket}/${id}: ${error.message}`);
+          else photos += paths.length;
+        }
       }
     }
-    // Rows that don't cascade from the profile, then the accounts themselves.
+    // Rows that don't cascade from the profile, then the accounts themselves (their meals,
+    // workouts, chats, coach changes etc. are deleted with the profile).
     await db.from('trainer_clients').delete().in('trainer_id', ids);
     await db.from('targets').delete().in('set_by', ids);
-    for (const id of ids) await db.auth.admin.deleteUser(id);
+    for (const id of ids) {
+      const { error } = await db.auth.admin.deleteUser(id);
+      if (error) problems.push(`account ${id}: ${error.message}`);
+    }
   }
-  return { deleted: ids.length };
+  // Test runs of the head coach (reports starting with "TEST") and their changes.
+  const { data: runs } = await db.from('coach_runs').select('id').like('report', 'TEST%');
+  const runIds = (runs ?? []).map((r) => r.id as string);
+  if (runIds.length) {
+    await db.from('coach_actions').delete().in('run_id', runIds);
+    await db.from('coach_runs').delete().in('id', runIds);
+  }
+  return {
+    deleted_accounts: ids.length - problems.filter((p) => p.startsWith('account')).length,
+    photos,
+    test_runs: runIds.length,
+    problems,
+  };
 }
 
 /** Put the first n test clients on the AI coach (with conditions for the safety checks). */
