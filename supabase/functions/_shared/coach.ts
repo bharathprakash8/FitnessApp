@@ -2,6 +2,8 @@
 // rules every coach change must pass, and the day coach prompts.
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
+import { addDays } from './util.ts';
+
 export const CONDITION_LABELS: Record<string, string> = {
   knee: 'knee pain',
   back: 'back pain',
@@ -31,11 +33,7 @@ export function localMinutes(timeZone: string) {
   return (hm[0] ?? 0) * 60 + (hm[1] ?? 0);
 }
 
-export function addDays(day: string, n: number) {
-  const d = new Date(`${day}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
+export { addDays };
 
 function ageOn(dob: string | null, day: string) {
   if (!dob) return null;
@@ -445,6 +443,7 @@ export function chatSummary(s: Awaited<ReturnType<typeof personSummary>>) {
     yesterday: { kcal: s.yesterday.kcal, protein_g: s.yesterday.protein_g },
     workout_plan: s.plan ? `${s.plan.name}: ${s.plan.days.map((d) => d.title).join(', ')}` : null,
     last_workout: lastWorkout,
+    health_sync: s.health_sync,
   };
 }
 

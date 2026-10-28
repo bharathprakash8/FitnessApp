@@ -18,17 +18,9 @@ import { sendToUsers } from '../_shared/fcm.ts';
 import { generateJsonVia, TEXT_CHAIN } from '../_shared/ai.ts';
 import { generateJson } from '../_shared/gemini.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { addDays, todayIn } from '../_shared/util.ts';
 
 const MEALS = ['breakfast', 'lunch', 'snack', 'dinner'] as const;
-
-function todayIn(timeZone: string) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
-}
-function addDays(day: string, n: number) {
-  const d = new Date(`${day}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
 
 interface Person {
   id: string;

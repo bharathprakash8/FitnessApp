@@ -6,6 +6,7 @@ import { z } from 'npm:zod@3';
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sameSecret } from '../_shared/util.ts';
 
 const Internal = z.object({
   user_ids: z.array(z.string().uuid()).min(1).max(500),
@@ -14,13 +15,6 @@ const Internal = z.object({
   url: z.string().startsWith('/').max(200).optional(),
   tag: z.string().max(60).optional(),
 });
-
-function sameSecret(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 serveJson(async (req) => {
   const db = adminClient();

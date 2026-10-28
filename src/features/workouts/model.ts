@@ -14,12 +14,6 @@ export type LogWithExercise = WorkoutLog & {
   exercises: Pick<Exercise, 'id' | 'name' | 'log_type' | 'muscle_group'>;
 };
 
-export const LOG_TYPE_LABELS: Record<LogType, string> = {
-  weights: 'Weights (kg × reps)',
-  bodyweight: 'Bodyweight (reps)',
-  timed: 'Timed (minutes)',
-};
-
 /** Days and their exercises in display order. */
 export function sortPlan(plan: PlanFull): PlanFull {
   return {

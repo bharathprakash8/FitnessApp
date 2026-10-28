@@ -47,17 +47,11 @@ import {
 } from '../_shared/coach.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sameSecret } from '../_shared/util.ts';
 
 type Db = SupabaseClient;
 const IST = 'Asia/Kolkata';
 const COACH_EMAIL = 'ai.coach@fitcoach.app';
-
-function sameSecret(a: string, b: string) {
-  if (!a || a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 const push = (db: Db, ids: string[], title: string, body: string, url: string, tag: string) =>
   sendToUsers(db, ids, { title, body: body.slice(0, 180), url, tag }).catch((e) =>
@@ -714,7 +708,7 @@ async function writeNote(db: Db, p: CoachPerson, kind: 'morning' | 'evening') {
     system: NOTE_SYSTEM,
     parts: [
       {
-        text: `Note type: ${kind}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nPerson: ${JSON.stringify(summary)}`,
+        text: `Note type: ${kind}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nPerson: ${JSON.stringify(chatSummary(summary))}`,
       },
     ],
     schema: NOTE_SCHEMA,

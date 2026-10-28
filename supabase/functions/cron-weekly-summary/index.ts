@@ -12,6 +12,7 @@ import { adminClient, requireCaller } from '../_shared/auth.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
 import { generateJsonVia, TEXT_CHAIN } from '../_shared/ai.ts';
 import { handleJson, HttpError } from '../_shared/http.ts';
+import { addDays, isoWeekday, sameSecret, todayIn } from '../_shared/util.ts';
 
 const SYSTEM = `Write a short, encouraging, factual summary for a personal trainer about one client's past week, using only the numbers provided. 4–6 lines. Mention consistency, nutrition vs target, activity, and one thing to focus on next week. Do not give medical advice or diagnose. If intake is far below target or falling sharply, add a neutral note for the trainer to check in. Use simple Indian English. Numbers that are null were not recorded – say so briefly instead of guessing. Return only JSON matching the schema.`;
 
@@ -21,24 +22,9 @@ const SCHEMA = {
   required: ['summary'],
 };
 
-function sameSecret(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
-
 // ---------------------------------------------------------------------------
 // Dates (YYYY-MM-DD in the client's time zone)
 // ---------------------------------------------------------------------------
-const todayIn = (tz: string) =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
-const addDays = (date: string, n: number) =>
-  new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
-const isoWeekday = (date: string) => {
-  const d = new Date(`${date}T00:00:00Z`).getUTCDay();
-  return d === 0 ? 7 : d;
-};
 
 /** Monday–Sunday of the week before the one containing `today`. */
 function lastWeek(today: string) {

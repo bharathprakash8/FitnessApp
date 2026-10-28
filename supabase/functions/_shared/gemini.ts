@@ -161,7 +161,8 @@ export async function generateJson(opts: {
           continue;
         }
       }
-      if (res.status === 503 || res.status === 500) {
+      // Google's error guide: 408 and 5xx are temporary – use the next model now.
+      if ([408, 500, 503, 504].includes(res.status)) {
         // Google says the model is overloaded ("high demand"): use the next model now and
         // leave this one alone for a couple of minutes.
         console.error('Gemini model busy:', m, res.status);
@@ -180,7 +181,7 @@ export async function generateJson(opts: {
     throw new HttpError(504, 'The AI took too long. Please try again.', 'ai_timeout');
   }
 
-  if (!res || [429, 404, 500, 503].includes(res.status)) {
+  if (!res || [404, 408, 429, 500, 503, 504].includes(res.status)) {
     console.error('Gemini: no model available', lastQuota);
     throw new HttpError(
       429,

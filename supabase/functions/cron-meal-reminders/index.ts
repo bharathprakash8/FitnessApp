@@ -9,6 +9,7 @@
 import { adminClient } from '../_shared/auth.ts';
 import { sendToUsers, type PushMessage } from '../_shared/fcm.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sameSecret } from '../_shared/util.ts';
 
 const WINDOW_MIN = 30; // a run can be a little late; the log prevents doubles
 
@@ -25,13 +26,6 @@ const CUSTOM_URL = {
   food: '/food/new/photo',
   other: '/today',
 } as const;
-
-function sameSecret(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 function localNow(timeZone: string) {
   const now = new Date();

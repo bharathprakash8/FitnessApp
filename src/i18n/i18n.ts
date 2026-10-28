@@ -25,10 +25,6 @@ export function dateLocale(): string {
   return current === 'kn' ? 'kn-IN' : 'en-IN';
 }
 
-export function getLanguage(): Language {
-  return current;
-}
-
 /** Switch the app's language now (the account setting is saved separately). */
 export function setLanguage(lang: Language) {
   if (lang === current) return;

@@ -27,6 +27,7 @@ import {
   revoke,
 } from '../_shared/google.ts';
 import { handleJson, HttpError } from '../_shared/http.ts';
+import { addDays, isoWeekday } from '../_shared/util.ts';
 
 const APP_URL = (Deno.env.get('APP_URL') ?? 'https://fitcoach-ten-nu.vercel.app').replace(
   /\/$/,
@@ -75,13 +76,6 @@ function localToUtc(date: string, time: string, tz: string): Date {
   utc = guess - offsetMin(utc, tz) * 60_000;
   return new Date(utc);
 }
-
-const isoWeekday = (date: string) => {
-  const d = new Date(`${date}T00:00:00Z`).getUTCDay();
-  return d === 0 ? 7 : d;
-};
-const addDays = (date: string, n: number) =>
-  new Date(Date.parse(`${date}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
 const BYDAY = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 

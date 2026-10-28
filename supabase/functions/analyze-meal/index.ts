@@ -9,6 +9,7 @@ import { z } from 'npm:zod@3';
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import { generateJson, lastTimings, type Part } from '../_shared/gemini.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { todayIn } from '../_shared/util.ts';
 
 const DAILY_CAP = 15;
 const FOLLOW_UP_CAP = 15;
@@ -47,6 +48,20 @@ const LOOK_SCHEMA = {
   },
   required: ['items', 'container'],
 };
+
+const LookResult = z.object({
+  items: z
+    .array(
+      z.object({
+        name: z.string().max(80),
+        count: z.number().min(0).max(50).catch(1),
+        amount: z.string().max(80).catch(''),
+        visible_fat: z.string().max(80).catch(''),
+      }),
+    )
+    .max(20),
+  container: z.string().max(80).catch(''),
+});
 
 const SCHEMA = {
   type: 'OBJECT',
@@ -117,10 +132,6 @@ const AiResult = z.object({
   follow_up_question: z.string().max(300).catch(''),
   follow_up_options: z.array(z.string().max(60)).max(4).catch([]),
 });
-
-function todayIn(timeZone: string): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date());
-}
 
 serveJson(async (req) => {
   const db = adminClient();
@@ -207,8 +218,10 @@ serveJson(async (req) => {
       timeoutMs: 12_000,
       budgetMs: 14_000,
     }).catch(() => null); // if the look fails, the estimate still runs on its own
-    if (look) {
-      prompt += `\nA careful look at this photo found (use these counts and amounts): ${JSON.stringify(look).slice(0, 2000)}`;
+    // Use the look only if it has the expected shape (a bad answer is simply ignored).
+    const seen = LookResult.safeParse(look);
+    if (seen.success && seen.data.items.length) {
+      prompt += `\nA careful look at this photo found (use these counts and amounts): ${JSON.stringify(seen.data).slice(0, 2000)}`;
     }
   }
   if (body.follow_up) {

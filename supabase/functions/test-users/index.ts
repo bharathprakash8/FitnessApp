@@ -9,17 +9,11 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { adminClient } from '../_shared/auth.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sameSecret } from '../_shared/util.ts';
 
 const DOMAIN = '@fitcoach.test';
 const TRAINERS = ['test.trainer1', 'test.trainer2'];
 const CLIENTS = Array.from({ length: 8 }, (_, i) => `test.client${i + 1}`);
-
-function sameSecret(a: string, b: string) {
-  if (!a || a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 type Admin = ReturnType<typeof adminClient>;
 

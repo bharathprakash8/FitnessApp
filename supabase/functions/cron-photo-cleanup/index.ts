@@ -4,15 +4,9 @@ import { z } from 'npm:zod@3';
 
 import { adminClient } from '../_shared/auth.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sameSecret } from '../_shared/util.ts';
 
 const Body = z.object({ days: z.number().int().min(0).max(30).default(7) }).default({});
-
-function sameSecret(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
 
 serveJson(async (req) => {
   const expected = Deno.env.get('CRON_SECRET');

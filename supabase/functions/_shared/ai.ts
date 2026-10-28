@@ -18,13 +18,35 @@ export const KANNADA_CHAIN = ['groq:openai/gpt-oss-120b', 'gemini'];
 /** Groq models skipped until this time after a limit or failure (per running server). */
 const restUntil = new Map<string, number>();
 
-/** Plain JSON-schema text (lower-case types) for models without schema support. */
-function schemaText(schema: Record<string, unknown>) {
-  return JSON.stringify(schema).replace(
-    /"type":"([A-Z]+)"/g,
-    (_, t: string) => `"type":"${t.toLowerCase()}"`,
-  );
+type Schema = Record<string, unknown>;
+
+/**
+ * Our schemas (Gemini style) as a strict JSON Schema for Groq structured outputs: lower-case
+ * types, every property required and no extra properties (Groq strict-mode rules).
+ */
+function strictSchema(schema: Schema): Schema {
+  const out: Schema = { ...schema };
+  if (typeof out.type === 'string') out.type = out.type.toLowerCase();
+  if (out.properties && typeof out.properties === 'object') {
+    const props = Object.fromEntries(
+      Object.entries(out.properties as Record<string, Schema>).map(([k, v]) => [
+        k,
+        strictSchema(v),
+      ]),
+    );
+    out.properties = props;
+    out.required = Object.keys(props);
+    out.additionalProperties = false;
+  }
+  if (out.items && typeof out.items === 'object') out.items = strictSchema(out.items as Schema);
+  return out;
 }
+
+/** Reasoning settings per Groq model: little thinking = fast answers (Groq reasoning docs). */
+const REASONING: Record<string, Schema> = {
+  'openai/gpt-oss-120b': { reasoning_effort: 'low', include_reasoning: false },
+  'qwen/qwen3.8-27b': { reasoning_effort: 'none' },
+};
 
 async function groq(
   model: string,
@@ -48,16 +70,22 @@ async function groq(
   const res = await fetch(GROQ, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    // Groq docs: structured outputs (strict JSON Schema), max_completion_tokens, default
+    // temperature for reasoning models, reasoning effort per model.
     body: JSON.stringify({
       model,
-      temperature: 0.2,
-      max_tokens: opts.maxTokens,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content: `${opts.system}\nReturn only a JSON object matching this JSON schema: ${schemaText(opts.schema)}`,
+      max_completion_tokens: opts.maxTokens,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: feature.replace(/[^a-z0-9_-]/gi, '_'),
+          strict: true,
+          schema: strictSchema(opts.schema),
         },
+      },
+      ...(REASONING[model] ?? {}),
+      messages: [
+        { role: 'system', content: opts.system },
         { role: 'user', content: images.length ? [...images, { type: 'text', text }] : text },
       ],
     }),
@@ -69,9 +97,15 @@ async function groq(
   }
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    // 429 = per-minute/day limit; others = busy or the answer wasn't valid JSON.
+    // 429 = per-minute/day limit (wait as long as Groq says); 5xx = busy; 400 = the answer
+    // didn't fit the schema – the next model is tried.
     console.error('Groq', model, res.status, String(body?.error?.message ?? '').slice(0, 160));
-    if (res.status === 429 || res.status >= 500) restUntil.set(model, Date.now() + 60_000);
+    if (res.status === 429) {
+      const wait = Number(res.headers.get('retry-after'));
+      restUntil.set(model, Date.now() + (wait > 0 ? Math.min(wait, 3600) * 1000 : 60_000));
+    } else if (res.status >= 500) {
+      restUntil.set(model, Date.now() + 60_000);
+    }
     return null;
   }
   const u = body?.usage ?? {};
