@@ -118,5 +118,6 @@ export function loginInstructions(user: Pick<AdminUser, 'full_name' | 'email'>):
     `Android: install the FitCoach app from ${ANDROID_APP_URL} (allow "install from this source" when asked).`,
     '',
     `Setup guides: ${link}/guides/iphone.html (iPhone) · ${link}/guides/android.html (Android)`,
+    `How to use FitCoach: ${link}/guides/how-to-use.html`,
   ].join('\n');
 }

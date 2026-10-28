@@ -11,6 +11,7 @@ const ANDROID_URL =
 const GUIDES = [
   { file: 'FitCoach-android-setup.pdf', page: 'android.html', label: 'Android setup guide' },
   { file: 'FitCoach-iphone-setup.pdf', page: 'iphone.html', label: 'iPhone setup guide' },
+  { file: 'FitCoach-user-guide.pdf', page: 'how-to-use.html', label: 'How to use FitCoach' },
 ];
 
 export interface WelcomeTo {
@@ -65,8 +66,8 @@ export async function sendWelcome(to: WelcomeTo, trainerName: string | null): Pr
     'LOG IN',
     `Use this email address (${to.email}). We'll email you a 6-digit code – type it in and you're in.`,
     '',
-    'Step-by-step setup guides for Android and iPhone are attached (also online:',
-    `${APP_URL}/guides/android.html and ${APP_URL}/guides/iphone.html).`,
+    'Step-by-step setup guides for Android and iPhone and a guide to all the features are attached (also online:',
+    `${APP_URL}/guides/android.html, ${APP_URL}/guides/iphone.html and ${APP_URL}/guides/how-to-use.html).`,
     '',
     'See you in the app!',
     'FitCoach',
@@ -98,9 +99,10 @@ ${button(ANDROID_URL, 'Download Android app', true)}
 <p style="font-size:15px;line-height:1.55;margin:0">Use this email address (<b>${esc(to.email)}</b>). We'll email you a <b>6-digit code</b> – type it in and you're in. No password needed.</p>
 
 <div style="background:#eef3fc;border-radius:12px;padding:12px 14px;margin:20px 0 0;font-size:14px;line-height:1.5">
-📎 <b>Setup guides attached</b> – step by step for Android and iPhone (notifications, calories burnt from your phone or watch). Also online:
+📎 <b>Guides attached</b> – setup step by step for Android and iPhone, and <b>How to use FitCoach</b> (every feature explained). Also online:
 <a href="${APP_URL}/guides/android.html" style="color:#2f6fde">Android</a> ·
-<a href="${APP_URL}/guides/iphone.html" style="color:#2f6fde">iPhone</a>
+<a href="${APP_URL}/guides/iphone.html" style="color:#2f6fde">iPhone</a> ·
+<a href="${APP_URL}/guides/how-to-use.html" style="color:#2f6fde">How to use</a>
 </div>
 </div>
 <p style="font-size:12px;color:#6b7385;line-height:1.5;margin:14px 4px 0">Calories in FitCoach are estimates. Please check with your doctor before starting a new exercise or diet programme.</p>
