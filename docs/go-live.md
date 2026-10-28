@@ -8,8 +8,8 @@ The current Supabase project (`updctclaxbawgtrhtdor`, Mumbai) **is production** 
 - [x] **Backups set up** (19 Oct) – secrets set, first run decrypted and checked. Copy the
       passphrase from `C:\Users\Bharath\FitCoach-keys\backup-passphrase.txt` into your password manager.
 - [x] **Keep-awake job** – ran green on 19 Oct.
-- [ ] **Test accounts removed** – `node scripts/load-test.mjs cleanup`, then ask Claude to delete
-      the `test-users` Edge Function and the `TEST_USERS_SECRET` secret.
+- [x] **Test accounts removed** (28 Oct) – all test accounts and their data deleted; the
+      `test-users` function, its secret and every test-only code path removed.
 - [ ] **AI** – Admin → App health shows ✓ for all five models; the daily limit says 1060.
 - [ ] **Google Calendar** – OAuth app published ("In production"); one trainer connected.
 - [ ] **Android app** – ask Claude to build a fresh APK from the latest code, install it on one

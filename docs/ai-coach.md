@@ -77,5 +77,5 @@ Day coach: Groq free tier (+ Gemini free as backup). Head coach: owner's Claude 
 ## Testing
 
 - `npm run db:test` includes the AI coach RLS checks.
-- Temporary test helpers (remove at go-live with the test users): `test-users` actions
-  `map_to_coach` and `coach_mode`; the head-coach key may also run `setup` and `note_now`.
+- The head-coach key may also run `setup` (first set-up) and `note_now` (a note on demand).
+- The temporary test accounts and test helpers were removed on 28 Oct 2026.

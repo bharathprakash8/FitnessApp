@@ -154,7 +154,7 @@ serveJson(async (req) => {
 
   const { data: profile, error: pErr } = await db
     .from('profiles')
-    .select('diet_preference, timezone, email')
+    .select('diet_preference, timezone')
     .eq('id', caller.id)
     .single();
   if (pErr) throw pErr;
@@ -163,9 +163,7 @@ serveJson(async (req) => {
   // Daily cap (follow-up answers and single-item re-estimates have their own allowance).
   const secondary = Boolean(body.follow_up || body.item);
   const feature = secondary ? 'analyze-meal-followup' : 'analyze-meal';
-  // Temporary test accounts (load and accuracy tests) aren't limited; removed at go-live.
-  const testAccount = profile.email.endsWith('@fitcoach.test');
-  const cap = testAccount ? 1000 : secondary ? FOLLOW_UP_CAP : DAILY_CAP;
+  const cap = secondary ? FOLLOW_UP_CAP : DAILY_CAP;
   const detailed = body.detail === 'detailed' && !body.item;
   const { data: usage } = await db
     .from('ai_usage')

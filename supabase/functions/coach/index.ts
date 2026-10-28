@@ -9,7 +9,7 @@
 // Scheduler (pg_cron, x-cron-secret): { action: 'tick' } morning/evening notes from the day coach
 //   and a "head coach didn't run" alert for admins at 9 AM IST.
 // Client (JWT, mapped to the AI coach): { action: 'ask', question }  "Ask the coach".
-// The head coach key may also run 'setup' and 'note_now' (bootstrap and testing).
+// The head coach key may also run 'setup' (first set-up) and 'note_now' (a note on demand).
 // Admin (JWT): setup | set_mode | approve | reject | undo | answer | save_playbook | note_now
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
@@ -1322,44 +1322,41 @@ serveJson(async (req) => {
             error: body.error ? String(body.error).slice(0, 2000) : null,
           })
           .eq('id', runId);
-        // Test runs (report starting with "TEST") don't notify the admins.
-        if (!report.startsWith('TEST')) {
-          await push(
-            db,
-            await adminIds(db),
-            'Head coach report is ready',
-            report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
-            '/admin',
-            'coach-report',
-          );
-          // Each trainer hears how many suggestions wait for them (assisted clients).
-          const { data: waiting } = await db
-            .from('coach_actions')
-            .select('client_id')
-            .eq('run_id', runId)
-            .eq('status', 'proposed');
-          const clientIds = [...new Set((waiting ?? []).map((w) => w.client_id as string))];
-          if (clientIds.length) {
-            const { data: links } = await db
-              .from('trainer_clients')
-              .select('client_id, trainer_id')
-              .in('client_id', clientIds)
-              .eq('ai_assist', true);
-            const perTrainer = new Map<string, number>();
-            for (const w of waiting ?? []) {
-              const t = links?.find((l) => l.client_id === w.client_id)?.trainer_id;
-              if (t) perTrainer.set(t, (perTrainer.get(t) ?? 0) + 1);
-            }
-            for (const [trainerId, n] of perTrainer) {
-              await push(
-                db,
-                [trainerId],
-                `Your AI assistant has ${n} suggestion${n === 1 ? '' : 's'}`,
-                'Open AI assistant to approve or skip them.',
-                '/trainer/assistant',
-                'coach-suggestions',
-              );
-            }
+        await push(
+          db,
+          await adminIds(db),
+          'Head coach report is ready',
+          report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
+          '/admin',
+          'coach-report',
+        );
+        // Each trainer hears how many suggestions wait for them (assisted clients).
+        const { data: waiting } = await db
+          .from('coach_actions')
+          .select('client_id')
+          .eq('run_id', runId)
+          .eq('status', 'proposed');
+        const clientIds = [...new Set((waiting ?? []).map((w) => w.client_id as string))];
+        if (clientIds.length) {
+          const { data: links } = await db
+            .from('trainer_clients')
+            .select('client_id, trainer_id')
+            .in('client_id', clientIds)
+            .eq('ai_assist', true);
+          const perTrainer = new Map<string, number>();
+          for (const w of waiting ?? []) {
+            const t = links?.find((l) => l.client_id === w.client_id)?.trainer_id;
+            if (t) perTrainer.set(t, (perTrainer.get(t) ?? 0) + 1);
+          }
+          for (const [trainerId, n] of perTrainer) {
+            await push(
+              db,
+              [trainerId],
+              `Your AI assistant has ${n} suggestion${n === 1 ? '' : 's'}`,
+              'Open AI assistant to approve or skip them.',
+              '/trainer/assistant',
+              'coach-suggestions',
+            );
           }
         }
         return { finished: true };
@@ -1376,67 +1373,6 @@ serveJson(async (req) => {
       throw new HttpError(401, 'Not allowed', 'unauthorized');
     }
     return await tick(db);
-  }
-
-  // TEMPORARY (remove at go-live with the test users): admin actions on test accounts only,
-  // so approve / reject / undo / answer can be tested without an admin login.
-  const testSecret = req.headers.get('x-test-secret');
-  if (testSecret !== null) {
-    if (!sameSecret(testSecret, Deno.env.get('TEST_USERS_SECRET') ?? '')) {
-      throw new HttpError(401, 'Not allowed', 'unauthorized');
-    }
-    const parsed = AdminBody.safeParse(body);
-    if (!parsed.success) throw new HttpError(400, 'Invalid input', 'invalid_input');
-    const b = parsed.data;
-    let clientId: string | null = null;
-    if ('action_ids' in b) {
-      const { data } = await db.from('coach_actions').select('client_id').in('id', b.action_ids);
-      const ids = [...new Set((data ?? []).map((r) => r.client_id as string | null))];
-      for (const id of ids) {
-        const p = id ? await loadPerson(db, id) : null;
-        if (!p?.email.endsWith('@fitcoach.test')) {
-          throw new HttpError(403, 'Test accounts only', 'forbidden');
-        }
-      }
-      return await adminAction(db, b);
-    }
-    if ('action_id' in b) {
-      const { data } = await db
-        .from('coach_actions')
-        .select('client_id')
-        .eq('id', b.action_id)
-        .maybeSingle();
-      clientId = data?.client_id ?? null;
-    } else if ('query_id' in b) {
-      const { data } = await db
-        .from('coach_queries')
-        .select('client_id')
-        .eq('id', b.query_id)
-        .maybeSingle();
-      clientId = data?.client_id ?? null;
-    } else if ('client_id' in b) {
-      clientId = b.client_id;
-    }
-    // Cleaning up after a test run: proposals from a run whose report starts with "TEST"
-    // may be rejected for anyone (a real person on the coach also gets test proposals).
-    let testRunProposal = false;
-    if (b.action === 'reject') {
-      const { data: a } = await db
-        .from('coach_actions')
-        .select('status, coach_runs(report)')
-        .eq('id', b.action_id)
-        .maybeSingle();
-      const report = (a as { coach_runs?: { report?: string | null } | null } | null)?.coach_runs
-        ?.report;
-      testRunProposal = a?.status === 'proposed' && Boolean(report?.startsWith('TEST'));
-    }
-    if (b.action !== 'set_mode' && b.action !== 'setup' && !testRunProposal) {
-      const p = clientId ? await loadPerson(db, clientId) : null;
-      if (!p?.email.endsWith('@fitcoach.test')) {
-        throw new HttpError(403, 'Test accounts only', 'forbidden');
-      }
-    }
-    return await adminAction(db, b);
   }
 
   // People in the app
