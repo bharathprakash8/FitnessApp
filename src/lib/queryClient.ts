@@ -34,6 +34,7 @@ export const queryClient = new QueryClient({
 });
 
 const PERSIST_KEY = 'fitcoach-query-cache-v1';
+const NOT_SAVED = ['meal-photo-urls', 'admin-coach'];
 
 /**
  * The last data each screen showed is kept on the phone (IndexedDB), so Today, Workouts
@@ -51,11 +52,13 @@ export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
   }),
   maxAge: WEEK,
   // Bump when the shape of saved query data changes, so old copies on phones are dropped.
-  buster: '2026-10-19',
+  buster: '2026-11-05',
   dehydrateOptions: {
-    // Signed photo links expire after an hour – never keep them.
+    // Signed photo links expire after an hour – never keep them. The AI Coach screen holds
+    // such links too, plus Maps, which come back empty after saving as text (that crashed it).
+    // Saved data must be plain JSON: anything with a Map, Set or Date goes in this list.
     shouldDehydrateQuery: (q) =>
-      q.state.status === 'success' && q.queryKey[0] !== 'meal-photo-urls',
+      q.state.status === 'success' && !NOT_SAVED.includes(String(q.queryKey[0])),
   },
 };
 
