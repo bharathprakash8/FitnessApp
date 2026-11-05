@@ -117,12 +117,12 @@ function CoachConsentCard({
           </li>
           <li>
             {t(
-              'Each morning Claude AI (Anthropic) reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.',
+              'Each morning Google Gemini AI reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.',
             )}
           </li>
           <li>
             {t(
-              'Quick answers and notes during the day come from Groq and Google Gemini AI. Your profile, health conditions and logs are shared with them for this.',
+              'Quick answers and notes during the day also come from Google Gemini AI. Your profile, health conditions and logs are shared with Google for this and may be used to improve its services.',
             )}
           </li>
           <li>

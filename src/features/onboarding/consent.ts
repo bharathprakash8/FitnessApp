@@ -45,7 +45,7 @@ const CONSENT_SECTIONS: { title: string; points: string[] }[] = [
     points: [
       'Food photos and food descriptions are sent to Google’s Gemini AI to estimate calories, and may be used by Google to improve its services. Please photograph only your food.',
       'To write your insights, weekly summaries and meal ideas, your first name, goal, diet preference, foods to avoid and your food, workout, weight and activity numbers are sent to Groq AI, with Google’s Gemini AI as a backup.',
-      'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Claude AI (Anthropic), Groq AI and Google’s Gemini AI to coach you. You will be asked to agree to this separately.',
+      'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Google’s Gemini AI to coach you, and may be used by Google to improve its services. You will be asked to agree to this separately.',
       'These AI services may run outside India.',
     ],
   },

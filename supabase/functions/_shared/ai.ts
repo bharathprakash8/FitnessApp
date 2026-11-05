@@ -12,8 +12,8 @@ const GROQ = 'https://api.groq.com/openai/v1/chat/completions';
 /** Fast text answers (chat, notes, summaries): Groq first, Gemini as the safety net. */
 export const TEXT_CHAIN = ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b', 'gemini'];
 
-/** Kannada text: Qwen writes poor Kannada, so GPT-OSS 120B then Gemini. */
-export const KANNADA_CHAIN = ['groq:openai/gpt-oss-120b', 'gemini'];
+/** The AI trainer's chat and notes (owner, 5 Nov 2026): Gemini only, in any language. */
+export const COACH_CHAIN = ['gemini'];
 
 /** Groq models skipped until this time after a limit or failure (per running server). */
 const restUntil = new Map<string, number>();

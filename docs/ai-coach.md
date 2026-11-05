@@ -22,17 +22,17 @@ global mode (Off / Dry run / Live) still applies to everyone: in dry run every c
   Map anyone to it in Admin → Users → person → Trainer, like a human trainer.
 - The person sees a **"Meet your AI coach"** card on Today and must agree once
   (`profiles.coach_consent_at`). Until then nothing about them goes to the coach.
-- **Day coach** (fast AI – Groq GPT-OSS 120B, then Qwen, then Gemini as backup):
+- **Day coach** (Gemini, on the API key owned by nidhi@samhithe.in):
   - **Ask coach** chat (`/coach`). Red-flag words (chest pain, dizzy, breathless, fainting,
     sugar very low/high, in English and Kannada) get a fixed "stop, call your doctor / 108"
     reply without asking the AI, and the admins get a push.
   - Health, medicine or supplement questions are **escalated** to the head coach / admin.
   - **Morning note** from 8:30 and **evening note** from 20:30 (person's time zone; pg_cron job
     `coach-tick` every 30 minutes). The head coach's note replaces the morning note.
-- **Head coach** (Claude, daily ~7:30 AM): reviews every person and every meal photo, corrects
+- **Head coach** (Gemini on the server, daily from 7:00 AM IST, PC not needed): reviews every person and every meal photo, corrects
   calories, sets today's plan (workout day / light / rest, ±200 kcal), writes the note, answers
   escalated questions, keeps the **playbook** the day coach follows, and sends the admin a
-  report. Instructions: `coach/HEAD_COACH.md`.
+  report. Instructions: `supabase/functions/_shared/headCoach.ts`.
 
 ## Safety rules (server, `supabase/functions/coach`)
 
@@ -57,22 +57,24 @@ If the head coach hasn't run by 9 AM IST, admins get a push; people keep their n
 
 ## Running the head coach
 
-- **Now:** a scheduled task in the Claude desktop app on the owner's PC
-  ("FitCoach head coach", daily 7:30 AM; the PC and app must be on – if not, it runs on next
-  launch). It uses the owner's Claude Pro plan.
-- By hand: open Claude Code in this folder and say "run the head coach as in coach/HEAD_COACH.md".
-- Scripts: `node scripts/coach-fetch.mjs` (digest + photos into the git-ignored `coach-work/`),
-  `node scripts/coach-apply.mjs` (sends actions + report, deletes `coach-work/`).
+- **Now:** pg_cron job `coach-head-tick` calls the `coach` function every 5 minutes from 06:30 to
+  09:55 IST (`head_tick`). From 7:00 it starts one run a day and reviews a few people per call, one
+  Gemini request per person; `coach_runs.progress` remembers who is done, and each person gets up
+  to 3 tries. When everyone is done, the report goes to the admin.
+- Start one early: POST `{ "action": "head_tick" }` with the `x-coach-key` header, repeated until it
+  returns `finished`.
+- Each new run turns down notes and day plans still waiting from earlier days. Meals already
+  suggested or turned down are not proposed again.
+- **Old manual way (fallback):** Claude Code with `coach/HEAD_COACH.md`, `scripts/coach-fetch.mjs`
+  and `scripts/coach-apply.mjs`.
 - Key: `COACH_API_KEY` – Supabase secret, local copy in git-ignored `.env.coach.local`.
   New key: generate a random string, put it in `.env.coach.local`, and set it with
   `npx supabase secrets set --env-file <temp file>` (never on the command line).
-- **Later:** move the head coach to the Claude API (Console, prepaid) so it doesn't use the Pro
-  plan – same coach function; `start_run` accepts `source: 'claude_api'`.
 
 ## Costs
 
-Day coach: Groq free tier (+ Gemini free as backup). Head coach: owner's Claude Pro plan
-(~₹0 extra; measure usage in the first week).
+Gemini free tier for both, sharing its daily limit with meal estimates. Free-tier content may be
+used by Google to improve its services (the consent text says so).
 
 ## Testing
 

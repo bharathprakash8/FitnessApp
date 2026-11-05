@@ -7,14 +7,15 @@
 //                                              dry_run = proposed only, live = small changes applied
 //   { action: 'finish_run', run_id, report, people?, photos? }
 // Scheduler (pg_cron, x-cron-secret): { action: 'tick' } morning/evening notes from the day coach
-//   and a "head coach didn't run" alert for admins at 9 AM IST.
+//   and a "head coach didn't run" alert for admins at 9 AM IST; { action: 'head_tick' } the daily
+//   head coach review on Gemini, a few people per call.
 // Client (JWT, mapped to the AI coach): { action: 'ask', question }  "Ask the coach".
 // The head coach key may also run 'setup' (first set-up) and 'note_now' (a note on demand).
 // Admin (JWT): setup | set_mode | approve | reject | undo | answer | save_playbook | note_now
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
-import { generateJsonVia, KANNADA_CHAIN, TEXT_CHAIN } from '../_shared/ai.ts';
+import { COACH_CHAIN, generateJsonVia } from '../_shared/ai.ts';
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import {
   activePlan,
@@ -47,6 +48,8 @@ import {
 } from '../_shared/coach.ts';
 import { clientBackground } from '../_shared/background.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
+import { generateJson, type Part } from '../_shared/gemini.ts';
+import { HEAD_SCHEMA, HEAD_SYSTEM } from '../_shared/headCoach.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 import { sameSecret } from '../_shared/util.ts';
 
@@ -620,69 +623,72 @@ async function undo(ctx: Ctx, id: string) {
 // ---------------------------------------------------------------------------
 // Head coach: digest
 // ---------------------------------------------------------------------------
-async function digest(db: Db, coachId: string) {
-  const people = await coachedPeople(db, coachId);
-  let photos = 0;
-  // Several people at a time (each needs ~20 small queries); 50 people stay well inside the
-  // function time limit.
-  const one = async (p: CoachPerson) => {
-    const today = localDate(p.timezone || IST);
-    const [summary, playbook, background, meals, questions] = await Promise.all([
-      personSummary(db, p, today),
-      playbookFor(db, p.id),
-      clientBackground(db, p, today),
-      db
-        .from('meal_logs')
-        .select(
-          'id, eaten_on, eaten_at, meal_type, source, input_text, items, total_calories, edited, photo_path, coach_suggestion',
-        )
-        .eq('client_id', p.id)
-        .gte('eaten_on', addDays(today, -2))
-        .is('coach_checked_at', null)
-        .order('eaten_at'),
-      db
-        .from('coach_queries')
-        .select('id, question, answer, status, red_flag, escalate_reason, created_at')
-        .eq('client_id', p.id)
-        .gte('created_at', new Date(Date.now() - 3 * 86_400_000).toISOString())
-        .order('created_at'),
-    ]);
-    const toCheck = [];
-    for (const m of meals.data ?? []) {
-      let photo_url: string | null = null;
-      if (m.photo_path) {
-        const { data } = await db.storage.from('meal-photos').createSignedUrl(m.photo_path, 3600);
-        photo_url = data?.signedUrl ?? null;
-        if (photo_url) photos++;
-      }
-      toCheck.push({
-        meal_id: m.id,
-        date: m.eaten_on,
-        meal_type: m.meal_type,
-        source: m.source,
-        typed_text: m.input_text,
-        edited_by_person: m.edited,
-        items: m.items,
-        total_kcal: m.total_calories,
-        photo_url,
-      });
+async function personDigest(db: Db, p: CoachPerson) {
+  const today = localDate(p.timezone || IST);
+  const [summary, playbook, background, meals, questions] = await Promise.all([
+    personSummary(db, p, today),
+    playbookFor(db, p.id),
+    clientBackground(db, p, today),
+    db
+      .from('meal_logs')
+      .select(
+        'id, eaten_on, eaten_at, meal_type, source, input_text, items, total_calories, edited, photo_path, coach_suggestion',
+      )
+      .eq('client_id', p.id)
+      .gte('eaten_on', addDays(today, -2))
+      .is('coach_checked_at', null)
+      .order('eaten_at'),
+    db
+      .from('coach_queries')
+      .select('id, question, answer, status, red_flag, escalate_reason, created_at')
+      .eq('client_id', p.id)
+      .gte('created_at', new Date(Date.now() - 3 * 86_400_000).toISOString())
+      .order('created_at'),
+  ]);
+  // Meals already waiting for a decision, or turned down, aren't proposed again each morning.
+  const { data: decided } = await db
+    .from('coach_actions')
+    .select('target_id')
+    .in('status', ['proposed', 'rejected'])
+    .in(
+      'target_id',
+      (meals.data ?? []).map((m) => m.id),
+    );
+  const skip = new Set((decided ?? []).map((d) => d.target_id));
+  const toCheck = [];
+  for (const m of (meals.data ?? []).filter((x) => !skip.has(x.id))) {
+    let photo_url: string | null = null;
+    if (m.photo_path) {
+      const { data } = await db.storage.from('meal-photos').createSignedUrl(m.photo_path, 3600);
+      photo_url = data?.signedUrl ?? null;
     }
-    return {
-      client_id: p.id,
-      today,
-      // "AI-only" (admin approves) or the human trainer the AI assists (they approve).
-      coached_by: p.supervisor ? `AI assistant to trainer ${p.supervisor.name}` : 'AI-only',
-      summary,
-      background,
-      person_playbook: playbook.person,
-      meals_to_check: toCheck,
-      questions_last_3_days: questions.data ?? [],
-    };
-  };
-  const out = [];
-  for (let i = 0; i < people.length; i += 5) {
-    out.push(...(await Promise.all(people.slice(i, i + 5).map(one))));
+    toCheck.push({
+      meal_id: m.id,
+      date: m.eaten_on,
+      meal_type: m.meal_type,
+      source: m.source,
+      typed_text: m.input_text,
+      edited_by_person: m.edited,
+      items: m.items,
+      total_kcal: m.total_calories,
+      photo_url,
+    });
   }
+  return {
+    client_id: p.id,
+    today,
+    // "AI-only" (admin approves) or the human trainer the AI assists (they approve).
+    coached_by: p.supervisor ? `AI assistant to trainer ${p.supervisor.name}` : 'AI-only',
+    summary,
+    background,
+    person_playbook: playbook.person,
+    meals_to_check: toCheck,
+    questions_last_3_days: questions.data ?? [],
+  };
+}
+
+/** The AI coach's shared rules and its own safe plans. */
+async function coachLibrary(db: Db, coachId: string) {
   const { data: shared } = await db
     .from('coach_playbook')
     .select('body')
@@ -692,14 +698,364 @@ async function digest(db: Db, coachId: string) {
     .from('workout_plans')
     .select('id, name, description, plan_days(id, day_index, title)')
     .eq('trainer_id', coachId);
+  return { shared_playbook: shared?.body ?? '', coach_plans: plans ?? [] };
+}
+
+async function digest(db: Db, coachId: string) {
+  const people = await coachedPeople(db, coachId);
+  // Several people at a time (each needs ~20 small queries); 50 people stay well inside the
+  // function time limit.
+  const out = [];
+  for (let i = 0; i < people.length; i += 5) {
+    out.push(...(await Promise.all(people.slice(i, i + 5).map((p) => personDigest(db, p)))));
+  }
   return {
     mode: await coachMode(db),
     generated_at: new Date().toISOString(),
-    shared_playbook: shared?.body ?? '',
-    coach_plans: plans ?? [],
+    ...(await coachLibrary(db, coachId)),
     people: out,
-    photos,
+    photos: out.reduce((n, d) => n + d.meals_to_check.filter((m) => m.photo_url).length, 0),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Head coach on the server (Gemini): one person per AI call, a few people per tick
+// ---------------------------------------------------------------------------
+type PersonDigest = Awaited<ReturnType<typeof personDigest>>;
+interface HeadProgress {
+  name: string;
+  attempts: number;
+  done: boolean;
+  summary?: string;
+  error?: string;
+  photos?: number;
+  counts?: Record<string, number>;
+  needs_ok?: string[];
+}
+const MAX_PHOTOS_PER_PERSON = 12;
+const MAX_ATTEMPTS = 3;
+const IST_START = 420; // 7:00 AM
+
+function toBase64(buf: ArrayBuffer) {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(s);
+}
+
+/**
+ * One AI action → a checked action for this person only. The person, date and ids can't point
+ * at anyone else, whatever the AI (or text in someone's log) says.
+ */
+function headAction(raw: Record<string, unknown>, d: PersonDigest, planIds: Set<string>) {
+  const client_id = d.client_id;
+  const meal = d.meals_to_check.some((m) => m.meal_id === raw.meal_id);
+  const open = d.questions_last_3_days.some(
+    (q) => q.id === raw.query_id && q.status === 'escalated',
+  );
+  let input: unknown;
+  switch (raw.kind) {
+    case 'check_meal':
+      if (!meal) return null;
+      input = { kind: raw.kind, meal_id: raw.meal_id };
+      break;
+    case 'correct_meal':
+      if (!meal) return null;
+      input = { kind: raw.kind, meal_id: raw.meal_id, items: raw.items, reason: raw.reason };
+      break;
+    case 'day_plan':
+      input = {
+        kind: raw.kind,
+        client_id,
+        date: d.today,
+        plan: raw.plan,
+        plan_day_id: raw.plan_day_id || undefined,
+        note: raw.note || undefined,
+        kcal_adjust: raw.kcal_adjust ?? 0,
+      };
+      break;
+    case 'note':
+      input = { kind: raw.kind, client_id, date: d.today, text: raw.text };
+      break;
+    case 'answer':
+      if (!open) return null;
+      input = { kind: raw.kind, query_id: raw.query_id, text: raw.text };
+      break;
+    case 'playbook':
+      input = { kind: raw.kind, client_id, body: raw.body };
+      break;
+    case 'target':
+      input = {
+        kind: raw.kind,
+        client_id,
+        calories: raw.calories,
+        protein_g: raw.protein_g,
+        reason: raw.reason,
+      };
+      break;
+    case 'assign_plan':
+      if (!planIds.has(String(raw.plan_id))) return null;
+      input = { kind: raw.kind, client_id, plan_id: raw.plan_id, reason: raw.reason };
+      break;
+    case 'flag':
+      input = { kind: raw.kind, client_id, text: raw.text };
+      break;
+    default:
+      return null;
+  }
+  const parsed = Action.safeParse(input);
+  return parsed.success ? parsed.data : null;
+}
+
+async function reviewPerson(
+  ctx: Ctx,
+  runId: string,
+  mode: 'dry_run' | 'live',
+  p: CoachPerson,
+  library: Awaited<ReturnType<typeof coachLibrary>>,
+  entry: HeadProgress,
+  save: () => Promise<unknown>,
+) {
+  const d = await personDigest(ctx.db, p);
+  const parts: Part[] = [];
+  let photos = 0;
+  const meals = [];
+  for (const { photo_url, ...m } of d.meals_to_check) {
+    meals.push(m);
+    if (!photo_url || photos >= MAX_PHOTOS_PER_PERSON) continue;
+    const img = await fetch(photo_url).catch(() => null);
+    if (!img?.ok) continue;
+    parts.push({ text: `Photo of meal_id ${m.meal_id}:` });
+    parts.push({
+      inline_data: { mime_type: 'image/jpeg', data: toBase64(await img.arrayBuffer()) },
+    });
+    photos++;
+  }
+  parts.push({
+    text: JSON.stringify({
+      shared_playbook: library.shared_playbook,
+      coach_plans: library.coach_plans,
+      weekday_today: new Date(`${d.today}T12:00:00Z`).toLocaleDateString('en-GB', {
+        weekday: 'long',
+      }),
+      person: { ...d, meals_to_check: meals },
+    }),
+  });
+  const json = (await generateJson({
+    system: HEAD_SYSTEM,
+    parts,
+    schema: HEAD_SCHEMA,
+    feature: 'head-coach',
+    thinking: 'medium',
+    timeoutMs: 50_000,
+    budgetMs: 85_000,
+  })) as { summary?: unknown; actions?: unknown };
+
+  // From here on it is never tried again, so a failure can't send the same suggestions twice.
+  entry.done = true;
+  entry.photos = photos;
+  entry.summary = String(json?.summary ?? '').slice(0, 1500);
+  await save();
+
+  const planIds = new Set(library.coach_plans.map((x) => x.id as string));
+  const counts: Record<string, number> = {};
+  const needsOk: string[] = [];
+  const seen = new Set<string>();
+  const raws = Array.isArray(json?.actions) ? (json.actions as Record<string, unknown>[]) : [];
+  for (const raw of raws.slice(0, 60)) {
+    const a = headAction(raw, d, planIds);
+    if (!a) {
+      counts.skipped = (counts.skipped ?? 0) + 1;
+      continue;
+    }
+    // One day plan, one note and one playbook page per person.
+    if (['day_plan', 'note', 'playbook'].includes(a.kind)) {
+      if (seen.has(a.kind)) continue;
+      seen.add(a.kind);
+    }
+    const r = await recordAction(ctx, runId, a, mode);
+    const status = String(r?.status ?? 'error');
+    counts[status] = (counts[status] ?? 0) + 1;
+    if (NEEDS_APPROVAL.has(a.kind) && status === 'proposed') {
+      needsOk.push(
+        `${p.full_name ?? 'Someone'}: ${a.kind === 'target' ? 'a target' : 'a workout plan'}`,
+      );
+    }
+  }
+  entry.counts = counts;
+  entry.needs_ok = needsOk;
+  await save();
+}
+
+function headReport(mode: string, list: HeadProgress[]) {
+  const ok = list.filter((e) => e.done);
+  const failed = list.filter((e) => !e.done);
+  const waiting = ok.reduce((n, e) => n + (e.counts?.proposed ?? 0), 0);
+  const applied = ok.reduce((n, e) => n + (e.counts?.applied ?? 0), 0);
+  const first =
+    `Head coach checked ${ok.length} of ${list.length} people: ` +
+    (mode === 'live'
+      ? `${applied} changes made, ${waiting} waiting for OK.`
+      : `${waiting} suggestions waiting.`);
+  const blocks = list.map((e) => {
+    const tally = Object.entries(e.counts ?? {})
+      .map(([k, v]) => `${k} ${v}`)
+      .join(', ');
+    return e.done
+      ? `${e.name}\n${e.summary ?? ''}${tally ? `\n(${tally})` : ''}`
+      : `${e.name}\nNot reviewed: ${e.error ?? 'the AI was busy'}`;
+  });
+  const needs = ok.flatMap((e) => e.needs_ok ?? []);
+  return [
+    first,
+    ...blocks,
+    needs.length ? `Needs your OK:\n${needs.join('\n')}` : '',
+    failed.length ? 'Those not reviewed keep their normal plans today.' : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+async function headTick(db: Db, force: boolean) {
+  const started = Date.now();
+  const coach = await coachAccount(db);
+  if (!coach) return { skipped: 'no coach' };
+  const mode = await coachMode(db);
+  if (mode === 'off') return { skipped: 'off' };
+  if (!force && localMinutes(IST) < IST_START) return { skipped: 'too early' };
+  const dayStart = `${localDate(IST)}T00:00:00+05:30`;
+
+  const { data: existing } = await db
+    .from('coach_runs')
+    .select('id, mode, finished_at, progress')
+    .eq('source', 'gemini')
+    .gte('started_at', dayStart)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing?.finished_at) return { finished: true, already: true };
+
+  let run = existing;
+  if (!run) {
+    // Yesterday's unanswered notes and day plans are out of date by now.
+    await db
+      .from('coach_actions')
+      .update({ status: 'rejected', decided_at: new Date().toISOString() })
+      .eq('status', 'proposed')
+      .in('kind', ['note', 'day_plan'])
+      .lt('created_at', dayStart);
+    const { data, error } = await db
+      .from('coach_runs')
+      .insert({ mode, source: 'gemini' })
+      .select('id, mode, finished_at, progress')
+      .single();
+    if (error) throw error;
+    run = data;
+  }
+  const runId = run.id as string;
+  const runMode = run.mode as 'dry_run' | 'live';
+  const progress = (run.progress ?? {}) as Record<string, HeadProgress>;
+  const people = await coachedPeople(db, coach.id);
+  const library = await coachLibrary(db, coach.id);
+  const ctx: Ctx = { db, coachId: coach.id, people: new Map() };
+  const save = async () => await db.from('coach_runs').update({ progress }).eq('id', runId);
+
+  for (const p of people) {
+    const entry: HeadProgress = (progress[p.id] ??= {
+      name: p.full_name ?? 'Someone',
+      attempts: 0,
+      done: false,
+    });
+    if (entry.done || entry.attempts >= MAX_ATTEMPTS) continue;
+    // One person can take up to ~90 s; stay inside the function's 150 s limit.
+    if (Date.now() - started > 30_000) return { more: true };
+    entry.attempts++;
+    await save();
+    try {
+      await reviewPerson(ctx, runId, runMode, p, library, entry, save);
+    } catch (err) {
+      entry.error = err instanceof Error ? err.message.slice(0, 200) : 'Unknown error';
+      console.error('head coach person failed', entry.error);
+      await save();
+    }
+  }
+
+  const list = Object.values(progress);
+  if (list.some((e) => !e.done && e.attempts < MAX_ATTEMPTS)) return { more: true };
+  const failed = list.filter((e) => !e.done).length;
+  await finishRun(
+    db,
+    runId,
+    headReport(runMode, list),
+    list.length - failed,
+    list.reduce((n, e) => n + (e.photos ?? 0), 0),
+    failed ? `${failed} not reviewed` : null,
+  );
+  return { finished: true, people: list.length, failed };
+}
+
+/** Save the report and tell the admins and the trainers with suggestions waiting. */
+async function finishRun(
+  db: Db,
+  runId: string,
+  report: string,
+  people: number,
+  photos: number,
+  error: string | null,
+) {
+  const { count } = await db
+    .from('coach_actions')
+    .select('id', { count: 'exact', head: true })
+    .eq('run_id', runId);
+  await db
+    .from('coach_runs')
+    .update({
+      finished_at: new Date().toISOString(),
+      report,
+      actions: count ?? 0,
+      people,
+      photos,
+      error,
+    })
+    .eq('id', runId);
+  await push(
+    db,
+    await adminIds(db),
+    'Head coach report is ready',
+    report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
+    '/admin',
+    'coach-report',
+  );
+  // Each trainer hears how many suggestions wait for them (assisted clients).
+  const { data: waiting } = await db
+    .from('coach_actions')
+    .select('client_id')
+    .eq('run_id', runId)
+    .eq('status', 'proposed');
+  const clientIds = [...new Set((waiting ?? []).map((w) => w.client_id as string))];
+  if (!clientIds.length) return;
+  const { data: links } = await db
+    .from('trainer_clients')
+    .select('client_id, trainer_id')
+    .in('client_id', clientIds)
+    .eq('ai_assist', true);
+  const perTrainer = new Map<string, number>();
+  for (const w of waiting ?? []) {
+    const t = links?.find((l) => l.client_id === w.client_id)?.trainer_id;
+    if (t) perTrainer.set(t, (perTrainer.get(t) ?? 0) + 1);
+  }
+  for (const [trainerId, n] of perTrainer) {
+    await push(
+      db,
+      [trainerId],
+      `Your AI assistant has ${n} suggestion${n === 1 ? '' : 's'}`,
+      'Open AI assistant to approve or skip them.',
+      '/trainer/assistant',
+      'coach-suggestions',
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -713,7 +1069,7 @@ async function writeNote(db: Db, p: CoachPerson, kind: 'morning' | 'evening') {
     clientBackground(db, p, today),
   ]);
   const { data, model } = await generateJsonVia({
-    chain: p.language === 'kn' ? KANNADA_CHAIN : TEXT_CHAIN,
+    chain: COACH_CHAIN,
     system: NOTE_SYSTEM,
     parts: [
       {
@@ -789,7 +1145,8 @@ async function tick(db: Db) {
     const { count } = await db
       .from('coach_runs')
       .select('id', { count: 'exact', head: true })
-      .gte('started_at', `${istDay}T00:00:00+05:30`);
+      .gte('started_at', `${istDay}T00:00:00+05:30`)
+      .not('finished_at', 'is', null);
     if (!count) {
       const admins = await adminIds(db);
       for (const id of admins) {
@@ -882,8 +1239,7 @@ async function ask(db: Db, clientId: string, question: string) {
       clientBackground(db, p, today),
     ]);
     const r = await generateJsonVia({
-      // Qwen writes poor Kannada (26–27 Oct tests): Kannada goes GPT-OSS 120B → Gemini.
-      chain: lang === 'kn' ? KANNADA_CHAIN : TEXT_CHAIN,
+      chain: COACH_CHAIN,
       system: ASK_SYSTEM,
       parts: [
         {
@@ -1304,63 +1660,18 @@ serveJson(async (req) => {
         }
         return { results };
       }
-      case 'finish_run': {
-        const runId = String(body.run_id ?? '');
-        const report = String(body.report ?? '').slice(0, 20000);
-        const { count } = await db
-          .from('coach_actions')
-          .select('id', { count: 'exact', head: true })
-          .eq('run_id', runId);
-        await db
-          .from('coach_runs')
-          .update({
-            finished_at: new Date().toISOString(),
-            report,
-            actions: count ?? 0,
-            people: Number(body.people ?? 0) || 0,
-            photos: Number(body.photos ?? 0) || 0,
-            error: body.error ? String(body.error).slice(0, 2000) : null,
-          })
-          .eq('id', runId);
-        await push(
+      case 'head_tick':
+        return await headTick(db, true);
+      case 'finish_run':
+        await finishRun(
           db,
-          await adminIds(db),
-          'Head coach report is ready',
-          report.split('\n').find((l) => l.trim()) ?? 'Open the AI Coach tab.',
-          '/admin',
-          'coach-report',
+          String(body.run_id ?? ''),
+          String(body.report ?? '').slice(0, 20000),
+          Number(body.people ?? 0) || 0,
+          Number(body.photos ?? 0) || 0,
+          body.error ? String(body.error).slice(0, 2000) : null,
         );
-        // Each trainer hears how many suggestions wait for them (assisted clients).
-        const { data: waiting } = await db
-          .from('coach_actions')
-          .select('client_id')
-          .eq('run_id', runId)
-          .eq('status', 'proposed');
-        const clientIds = [...new Set((waiting ?? []).map((w) => w.client_id as string))];
-        if (clientIds.length) {
-          const { data: links } = await db
-            .from('trainer_clients')
-            .select('client_id, trainer_id')
-            .in('client_id', clientIds)
-            .eq('ai_assist', true);
-          const perTrainer = new Map<string, number>();
-          for (const w of waiting ?? []) {
-            const t = links?.find((l) => l.client_id === w.client_id)?.trainer_id;
-            if (t) perTrainer.set(t, (perTrainer.get(t) ?? 0) + 1);
-          }
-          for (const [trainerId, n] of perTrainer) {
-            await push(
-              db,
-              [trainerId],
-              `Your AI assistant has ${n} suggestion${n === 1 ? '' : 's'}`,
-              'Open AI assistant to approve or skip them.',
-              '/trainer/assistant',
-              'coach-suggestions',
-            );
-          }
-        }
         return { finished: true };
-      }
       default:
         throw new HttpError(400, 'Unknown action', 'invalid_input');
     }
@@ -1372,7 +1683,7 @@ serveJson(async (req) => {
     if (!sameSecret(cronSecret, Deno.env.get('CRON_SECRET') ?? '')) {
       throw new HttpError(401, 'Not allowed', 'unauthorized');
     }
-    return await tick(db);
+    return body.action === 'head_tick' ? await headTick(db, false) : await tick(db);
   }
 
   // People in the app

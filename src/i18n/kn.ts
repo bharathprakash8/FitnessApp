@@ -24,8 +24,8 @@ export const kn: Record<string, string> = {
     'ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸಲು ಆಹಾರದ ಫೋಟೋಗಳು ಮತ್ತು ವಿವರಣೆಗಳನ್ನು Google ನ Gemini AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ, ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಆಹಾರದ ಫೋಟೋ ಮಾತ್ರ ತೆಗೆಯಿರಿ.',
   'To write your insights, weekly summaries and meal ideas, your first name, goal, diet preference, foods to avoid and your food, workout, weight and activity numbers are sent to Groq AI, with Google’s Gemini AI as a backup.':
     'ನಿಮ್ಮ ಒಳನೋಟಗಳು, ವಾರದ ಸಾರಾಂಶಗಳು ಮತ್ತು ಊಟದ ಸಲಹೆಗಳನ್ನು ಬರೆಯಲು ನಿಮ್ಮ ಮೊದಲ ಹೆಸರು, ಗುರಿ, ಆಹಾರ ಆದ್ಯತೆ, ಬೇಡದ ಆಹಾರಗಳು ಮತ್ತು ನಿಮ್ಮ ಆಹಾರ, ವ್ಯಾಯಾಮ, ತೂಕ ಮತ್ತು ಚಟುವಟಿಕೆಯ ಸಂಖ್ಯೆಗಳನ್ನು Groq AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ; Google ನ Gemini AI ಬ್ಯಾಕಪ್ ಆಗಿರುತ್ತದೆ.',
-  'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Claude AI (Anthropic), Groq AI and Google’s Gemini AI to coach you. You will be asked to agree to this separately.':
-    'ನೀವು AI ಕೋಚ್ ಬಳಸುತ್ತಿದ್ದರೆ, ನಿಮಗೆ ತರಬೇತಿ ನೀಡಲು ನಿಮ್ಮ ದಾಖಲೆಗಳು, ಊಟದ ಫೋಟೋಗಳು ಮತ್ತು ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳನ್ನು Claude AI (Anthropic), Groq AI ಮತ್ತು Google ನ Gemini AI ಸಹ ಪರಿಶೀಲಿಸುತ್ತವೆ. ಇದಕ್ಕೆ ಪ್ರತ್ಯೇಕವಾಗಿ ನಿಮ್ಮ ಒಪ್ಪಿಗೆ ಕೇಳಲಾಗುತ್ತದೆ.',
+  'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Google’s Gemini AI to coach you, and may be used by Google to improve its services. You will be asked to agree to this separately.':
+    'ನೀವು AI ಕೋಚ್ ಬಳಸುತ್ತಿದ್ದರೆ, ನಿಮಗೆ ತರಬೇತಿ ನೀಡಲು ನಿಮ್ಮ ದಾಖಲೆಗಳು, ಊಟದ ಫೋಟೋಗಳು ಮತ್ತು ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳನ್ನು Google ನ Gemini AI ಸಹ ಪರಿಶೀಲಿಸುತ್ತದೆ ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ಇದಕ್ಕೆ ಪ್ರತ್ಯೇಕವಾಗಿ ನಿಮ್ಮ ಒಪ್ಪಿಗೆ ಕೇಳಲಾಗುತ್ತದೆ.',
   'These AI services may run outside India.': 'ಈ AI ಸೇವೆಗಳು ಭಾರತದ ಹೊರಗೆ ನಡೆಯಬಹುದು.',
   'Where it is kept': 'ಇದನ್ನು ಎಲ್ಲಿ ಇಡಲಾಗುತ್ತದೆ',
   'Your data is stored on a private server in South Korea.':
@@ -1002,10 +1002,10 @@ export const kn: Record<string, string> = {
   'Meet your AI coach': 'ನಿಮ್ಮ AI ಕೋಚ್ ಪರಿಚಯ',
   'Your coach is an AI, supervised by the admin, who can see and undo every change.':
     'ನಿಮ್ಮ ಕೋಚ್ ಒಂದು AI. ಅಡ್ಮಿನ್ ಇದನ್ನು ಗಮನಿಸುತ್ತಾರೆ ಮತ್ತು ಪ್ರತಿಯೊಂದು ಬದಲಾವಣೆಯನ್ನು ನೋಡಿ ರದ್ದು ಮಾಡಬಹುದು.',
-  'Each morning Claude AI (Anthropic) reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.':
-    'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ Claude AI (Anthropic) ನಿಮ್ಮ ಊಟ ಮತ್ತು ಊಟದ ಫೋಟೋಗಳು, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ, ಕ್ಯಾಲೊರಿ ಅಂದಾಜುಗಳನ್ನು ಸರಿಪಡಿಸಬಹುದು, ಇಂದಿನ ವ್ಯಾಯಾಮವನ್ನು ಆರಿಸುತ್ತದೆ ಮತ್ತು ನಿಮಗೆ ಒಂದು ಸಂದೇಶ ಬರೆಯುತ್ತದೆ.',
-  'Quick answers and notes during the day come from Groq and Google Gemini AI. Your profile, health conditions and logs are shared with them for this.':
-    'ದಿನದ ತ್ವರಿತ ಉತ್ತರಗಳು ಮತ್ತು ಸಂದೇಶಗಳು Groq ಮತ್ತು Google Gemini AI ಯಿಂದ ಬರುತ್ತವೆ. ಇದಕ್ಕಾಗಿ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್, ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳು ಮತ್ತು ದಾಖಲೆಗಳನ್ನು ಅವುಗಳೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ.',
+  'Each morning Google Gemini AI reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.':
+    'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ Google Gemini AI ನಿಮ್ಮ ಊಟ ಮತ್ತು ಊಟದ ಫೋಟೋಗಳು, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ, ಕ್ಯಾಲೊರಿ ಅಂದಾಜುಗಳನ್ನು ಸರಿಪಡಿಸಬಹುದು, ಇಂದಿನ ವ್ಯಾಯಾಮವನ್ನು ಆರಿಸುತ್ತದೆ ಮತ್ತು ನಿಮಗೆ ಒಂದು ಸಂದೇಶ ಬರೆಯುತ್ತದೆ.',
+  'Quick answers and notes during the day also come from Google Gemini AI. Your profile, health conditions and logs are shared with Google for this and may be used to improve its services.':
+    'ದಿನದ ತ್ವರಿತ ಉತ್ತರಗಳು ಮತ್ತು ಸಂದೇಶಗಳು ಸಹ Google Gemini AI ಯಿಂದ ಬರುತ್ತವೆ. ಇದಕ್ಕಾಗಿ ನಿಮ್ಮ ಪ್ರೊಫೈಲ್, ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳು ಮತ್ತು ದಾಖಲೆಗಳನ್ನು Google ನೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ ಮತ್ತು ಅದರ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಬಳಸಬಹುದು.',
   'The coach is not a doctor and never gives medical advice. For health problems talk to your doctor; in an emergency call 108.':
     'ಕೋಚ್ ವೈದ್ಯರಲ್ಲ, ವೈದ್ಯಕೀಯ ಸಲಹೆ ನೀಡುವುದಿಲ್ಲ. ಆರೋಗ್ಯ ಸಮಸ್ಯೆಗಳಿಗೆ ನಿಮ್ಮ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ; ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ 108 ಗೆ ಕರೆ ಮಾಡಿ.',
   'I agree – start my AI coach': 'ನಾನು ಒಪ್ಪುತ್ತೇನೆ – ನನ್ನ AI ಕೋಚ್ ಪ್ರಾರಂಭಿಸಿ',

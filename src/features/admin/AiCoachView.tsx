@@ -169,7 +169,7 @@ function ModeBar({
 }) {
   const text =
     mode === 'dry_run'
-      ? 'Dry run – Claude only proposes. Nothing changes for anyone until you approve it.'
+      ? 'Dry run – the head coach only proposes. Nothing changes for anyone until you approve it.'
       : mode === 'live'
         ? 'Live – small changes apply at once (you can undo them). Targets and plans still need you.'
         : 'Off – no head coach, no notes. People keep their normal plans.';

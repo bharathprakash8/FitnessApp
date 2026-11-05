@@ -19,7 +19,7 @@ One admin creates trainers and clients and maps each client to one trainer. Trai
 - **Android:** Capacitor (same codebase) with Health Connect, Local Notifications, Push Notifications, Camera plugins
 - **Backend:** Supabase – Postgres with Row Level Security, Auth (email OTP code), Storage, Edge Functions (Deno/TypeScript), `pg_cron` + `pg_net`
 - **Push:** Firebase Cloud Messaging only (web push for the PWA, FCM for Android). No other Firebase services except App Distribution.
-- **AI:** Gemini API, called **only** from Edge Functions, model from the `GEMINI_MODEL` secret, structured JSON output. Added 27 Oct 2026 (owner): **Groq** (GPT-OSS 120B / Qwen, Edge Functions only, `GROQ_API_KEY`) for fast text – chat, notes, insights, weekly summaries – via `_shared/ai.ts` with Gemini as backup; **Claude** as the AI coach's daily head coach (scheduled task on the owner's PC, `coach/HEAD_COACH.md`, talks to the `coach` function with `COACH_API_KEY`). Photos, voice and meal estimates stay on Gemini.
+- **AI:** Gemini API, called **only** from Edge Functions, model from the `GEMINI_MODEL` secret, structured JSON output. Added 27 Oct 2026 (owner): **Groq** (GPT-OSS 120B / Qwen, Edge Functions only, `GROQ_API_KEY`) for fast text – insights, weekly summaries – via `_shared/ai.ts` with Gemini as backup. Changed 5 Nov 2026 (owner): the AI coach (head coach, chat and notes) runs on **Gemini** on the server, not Groq or Claude. Photos, voice and meal estimates stay on Gemini.
 - **Hosting:** Vercel (Hobby). **Errors:** Sentry (optional). **CI/ops:** GitHub Actions.
 
 ## Non-negotiable rules

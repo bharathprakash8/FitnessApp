@@ -425,7 +425,7 @@ export async function personSummary(db: SupabaseClient, p: CoachPerson, today: s
   };
 }
 
-/** A small version of personSummary for chat: fewer tokens = faster answers on Groq. */
+/** A small version of personSummary for chat: fewer tokens = faster answers. */
 /** The 7 dates up to and including today, oldest first. */
 function last7Days(today: string) {
   return Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
