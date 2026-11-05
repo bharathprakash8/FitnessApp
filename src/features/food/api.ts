@@ -114,7 +114,24 @@ export async function uploadMealPhoto(clientId: string, day: string, photo: Blob
   return path;
 }
 
+/** A suggested portion of the plate in the photo (worked out on the server). */
+export interface PortionAdvice {
+  status: 'ok';
+  eaten_today_kcal: number;
+  meals_logged_today: number;
+  caution: boolean;
+  budget_kcal: number;
+  plate_kcal: number;
+  suggested_kcal: number;
+  suggested_protein_g: number;
+  left_after_kcal: number;
+  eat_all: boolean;
+  items: (MealItem & { reduced: boolean })[];
+  add_protein_foods: string[];
+}
+
 export interface Analysis {
+  advice?: PortionAdvice | { status: 'no_target' } | null;
   items: MealItem[];
   total_calories: number;
   follow_up_question: string | null;
@@ -140,6 +157,8 @@ export async function analyzeMeal(input: {
   detail?: 'quick' | 'detailed';
   /** Re-estimate just this one item (after the client renamed or re-sized it). */
   item?: { name: string; portion: string };
+  /** Also suggest how much of this plate to eat. */
+  advice?: boolean;
 }): Promise<Analysis> {
   // The AI is sometimes briefly busy (all free models slow or used up at that moment):
   // try once more by itself before showing an error.

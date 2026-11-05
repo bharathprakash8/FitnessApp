@@ -413,6 +413,7 @@ export type Database = {
           model: string | null
           question: string
           red_flag: boolean
+          remembered: string | null
           status: string
         }
         Insert: {
@@ -427,6 +428,7 @@ export type Database = {
           model?: string | null
           question: string
           red_flag?: boolean
+          remembered?: string | null
           status?: string
         }
         Update: {
@@ -441,6 +443,7 @@ export type Database = {
           model?: string | null
           question?: string
           red_flag?: boolean
+          remembered?: string | null
           status?: string
         }
         Relationships: [

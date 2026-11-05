@@ -3,12 +3,14 @@
 //   detail: 'quick' (default, at most ~20 s) or 'detailed' (closer look, at most ~30 s)
 //   item: { name, portion } – re-estimate one item the client renamed or re-sized
 //         (counts against the follow-up allowance, not the main one)
+//   advice: true – also suggest how much of this plate to eat (see _shared/portion.ts)
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { z } from 'npm:zod@3';
 
 import { adminClient, requireCaller } from '../_shared/auth.ts';
 import { generateJson, lastTimings, type Part } from '../_shared/gemini.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { suggestPortions, type PlateItem } from '../_shared/portion.ts';
 import { todayIn } from '../_shared/util.ts';
 
 const DAILY_CAP = 15;
@@ -89,6 +91,29 @@ const SCHEMA = {
   required: ['items', 'follow_up_question', 'follow_up_options', 'total_calories'],
 };
 
+// Portion advice also needs each item in household units.
+const ADVICE_SCHEMA = {
+  ...SCHEMA,
+  properties: {
+    ...SCHEMA.properties,
+    items: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          ...SCHEMA.properties.items.items.properties,
+          count: { type: 'NUMBER' },
+          unit: { type: 'STRING' },
+          grams: { type: 'NUMBER' },
+        },
+        required: [...SCHEMA.properties.items.items.required, 'count', 'unit', 'grams'],
+      },
+    },
+  },
+};
+
+const ADVICE_PROMPT = `For each item also give the amount on the plate: unit is what an Indian home cook counts it in (chapati, idli, dosa, piece, katori, cup, tablespoon, glass), count is how many of that unit (use 0 and an empty unit only when it can't be counted), and grams is your estimate of its total weight. Do not ask a follow-up question.`;
+
 const Body = z
   .object({
     photo_path: z.string().max(200).optional(),
@@ -101,6 +126,7 @@ const Body = z
     item: z
       .object({ name: z.string().trim().min(1).max(80), portion: z.string().trim().max(80) })
       .optional(),
+    advice: z.boolean().default(false),
   })
   .refine((b) => b.photo_path || b.text || b.item, {
     message: 'Add a photo or describe the meal',
@@ -126,6 +152,9 @@ const AiResult = z.object({
         carbs_g: num(1000),
         fat_g: num(500),
         confidence: z.enum(['high', 'medium', 'low']).catch('low'),
+        count: num(50).catch(0),
+        unit: z.string().trim().max(30).catch(''),
+        grams: num(3000).catch(0),
       }),
     )
     .max(20),
@@ -154,7 +183,7 @@ serveJson(async (req) => {
 
   const { data: profile, error: pErr } = await db
     .from('profiles')
-    .select('diet_preference, timezone')
+    .select('diet_preference, timezone, sex, foods_to_avoid, health_conditions')
     .eq('id', caller.id)
     .single();
   if (pErr) throw pErr;
@@ -203,6 +232,8 @@ serveJson(async (req) => {
     prompt += `\nEstimate exactly one food item: "${body.item.name}"${portion}. Return exactly one item with this name and portion. Do not ask a follow-up question.`;
   }
   if (detailed) prompt += `\n${DETAILED}`;
+  const wantsAdvice = body.advice && !secondary;
+  if (wantsAdvice) prompt += `\n${ADVICE_PROMPT}`;
   // Detailed photo: step 1, a careful look at what is on the plate (counts and amounts).
   if (detailed && body.photo_path) {
     const look = await generateJson({
@@ -231,16 +262,18 @@ serveJson(async (req) => {
     await generateJson({
       system: SYSTEM,
       parts,
-      schema: SCHEMA,
-      feature: body.item
-        ? 'meal-reestimate'
-        : body.follow_up
-          ? 'meal-follow-up'
-          : body.photo_path
-            ? detailed
-              ? 'meal-photo-detailed'
-              : 'meal-photo'
-            : 'meal-text',
+      schema: wantsAdvice ? ADVICE_SCHEMA : SCHEMA,
+      feature: wantsAdvice
+        ? 'meal-portion'
+        : body.item
+          ? 'meal-reestimate'
+          : body.follow_up
+            ? 'meal-follow-up'
+            : body.photo_path
+              ? detailed
+                ? 'meal-photo-detailed'
+                : 'meal-photo'
+              : 'meal-text',
       // Lite models first (fast, large free quota); the same answer for the same photo.
       preferLite: true,
       temperature: 0,
@@ -273,14 +306,50 @@ serveJson(async (req) => {
     mainUsed = main?.count ?? 0;
   }
 
-  const items = result.data.items;
-  const followUp = secondary ? '' : result.data.follow_up_question.trim();
+  const plate = result.data.items;
+  // What the app saves: the portion fields only.
+  const items = plate.map(({ count: _c, unit: _u, grams: _g, ...item }) => item);
+  const followUp = secondary || wantsAdvice ? '' : result.data.follow_up_question.trim();
+
+  let advice: Record<string, unknown> | null = null;
+  if (wantsAdvice && plate.length) {
+    const [{ data: target }, { data: today }] = await Promise.all([
+      db
+        .from('targets')
+        .select('calories, protein_g')
+        .eq('client_id', caller.id)
+        .lte('effective_from', day)
+        .order('effective_from', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      db.from('meal_logs').select('total_calories').eq('client_id', caller.id).eq('eaten_on', day),
+    ]);
+    const eaten = (today ?? []).reduce((s, m) => s + Number(m.total_calories ?? 0), 0);
+    advice = target
+      ? {
+          status: 'ok',
+          eaten_today_kcal: eaten,
+          meals_logged_today: (today ?? []).length,
+          caution: (profile.health_conditions ?? []).length > 0,
+          ...suggestPortions(plate as PlateItem[], {
+            mealType: body.meal_type,
+            targetKcal: target.calories,
+            targetProtein: target.protein_g ?? 0,
+            eatenKcal: eaten,
+            sex: profile.sex,
+            diet: profile.diet_preference,
+            foodsToAvoid: profile.foods_to_avoid,
+          }),
+        }
+      : { status: 'no_target' };
+  }
   return {
     items,
     total_calories: Math.round(items.reduce((s, i) => s + i.calories, 0)),
     follow_up_question: followUp || null,
     follow_up_options: followUp ? result.data.follow_up_options : [],
     remaining_today: Math.max(0, DAILY_CAP - mainUsed),
+    advice,
     ai_timing: lastTimings, // which models were tried and how long each took
   };
 });

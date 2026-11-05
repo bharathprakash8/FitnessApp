@@ -1060,4 +1060,29 @@ export const kn: Record<string, string> = {
     'ಅವರು ಆ್ಯಪ್‌ನಲ್ಲಿ ಒಪ್ಪುವುದಕ್ಕಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ (ಅವರ ಇಂದು ಪುಟದಲ್ಲಿ ಒಂದು ಕಾರ್ಡ್).',
   'Switch on to let the AI check their meals and photos every morning, suggest today’s plan and answer their questions – you approve everything.':
     'ಪ್ರತಿದಿನ ಬೆಳಿಗ್ಗೆ AI ಅವರ ಊಟ ಮತ್ತು ಫೋಟೋಗಳನ್ನು ಪರಿಶೀಲಿಸಲು, ಇಂದಿನ ಯೋಜನೆ ಸೂಚಿಸಲು ಮತ್ತು ಅವರ ಪ್ರಶ್ನೆಗಳಿಗೆ ಉತ್ತರಿಸಲು ಆನ್ ಮಾಡಿ – ಎಲ್ಲವನ್ನೂ ನೀವು ಒಪ್ಪುತ್ತೀರಿ.',
+  'Suggested portion': 'ಸೂಚಿಸಿದ ಪ್ರಮಾಣ',
+  'You can eat all of this': 'ಇದೆಲ್ಲವನ್ನೂ ತಿನ್ನಬಹುದು',
+  'About {kcal} kcal, {protein} g protein': 'ಸುಮಾರು {kcal} kcal, {protein} g ಪ್ರೋಟೀನ್',
+  'Your full plate is about {kcal} kcal.': 'ನಿಮ್ಮ ಪೂರ್ತಿ ತಟ್ಟೆ ಸುಮಾರು {kcal} kcal.',
+  'This leaves about {kcal} kcal for the rest of today.':
+    'ಇಂದಿನ ಉಳಿದ ಸಮಯಕ್ಕೆ ಸುಮಾರು {kcal} kcal ಉಳಿಯುತ್ತದೆ.',
+  'This meal is light on protein. Add some {foods} if you can.':
+    'ಈ ಊಟದಲ್ಲಿ ಪ್ರೋಟೀನ್ ಕಡಿಮೆ ಇದೆ. ಸಾಧ್ಯವಾದರೆ ಸ್ವಲ್ಪ {foods} ಸೇರಿಸಿ.',
+  'No meals logged today yet. If you have already eaten, log that first to keep this right.':
+    'ಇಂದು ಇನ್ನೂ ಯಾವುದೇ ಊಟ ದಾಖಲಿಸಿಲ್ಲ. ಈಗಾಗಲೇ ತಿಂದಿದ್ದರೆ, ಇದು ಸರಿಯಾಗಿರಲು ಮೊದಲು ಅದನ್ನು ದಾಖಲಿಸಿ.',
+  'This is a general guide. Please follow what your doctor has told you about food.':
+    'ಇದು ಸಾಮಾನ್ಯ ಮಾರ್ಗದರ್ಶಿ. ಆಹಾರದ ಬಗ್ಗೆ ನಿಮ್ಮ ವೈದ್ಯರು ಹೇಳಿದ್ದನ್ನು ಪಾಲಿಸಿ.',
+  'Log this meal': 'ಈ ಊಟವನ್ನು ದಾಖಲಿಸಿ',
+  'Log this portion': 'ಈ ಪ್ರಮಾಣವನ್ನು ದಾಖಲಿಸಿ',
+  'I ate the full plate': 'ನಾನು ಪೂರ್ತಿ ತಟ್ಟೆ ತಿಂದೆ',
+  'You can change the amounts before saving.': 'ಉಳಿಸುವ ಮೊದಲು ಪ್ರಮಾಣವನ್ನು ಬದಲಾಯಿಸಬಹುದು.',
+  'Which meal is this?': 'ಇದು ಯಾವ ಊಟ?',
+  'How much should I eat?': 'ನಾನು ಎಷ್ಟು ತಿನ್ನಬೇಕು?',
+  'About 20 seconds – suggests a portion of this plate for you':
+    'ಸುಮಾರು 20 ಸೆಕೆಂಡ್ – ಈ ತಟ್ಟೆಯಿಂದ ನಿಮಗೆ ಎಷ್ಟು ಎಂದು ಸೂಚಿಸುತ್ತದೆ',
+  'Working out your portion…': 'ನಿಮ್ಮ ಪ್ರಮಾಣವನ್ನು ಲೆಕ್ಕ ಹಾಕಲಾಗುತ್ತಿದೆ…',
+  'You don’t have a calorie target yet, so here is the estimate for the whole plate. Ask your trainer to set one to get portion suggestions.':
+    'ನಿಮಗೆ ಇನ್ನೂ ಕ್ಯಾಲೊರಿ ಗುರಿ ಇಲ್ಲ, ಆದ್ದರಿಂದ ಇದು ಪೂರ್ತಿ ತಟ್ಟೆಯ ಅಂದಾಜು. ಪ್ರಮಾಣದ ಸಲಹೆಗಳಿಗಾಗಿ ಗುರಿ ನಿಗದಿಪಡಿಸಲು ನಿಮ್ಮ ತರಬೇತುದಾರರನ್ನು ಕೇಳಿ.',
+  'Based on {kcal} kcal logged so far today. Log your other meals to keep this right.':
+    'ಇಂದು ಇಲ್ಲಿಯವರೆಗೆ ದಾಖಲಿಸಿದ {kcal} kcal ಆಧಾರದಲ್ಲಿ. ಇದು ಸರಿಯಾಗಿರಲು ನಿಮ್ಮ ಇತರ ಊಟಗಳನ್ನೂ ದಾಖಲಿಸಿ.',
 };

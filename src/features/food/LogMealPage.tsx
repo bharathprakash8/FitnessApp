@@ -2,6 +2,7 @@ import {
   IonBackButton,
   IonButton,
   IonButtons,
+  IonChip,
   IonContent,
   IonHeader,
   IonIcon,
@@ -29,17 +30,40 @@ import {
   uploadMealPhoto,
   useSaveMeal,
   type Analysis,
+  type PortionAdvice as Advice,
   reestimateItem,
 } from './api';
 import { Countdown } from './Countdown';
 import { MealEditor, type MealEditorValues } from './MealEditor';
-import { localToIso, mealTypeForHour, nowIn, totalsOf, type MealSource } from './model';
+import {
+  MEAL_LABELS,
+  MEAL_TYPES,
+  localToIso,
+  mealTypeForHour,
+  nowIn,
+  totalsOf,
+  type MealItem,
+  type MealSource,
+  type MealType,
+} from './model';
+import { PortionAdvice } from './PortionAdvice';
 import './food.css';
 import { useT } from '../../i18n/i18n';
 
-type Stage = 'input' | 'choose' | 'working' | 'review';
+type Stage = 'input' | 'choose' | 'working' | 'portion' | 'review';
 type Detail = 'quick' | 'detailed';
 const SECONDS: Record<Detail, number> = { quick: 20, detailed: 30 };
+
+/** The saved form of a suggested item (without the "reduced" marker). */
+const plainItem = (item: Advice['items'][number]): MealItem => ({
+  name: item.name,
+  portion: item.portion,
+  calories: item.calories,
+  protein_g: item.protein_g,
+  carbs_g: item.carbs_g,
+  fat_g: item.fat_g,
+  confidence: item.confidence,
+});
 
 /** Log a meal: photo → AI estimate, text → AI estimate, or manual entry. */
 export function LogMealPage() {
@@ -67,6 +91,12 @@ export function LogMealPage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [answering, setAnswering] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  const [mealType, setMealType] = useState<MealType>(initialType);
+  const [advice, setAdvice] = useState<Advice | null>(null);
+  const [noTarget, setNoTarget] = useState(false);
+  const [askingPortion, setAskingPortion] = useState(false);
+  // What the editor opens with: normally the AI's items, or the suggested portion.
+  const [editorItems, setEditorItems] = useState<MealItem[] | null>(null);
   // Photo flow: the photo uploads while the client picks Quick or Detailed.
   const upload = useRef<Promise<string> | null>(null);
   const [countdown, setCountdown] = useState<Detail | null>(null);
@@ -109,7 +139,7 @@ export function LogMealPage() {
     try {
       const path = await upload.current;
       setPhotoPath(path);
-      setAnalysis(await analyzeMeal({ photo_path: path, meal_type: initialType, detail }));
+      setAnalysis(await analyzeMeal({ photo_path: path, meal_type: mealType, detail }));
       setStage('review');
     } catch (err) {
       setError(err instanceof Error ? err.message : tx('Something went wrong.'));
@@ -117,6 +147,46 @@ export function LogMealPage() {
     } finally {
       setCountdown(null);
     }
+  }
+
+  /** "How much should I eat?": a suggested portion of this plate, before eating. */
+  async function askPortion() {
+    if (!upload.current) return;
+    setStage('working');
+    setAskingPortion(true);
+    setCountdown('quick');
+    try {
+      const path = await upload.current;
+      setPhotoPath(path);
+      const result = await analyzeMeal({
+        photo_path: path,
+        meal_type: mealType,
+        detail: 'quick',
+        advice: true,
+      });
+      setAnalysis(result);
+      if (result.advice?.status === 'ok') {
+        setAdvice(result.advice);
+        setStage('portion');
+      } else {
+        // No target yet (or no food found): show the normal estimate and say why.
+        setNoTarget(result.advice?.status === 'no_target');
+        setStage('review');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : tx('Something went wrong.'));
+      setStage('input');
+    } finally {
+      setCountdown(null);
+      setAskingPortion(false);
+    }
+  }
+
+  /** On to the normal editor, with the suggested portion or the full plate filled in. */
+  function logFrom(items: MealItem[]) {
+    setEditorItems(items);
+    setEditorKey((k) => k + 1);
+    setStage('review');
   }
 
   async function onText() {
@@ -273,8 +343,37 @@ export function LogMealPage() {
 
           {stage === 'choose' && (
             <div className="food-choose">
+              {day === now.date && (
+                <>
+                  <div className="portion-meal" role="group" aria-label={tx('Which meal is this?')}>
+                    {MEAL_TYPES.map((m) => (
+                      <IonChip
+                        key={m}
+                        color={m === mealType ? 'primary' : 'medium'}
+                        outline={m !== mealType}
+                        onClick={() => setMealType(m)}
+                      >
+                        {tx(MEAL_LABELS[m])}
+                      </IonChip>
+                    ))}
+                  </div>
+                  <IonButton expand="block" size="large" onClick={() => void askPortion()}>
+                    <div className="food-choice">
+                      <strong>{tx('How much should I eat?')}</strong>
+                      <span>
+                        {tx('About 20 seconds – suggests a portion of this plate for you')}
+                      </span>
+                    </div>
+                  </IonButton>
+                </>
+              )}
               <p className="food-muted">{tx('How should the AI look at your photo?')}</p>
-              <IonButton expand="block" size="large" onClick={() => void estimatePhoto('detailed')}>
+              <IonButton
+                expand="block"
+                size="large"
+                fill={day === now.date ? 'outline' : 'solid'}
+                onClick={() => void estimatePhoto('detailed')}
+              >
                 <div className="food-choice">
                   <strong>{tx('Detailed analysis')}</strong>
                   <span>
@@ -327,9 +426,11 @@ export function LogMealPage() {
               <Countdown
                 seconds={SECONDS[countdown]}
                 label={
-                  countdown === 'detailed'
-                    ? tx('Looking closely at your meal…')
-                    : tx('Estimating calories…')
+                  askingPortion
+                    ? tx('Working out your portion…')
+                    : countdown === 'detailed'
+                      ? tx('Looking closely at your meal…')
+                      : tx('Estimating calories…')
                 }
               />
             ) : (
@@ -350,8 +451,23 @@ export function LogMealPage() {
             </>
           )}
 
+          {stage === 'portion' && advice && (
+            <PortionAdvice
+              advice={advice}
+              onLogSuggested={() => logFrom(advice.items.map(plainItem))}
+              onLogPlate={() => logFrom(analysis?.items ?? [])}
+            />
+          )}
+
           {stage === 'review' && (
             <>
+              {noTarget && (
+                <p className="portion-tip">
+                  {tx(
+                    'You don’t have a calorie target yet, so here is the estimate for the whole plate. Ask your trainer to set one to get portion suggestions.',
+                  )}
+                </p>
+              )}
               {analysis && analysis.items.length === 0 && (
                 <IonText color="warning">
                   <p>{tx('No food was recognised. Add the items yourself below.')}</p>
@@ -360,8 +476,8 @@ export function LogMealPage() {
               <MealEditor
                 onReestimate={reestimateItem}
                 key={editorKey}
-                initialItems={analysis?.items ?? []}
-                initialMealType={initialType}
+                initialItems={editorItems ?? analysis?.items ?? []}
+                initialMealType={mealType}
                 initialDate={day}
                 initialTime={initialTime}
                 maxDate={now.date}
