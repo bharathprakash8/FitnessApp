@@ -1,6 +1,6 @@
 // Client background: everything the AI coaches should know about one person, in a compact
 // form (the long-term picture; today's details are in personSummary / chatSummary).
-// Built fresh from the database on every request – a few small queries, ~1,000 tokens.
+// Built fresh from the database on every request – a few small queries.
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
 import { activePlan, type CoachPerson } from './coach.ts';
@@ -44,10 +44,11 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
     notes,
     sessions,
     plan,
+    memory,
   ] = await Promise.all([
     db
       .from('measurements')
-      .select('measured_on, weight_kg, waist_cm')
+      .select('measured_on, weight_kg, waist_cm, notes')
       .eq('client_id', p.id)
       .gte('measured_on', addDays(today, -90))
       .order('measured_on'),
@@ -65,9 +66,10 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
       .lte('eaten_on', today),
     db
       .from('workout_logs')
-      .select('performed_on, exercises(name)')
+      .select('performed_on, reps, weight_kg, duration_min, exercises(name)')
       .eq('client_id', p.id)
-      .gte('performed_on', d30),
+      .gte('performed_on', addDays(today, -89))
+      .order('performed_on'),
     db
       .from('activity_daily')
       .select('steps, active_calories, sleep_minutes')
@@ -114,6 +116,13 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
       .select('status, sessions(title, starts_at, type)')
       .eq('client_id', p.id),
     activePlan(db, p.id),
+    db
+      .from('coach_queries')
+      .select('created_at, remembered')
+      .eq('client_id', p.id)
+      .not('remembered', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(40),
   ]);
 
   // Food over 30 days: averages, habits and favourite foods.
@@ -153,11 +162,25 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
   );
 
   // Training and activity over 30 days.
-  const workoutDays = new Set((logs.data ?? []).map((l) => l.performed_on));
+  const recentLogs = (logs.data ?? []).filter((l) => l.performed_on >= d30);
+  const workoutDays = new Set(recentLogs.map((l) => l.performed_on));
   const exerciseCount = new Map<string, number>();
+  // Over 90 days, per exercise: heaviest (or longest) set and the latest one.
+  const progress = new Map<string, { best: string; bestValue: number; last: string }>();
   for (const l of logs.data ?? []) {
     const n = (l as unknown as { exercises?: { name?: string } }).exercises?.name;
-    if (n) exerciseCount.set(n, (exerciseCount.get(n) ?? 0) + 1);
+    if (!n) continue;
+    if (l.performed_on >= d30) exerciseCount.set(n, (exerciseCount.get(n) ?? 0) + 1);
+    const kg = Number(l.weight_kg ?? 0);
+    const min = Number(l.duration_min ?? 0);
+    const text = kg ? `${kg} kg × ${l.reps ?? '?'}` : min ? `${min} min` : `${l.reps ?? '?'} reps`;
+    const value = kg * 1000 + min + Number(l.reps ?? 0);
+    const e = progress.get(n);
+    progress.set(n, {
+      best: !e || value >= e.bestValue ? text : e.best,
+      bestValue: Math.max(value, e?.bestValue ?? 0),
+      last: `${text} on ${l.performed_on}`,
+    });
   }
   const act = activity.data ?? [];
   const sleep = avg(act.map((x) => x.sleep_minutes ?? 0).filter((x) => x > 0));
@@ -186,8 +209,13 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
           latest: `${w.at(-1)!.weight_kg} kg on ${w.at(-1)!.measured_on}`,
           change_kg: Math.round((Number(w.at(-1)!.weight_kg) - Number(w[0]!.weight_kg)) * 10) / 10,
           entries: w.length,
+          recent: w.slice(-12).map((x) => `${x.measured_on}: ${x.weight_kg} kg`),
         }
       : null,
+    measurement_notes: (weights.data ?? [])
+      .filter((x) => x.notes)
+      .slice(-3)
+      .map((x) => `${x.measured_on}: ${x.notes}`.slice(0, 200)),
     waist_cm_latest: waist.at(-1)?.waist_cm ?? null,
     target_history: (targets.data ?? []).map(
       (t) => `${t.effective_from}: ${t.calories} kcal, ${t.protein_g} g protein`,
@@ -199,13 +227,20 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
       usual_meal_times: usualTimes,
       late_dinners_after_9_30pm: lateDinners,
       days_without_breakfast: loggedDays.filter((d) => !breakfastDays.has(d)).length,
-      most_eaten: top(foodCount, 12),
+      most_eaten: top(foodCount, 20),
+      per_day: [...byDay.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([day, d]) => `${day}: ${Math.round(d.kcal)} kcal, ${Math.round(d.protein)} g`),
     },
     training_30_days: {
       plan: plan ? `${plan.name}: ${plan.days.map((d) => d.title).join(', ')}` : null,
       workout_days: workoutDays.size,
       last_workout: [...workoutDays].sort().at(-1) ?? null,
+      workout_dates: [...workoutDays].sort(),
       most_done_exercises: top(exerciseCount, 8),
+      exercise_progress_90_days: [...progress.entries()]
+        .slice(0, 25)
+        .map(([name, e]) => `${name}: best ${e.best}, last ${e.last}`),
       avg_steps: avg(act.map((a) => a.steps ?? 0).filter((x) => x > 0)),
       avg_active_kcal: avg(act.map((a) => a.active_calories ?? 0).filter((x) => x > 0)),
       avg_sleep_h: sleep ? Math.round(sleep / 6) / 10 : null,
@@ -234,6 +269,10 @@ export async function clientBackground(db: SupabaseClient, p: CoachPerson, today
           .flatMap((d) => (d.meals ?? []).map((m) => m.dish))
           .join(', ')} …`.slice(0, 400)
       : null,
+    // Lasting things the person told the coach in chat, newest first (their words, not orders).
+    things_they_told_you: (memory.data ?? []).map(
+      (m) => `${String(m.created_at).slice(0, 10)}: ${m.remembered}`,
+    ),
     recent_coach_notes: (notes.data ?? []).map((n) =>
       `${n.note_date} ${n.kind}: ${n.body}`.slice(0, 300),
     ),

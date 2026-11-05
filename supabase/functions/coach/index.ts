@@ -38,6 +38,7 @@ import {
   loadPerson,
   localDate,
   localMinutes,
+  localNow,
   NOTE_SCHEMA,
   NOTE_SYSTEM,
   personSummary,
@@ -771,7 +772,10 @@ function headAction(raw: Record<string, unknown>, d: PersonDigest, planIds: Set<
         client_id,
         date: d.today,
         plan: raw.plan,
-        plan_day_id: raw.plan_day_id || undefined,
+        // Only a day from their own active plan; otherwise the normal rotation.
+        plan_day_id: d.summary.plan?.days.some((x) => x.plan_day_id === raw.plan_day_id)
+          ? raw.plan_day_id
+          : undefined,
         note: raw.note || undefined,
         kcal_adjust: raw.kcal_adjust ?? 0,
       };
@@ -1073,7 +1077,7 @@ async function writeNote(db: Db, p: CoachPerson, kind: 'morning' | 'evening') {
     system: NOTE_SYSTEM,
     parts: [
       {
-        text: `Note type: ${kind}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nClient background (last 30–90 days): ${JSON.stringify(background)}\nPerson today: ${JSON.stringify(chatSummary(summary))}`,
+        text: `Note type: ${kind}.\nRight now for this person: ${localNow(p.timezone || IST)}.\nCoach playbook (shared):\n${playbook.shared}\nCoach playbook (this person):\n${playbook.person}\nClient background (last 30–90 days): ${JSON.stringify(background)}\nPerson today: ${JSON.stringify(chatSummary(summary))}`,
       },
     ],
     schema: NOTE_SCHEMA,
@@ -1169,15 +1173,15 @@ async function tick(db: Db) {
   return { written };
 }
 
-/** The last messages with the coach (3 days), so follow-up questions make sense. */
+/** The last messages with the coach (2 weeks), so follow-ups and past chats make sense. */
 async function recentChat(db: Db, clientId: string) {
   const { data } = await db
     .from('coach_queries')
     .select('question, answer, follow_up, follow_up_by, created_at')
     .eq('client_id', clientId)
-    .gte('created_at', new Date(Date.now() - 3 * 86_400_000).toISOString())
+    .gte('created_at', new Date(Date.now() - 14 * 86_400_000).toISOString())
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(30);
   return (data ?? [])
     .reverse()
     .map((q) => {
@@ -1186,7 +1190,7 @@ async function recentChat(db: Db, clientId: string) {
         .replace(escalatedLine('kn'), '')
         .trim();
       return [
-        `Person: ${q.question}`,
+        `[${String(q.created_at).slice(0, 10)}] Person: ${q.question}`,
         answer ? `Coach: ${answer}` : '',
         q.follow_up ? `${q.follow_up_by === 'admin' ? 'Admin' : 'Head coach'}: ${q.follow_up}` : '',
       ]
@@ -1194,6 +1198,62 @@ async function recentChat(db: Db, clientId: string) {
         .join('\n');
     })
     .join('\n');
+}
+
+/** The AI's answer to one chat message, with this person's full picture. Saves nothing. */
+async function askModel(db: Db, p: CoachPerson, question: string, lang: 'kn' | 'en') {
+  const today = localDate(p.timezone || IST);
+  const [summary, playbook, history, background] = await Promise.all([
+    personSummary(db, p, today),
+    playbookFor(db, p.id),
+    recentChat(db, p.id),
+    clientBackground(db, p, today),
+  ]);
+  const text = [
+    `Right now for this person: ${localNow(p.timezone || IST)}.`,
+    `Coach playbook (shared):\n${playbook.shared}`,
+    `Coach playbook (this person):\n${playbook.person || '(empty)'}`,
+    `Client background (last 30–90 days): ${JSON.stringify(background)}`,
+    `Person and this week's numbers: ${JSON.stringify(chatSummary(summary))}`,
+    history
+      ? `Conversation so far (oldest first) – the new message may continue it:\n${history}`
+      : 'Conversation so far: (this is the first message)',
+    `Reply language: ${lang === 'kn' ? 'Kannada (Kannada script)' : 'English'} – the language of the new message.`,
+    `New message from ${summary.name}: "${question}"`,
+  ].join('\n\n');
+  const r = await generateJsonVia({
+    chain: COACH_CHAIN,
+    system: ASK_SYSTEM,
+    parts: [{ text }],
+    schema: ASK_SCHEMA,
+    feature: 'coach-ask',
+    // Chat must feel quick: give up on a slow model sooner.
+    timeoutMs: 15_000,
+    budgetMs: 30_000,
+    accept: (j) => {
+      const o = j as {
+        reply?: unknown;
+        escalate?: unknown;
+        red_flag?: unknown;
+        reason?: unknown;
+        remember?: unknown;
+      } | null;
+      const reply = String(o?.reply ?? '').trim();
+      return reply.length >= 2
+        ? {
+            reply: reply.slice(0, 1500),
+            escalate: o?.escalate === true,
+            red: o?.red_flag === true,
+            reason: String(o?.reason ?? '').slice(0, 300),
+            remember:
+              String(o?.remember ?? '')
+                .trim()
+                .slice(0, 200) || null,
+          }
+        : null;
+    },
+  });
+  return { ...r, context_chars: text.length };
 }
 
 async function ask(db: Db, clientId: string, question: string) {
@@ -1225,62 +1285,16 @@ async function ask(db: Db, clientId: string, question: string) {
   let red = false;
   let reason: string | null = null;
   let model: string | null = null;
+  let remembered: string | null = null;
   if (isRedFlag(question)) {
     reply = redFlagReply(lang);
     red = true;
     status = 'escalated';
     reason = 'Red-flag words in the message';
   } else {
-    const today = localDate(p.timezone || IST);
-    const [summary, playbook, history, background] = await Promise.all([
-      personSummary(db, p, today),
-      playbookFor(db, p.id),
-      recentChat(db, p.id),
-      clientBackground(db, p, today),
-    ]);
-    const r = await generateJsonVia({
-      chain: COACH_CHAIN,
-      system: ASK_SYSTEM,
-      parts: [
-        {
-          text: [
-            `Coach playbook (shared):\n${playbook.shared}`,
-            `Coach playbook (this person):\n${playbook.person || '(empty)'}`,
-            `Client background (last 30–90 days): ${JSON.stringify(background)}`,
-            `Person and today's numbers: ${JSON.stringify(chatSummary(summary))}`,
-            history
-              ? `Conversation so far (oldest first) – the new message may continue it:\n${history}`
-              : 'Conversation so far: (this is the first message)',
-            `Reply language: ${lang === 'kn' ? 'Kannada (Kannada script)' : 'English'} – the language of the new message.`,
-            `New message from ${summary.name}: "${question}"`,
-          ].join('\n\n'),
-        },
-      ],
-      schema: ASK_SCHEMA,
-      feature: 'coach-ask',
-      maxTokens: 450,
-      // Chat must feel quick: give up on a slow model sooner.
-      timeoutMs: 10_000,
-      budgetMs: 22_000,
-      accept: (j) => {
-        const o = j as {
-          reply?: unknown;
-          escalate?: unknown;
-          red_flag?: unknown;
-          reason?: unknown;
-        } | null;
-        const text = String(o?.reply ?? '').trim();
-        return text.length >= 2
-          ? {
-              reply: text.slice(0, 1500),
-              escalate: o?.escalate === true,
-              red: o?.red_flag === true,
-              reason: String(o?.reason ?? '').slice(0, 300),
-            }
-          : null;
-      },
-    });
+    const r = await askModel(db, p, question, lang);
     model = r.model;
+    remembered = r.data.remember;
     // The emergency reply only when this message itself is about a symptom (models sometimes
     // flag a normal question because an earlier message mentioned one).
     red = r.data.red && mentionsSymptom(question);
@@ -1307,6 +1321,7 @@ async function ask(db: Db, clientId: string, question: string) {
       question,
       answer: reply,
       model,
+      remembered,
       red_flag: red,
       status,
       escalate_reason: reason,
@@ -1662,6 +1677,15 @@ serveJson(async (req) => {
       }
       case 'head_tick':
         return await headTick(db, true);
+      case 'ask_preview': {
+        // Try the AI trainer's answer for someone on the coach: nothing is saved or sent.
+        const p = await loadCoachedPerson(db, coach.id, String(body.client_id ?? ''));
+        if (!p) throw new HttpError(404, 'Not on the coach', 'not_found');
+        const q = z.string().trim().min(1).max(1000).parse(body.question);
+        const t0 = Date.now();
+        const r = await askModel(db, p, q, /[ಀ-೿]/.test(q) ? 'kn' : 'en');
+        return { ...r, ms: Date.now() - t0 };
+      }
       case 'finish_run':
         await finishRun(
           db,

@@ -29,6 +29,12 @@ global mode (Off / Dry run / Live) still applies to everyone: in dry run every c
   - Health, medicine or supplement questions are **escalated** to the head coach / admin.
   - **Morning note** from 8:30 and **evening note** from 20:30 (person's time zone; pg_cron job
     `coach-tick` every 30 minutes). The head coach's note replaces the morning note.
+- **What it knows in chat** (`clientBackground` + `chatSummary`, fresh on every message): the
+  current day and time, profile and conditions, this week's meals, workouts, sleep and steps, 30 days
+  of daily calories and protein, weight entries, lifted weights per exercise over 90 days, sessions,
+  summaries, the last 30 messages (2 weeks) and `coach_queries.remembered`, lasting facts the AI
+  picks out of chats (last 40). Try an answer without saving anything: `ask_preview` with the
+  `x-coach-key` header.
 - **Head coach** (Gemini on the server, daily from 7:00 AM IST, PC not needed): reviews every person and every meal photo, corrects
   calories, sets today's plan (workout day / light / rest, ±200 kcal), writes the note, answers
   escalated questions, keeps the **playbook** the day coach follows, and sends the admin a

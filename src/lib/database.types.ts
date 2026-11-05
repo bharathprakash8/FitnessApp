@@ -462,6 +462,7 @@ export type Database = {
           mode: string
           people: number
           photos: number
+          progress: Json
           report: string | null
           source: string
           started_at: string
@@ -474,6 +475,7 @@ export type Database = {
           mode: string
           people?: number
           photos?: number
+          progress?: Json
           report?: string | null
           source?: string
           started_at?: string
@@ -486,6 +488,7 @@ export type Database = {
           mode?: string
           people?: number
           photos?: number
+          progress?: Json
           report?: string | null
           source?: string
           started_at?: string
