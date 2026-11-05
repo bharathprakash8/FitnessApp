@@ -17,10 +17,9 @@ import './theme/variables.css';
 import './theme/app.css';
 import './theme/design.css';
 
-import { registerSW } from 'virtual:pwa-register';
-
 import { App } from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { startUpdateChecks } from './features/update/update';
 import { flushQueue, onSynced, startAutoSync } from './lib/offlineQueue';
 import { logError } from './lib/errorLog';
 import { isAndroidApp } from './lib/platform';
@@ -38,9 +37,8 @@ if (isAndroidApp) {
     await Promise.all(regs.map((r) => r.unregister()));
     if (regs.length && navigator.serviceWorker.controller) window.location.reload();
   });
-} else {
-  registerSW({ immediate: true });
 }
+startUpdateChecks();
 
 // Saves made offline are sent when the connection is back; then the screens refresh.
 onSynced(() => void queryClient.invalidateQueries());

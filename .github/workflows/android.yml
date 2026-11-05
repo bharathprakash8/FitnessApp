@@ -15,11 +15,15 @@ on:
         description: What changed (shown to testers)
         required: false
         default: ''
+      publish:
+        description: Publish to everyone (release + update popup in the app)
+        type: boolean
+        default: true
   push:
     tags: ['android-v*']
 
 permissions:
-  contents: read
+  contents: write # publishes the GitHub release that the app downloads
 
 concurrency:
   group: android-${{ github.ref }}
@@ -111,6 +115,34 @@ jobs:
           name: FitCoach-${{ env.ANDROID_VERSION_NAME }}
           path: ${{ runner.temp }}/FitCoach-${{ env.ANDROID_VERSION_NAME }}.apk
           retention-days: 30
+
+      # The download link in the app always points at the latest release's FitCoach.apk.
+      - name: Publish the release
+        if: ${{ github.event.inputs.publish != 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.event.inputs.release_notes }}
+        run: |
+          cp "$RUNNER_TEMP/FitCoach-$ANDROID_VERSION_NAME.apk" "$RUNNER_TEMP/FitCoach.apk"
+          gh release create "apk-$ANDROID_VERSION_NAME" "$RUNNER_TEMP/FitCoach.apk" \
+            --title "FitCoach Android $ANDROID_VERSION_NAME" \
+            --notes "${NOTES:-Improvements and fixes.}" \
+            --target "$GITHUB_SHA" \
+            --latest
+
+      # Last, so phones are only told about an APK that can already be downloaded.
+      - name: Tell the app there is a new version
+        if: ${{ github.event.inputs.publish != 'false' }}
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NOTES: ${{ github.event.inputs.release_notes }}
+        run: |
+          jq -n --argjson code "$ANDROID_VERSION_CODE" --arg name "$ANDROID_VERSION_NAME" --arg notes "$NOTES" \
+            '{p_code: $code, p_name: $name, p_notes: $notes}' |
+            curl --fail-with-body -sS -X POST "$SUPABASE_URL/rest/v1/rpc/set_latest_android" \
+              -H "apikey: $SERVICE_KEY" -H "Authorization: Bearer $SERVICE_KEY" \
+              -H "Content-Type: application/json" -d @-
 
       - name: Send to testers (Firebase App Distribution)
         if: ${{ vars.FIREBASE_ANDROID_APP_ID != '' }}

@@ -13,7 +13,35 @@ declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: (string | { url: string; revision: string | null })[];
 };
 
-self.skipWaiting();
+// A new version waits until the person taps "Update now" (features/update), so the app never
+// restarts while they are typing. If nobody is using the app, or the open page is an older
+// build without the popup, it takes over straight away.
+async function nobodyCanAskYet(): Promise<boolean> {
+  const pages = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const answers = pages.map(
+    (page) =>
+      new Promise<boolean>((resolve) => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = () => resolve(true);
+        page.postMessage({ type: 'CAN_PROMPT_UPDATE' }, [channel.port2]);
+        setTimeout(() => resolve(false), 1500);
+      }),
+  );
+  return !(await Promise.all(answers)).some(Boolean);
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    nobodyCanAskYet().then(async (takeOver) => {
+      if (takeOver) await self.skipWaiting();
+    }),
+  );
+});
+
+self.addEventListener('message', (event) => {
+  if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') void self.skipWaiting();
+});
+
 clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);

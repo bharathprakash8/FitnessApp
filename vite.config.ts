@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       // Registered in main.tsx – web only. In the Android app the old cached screens would
       // keep running after an APK update (the APK already contains every screen).
       injectRegister: false,

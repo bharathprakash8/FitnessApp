@@ -1845,6 +1845,7 @@ export type Database = {
       admin_app_health: { Args: never; Returns: Json }
       admin_user_diagnostics: { Args: { uid: string }; Returns: Json }
       app_role: { Args: never; Returns: string }
+      app_update_info: { Args: never; Returns: Json }
       bump_ai_usage: {
         Args: { day: string; feat: string; uid: string }
         Returns: number
@@ -1884,6 +1885,10 @@ export type Database = {
       session_owner: { Args: { s: string }; Returns: string }
       set_foods_to_avoid: {
         Args: { foods: string; person: string }
+        Returns: undefined
+      }
+      set_latest_android: {
+        Args: { p_code: number; p_name: string; p_notes: string }
         Returns: undefined
       }
       touch_client_info: {

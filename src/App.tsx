@@ -5,6 +5,7 @@ import { Route, matchPath, useLocation } from 'react-router-dom';
 
 import { ImpersonationBar } from './components/ImpersonationBar';
 import { StuckPageRescue } from './components/StuckPageRescue';
+import { UpdatePrompt } from './features/update/UpdatePrompt';
 import { HealthAutoSync } from './features/activity/HealthAutoSync';
 import { HealthSyncPage } from './features/activity/HealthSyncPage';
 import { AdminHomePage } from './features/admin/AdminHomePage';
@@ -188,6 +189,7 @@ export function App() {
           <StuckPageRescue />
           <ImpersonationBar />
           <PushAutoRegister />
+          <UpdatePrompt />
         </IonReactRouter>
       </AuthProvider>
     </IonApp>

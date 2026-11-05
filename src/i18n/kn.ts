@@ -1,6 +1,24 @@
 // Kannada for every English text in the app (English text = key). Missing ones show in
 // English. Machine-assisted translation (23 Oct 2026) – a native speaker should review.
 export const kn: Record<string, string> = {
+  'A new version of FitCoach is ready': 'FitCoach ಹೊಸ ಆವೃತ್ತಿ ಸಿದ್ಧವಾಗಿದೆ',
+  'It takes a few seconds. Everything you have saved stays safe.':
+    'ಕೆಲವೇ ಸೆಕೆಂಡುಗಳು ಸಾಕು. ನೀವು ಉಳಿಸಿದ ಎಲ್ಲವೂ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ.',
+  Later: 'ನಂತರ',
+  'Update now': 'ಈಗ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ',
+  'Almost done': 'ಬಹುತೇಕ ಮುಗಿದಿದೆ',
+  'Wait for FitCoach.apk to finish downloading.': 'FitCoach.apk ಡೌನ್‌ಲೋಡ್ ಮುಗಿಯುವವರೆಗೆ ಕಾಯಿರಿ.',
+  'Tap Open, or tap the file in your notifications.':
+    'Open ಒತ್ತಿ, ಅಥವಾ ನೋಟಿಫಿಕೇಶನ್‌ನಲ್ಲಿರುವ ಫೈಲ್ ಒತ್ತಿ.',
+  'Tap Update. If Android asks, allow installs from this source.':
+    'Update ಒತ್ತಿ. Android ಕೇಳಿದರೆ, ಈ ಮೂಲದಿಂದ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಲು ಅನುಮತಿಸಿ.',
+  'Your data stays safe. You won’t need to log in again.':
+    'ನಿಮ್ಮ ಡೇಟಾ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ. ಮತ್ತೆ ಲಾಗಿನ್ ಆಗಬೇಕಾಗಿಲ್ಲ.',
+  'Download again': 'ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ',
+  'Update to get the latest improvements and fixes.':
+    'ಹೊಸ ಸುಧಾರಣೆಗಳು ಮತ್ತು ಸರಿಪಡಿಸುವಿಕೆಗಳಿಗಾಗಿ ಅಪ್‌ಡೇಟ್ ಮಾಡಿ.',
+  'You have the latest version': 'ನೀವು ಹೊಸ ಆವೃತ್ತಿಯಲ್ಲಿದ್ದೀರಿ',
+  'Check for updates': 'ಅಪ್‌ಡೇಟ್ ಪರಿಶೀಲಿಸಿ',
   "The AI couldn't estimate this item. Enter the numbers yourself.":
     'AI ಈ ಐಟಂ ಅಂದಾಜಿಸಲಾಗಲಿಲ್ಲ. ಸಂಖ್ಯೆಗಳನ್ನು ನೀವೇ ನಮೂದಿಸಿ.',
   'Could not re-estimate': 'ಮತ್ತೆ ಅಂದಾಜಿಸಲಾಗಲಿಲ್ಲ',

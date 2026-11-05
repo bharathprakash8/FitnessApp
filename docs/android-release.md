@@ -47,6 +47,22 @@ The Android app is the same web app wrapped with Capacitor (`android/`), package
 - `versionCode` = GitHub run number (always increases), `versionName` = `package.json` version +
   run number.
 
+## Telling everyone about an update
+
+- **Website / iPhone:** deploy as usual. Phones find the new version when the app is opened or
+  brought back, and every 30 minutes. The popup offers **Update now**; if the person taps
+  **Later** it asks again after a day, and closing and reopening the app also applies it.
+- **Android:** run the workflow with a short note, which is shown in the popup:
+  `gh workflow run android.yml -f release_notes="Faster meal logging"`. It publishes the release
+  (`FitCoach.apk`, the file the app's link downloads), then saves the new version with
+  `set_latest_android`, and phones show the popup the next time the app is opened or brought back.
+- **Build without announcing it** (to try an APK on one phone first): add `-f publish=false` and
+  install the APK from the run's artifacts.
+- **Force an update** (only when old APKs can no longer work with the server): set `min_code` in
+  `app_settings` key `latest_android` to the lowest build number allowed. Older phones then get
+  no **Later** button.
+- APKs up to 0.1.0.14 have no popup, so those phones need the download link sent to them once.
+
 ## Installing on a phone
 
 Testers open the Firebase email on the phone → **Get started** → install the App Tester app → install
