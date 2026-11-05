@@ -37,3 +37,19 @@
 .onboarding-small {
   font-size: 0.85rem;
 }
+
+.consent-update {
+  position: fixed;
+  inset: 0;
+  z-index: 99000;
+  overflow-y: auto;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: var(--ion-background-color, #fff);
+  color: var(--ion-text-color, #111);
+}
+
+/* Show the whole agreement sentence: long Kannada text must not end in "…". */
+.onboarding-agree::part(label) {
+  white-space: normal;
+  overflow: visible;
+}

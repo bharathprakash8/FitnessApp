@@ -1,6 +1,43 @@
 // Kannada for every English text in the app (English text = key). Missing ones show in
 // English. Machine-assisted translation (23 Oct 2026) – a native speaker should review.
 export const kn: Record<string, string> = {
+  'We’ve updated how we explain your data': 'ನಿಮ್ಮ ಡೇಟಾ ಕುರಿತ ಮಾಹಿತಿಯನ್ನು ನಾವು ನವೀಕರಿಸಿದ್ದೇವೆ',
+  'Please read this and agree to keep using FitCoach. It only takes a minute.':
+    'FitCoach ಬಳಸುವುದನ್ನು ಮುಂದುವರಿಸಲು ದಯವಿಟ್ಟು ಇದನ್ನು ಓದಿ ಒಪ್ಪಿಗೆ ನೀಡಿ. ಒಂದು ನಿಮಿಷ ಸಾಕು.',
+  'Read the full privacy policy': 'ಪೂರ್ಣ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಓದಿ',
+  'If you don’t agree, log out and talk to your trainer or the admin. You can ask them to delete your data.':
+    'ನೀವು ಒಪ್ಪದಿದ್ದರೆ, ಲಾಗ್ ಔಟ್ ಮಾಡಿ ನಿಮ್ಮ ತರಬೇತುದಾರ ಅಥವಾ ಅಡ್ಮಿನ್ ಜೊತೆ ಮಾತನಾಡಿ. ನಿಮ್ಮ ಡೇಟಾ ಅಳಿಸಲು ಅವರನ್ನು ಕೇಳಬಹುದು.',
+  'What we collect': 'ನಾವು ಸಂಗ್ರಹಿಸುವುದು',
+  'Your profile: date of birth, sex, height, weight, goal, diet preference and any injuries you tell us about.':
+    'ನಿಮ್ಮ ಪ್ರೊಫೈಲ್: ಹುಟ್ಟಿದ ದಿನಾಂಕ, ಲಿಂಗ, ಎತ್ತರ, ತೂಕ, ಗುರಿ, ಆಹಾರ ಆದ್ಯತೆ ಮತ್ತು ನೀವು ತಿಳಿಸುವ ಗಾಯಗಳು.',
+  'Food photos and food logs, workout logs, and activity (calories burnt, steps, sleep) from your phone.':
+    'ಆಹಾರದ ಫೋಟೋಗಳು ಮತ್ತು ಆಹಾರ ದಾಖಲೆಗಳು, ವ್ಯಾಯಾಮ ದಾಖಲೆಗಳು ಮತ್ತು ನಿಮ್ಮ ಫೋನ್‌ನಿಂದ ಚಟುವಟಿಕೆ (ಸುಟ್ಟ ಕ್ಯಾಲೊರಿ, ಹೆಜ್ಜೆಗಳು, ನಿದ್ರೆ).',
+  'Body measurements and progress photos, if you add them.':
+    'ನೀವು ಸೇರಿಸಿದರೆ, ದೇಹದ ಅಳತೆಗಳು ಮತ್ತು ಪ್ರಗತಿ ಫೋಟೋಗಳು.',
+  'Who can see it': 'ಇದನ್ನು ಯಾರು ನೋಡಬಹುದು',
+  'Your trainer and the admin. No other people.':
+    'ನಿಮ್ಮ ತರಬೇತುದಾರ ಮತ್ತು ಅಡ್ಮಿನ್. ಬೇರೆ ಯಾವ ವ್ಯಕ್ತಿಗಳೂ ಇಲ್ಲ.',
+  'You and the admin. Your clients can’t see it.':
+    'ನೀವು ಮತ್ತು ಅಡ್ಮಿನ್. ನಿಮ್ಮ ಕ್ಲೈಂಟ್‌ಗಳು ಇದನ್ನು ನೋಡಲಾರರು.',
+  'AI services we use': 'ನಾವು ಬಳಸುವ AI ಸೇವೆಗಳು',
+  'Food photos and food descriptions are sent to Google’s Gemini AI to estimate calories, and may be used by Google to improve its services. Please photograph only your food.':
+    'ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸಲು ಆಹಾರದ ಫೋಟೋಗಳು ಮತ್ತು ವಿವರಣೆಗಳನ್ನು Google ನ Gemini AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ, ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಆಹಾರದ ಫೋಟೋ ಮಾತ್ರ ತೆಗೆಯಿರಿ.',
+  'To write your insights, weekly summaries and meal ideas, your first name, goal, diet preference, foods to avoid and your food, workout, weight and activity numbers are sent to Groq AI, with Google’s Gemini AI as a backup.':
+    'ನಿಮ್ಮ ಒಳನೋಟಗಳು, ವಾರದ ಸಾರಾಂಶಗಳು ಮತ್ತು ಊಟದ ಸಲಹೆಗಳನ್ನು ಬರೆಯಲು ನಿಮ್ಮ ಮೊದಲ ಹೆಸರು, ಗುರಿ, ಆಹಾರ ಆದ್ಯತೆ, ಬೇಡದ ಆಹಾರಗಳು ಮತ್ತು ನಿಮ್ಮ ಆಹಾರ, ವ್ಯಾಯಾಮ, ತೂಕ ಮತ್ತು ಚಟುವಟಿಕೆಯ ಸಂಖ್ಯೆಗಳನ್ನು Groq AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ; Google ನ Gemini AI ಬ್ಯಾಕಪ್ ಆಗಿರುತ್ತದೆ.',
+  'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Claude AI (Anthropic), Groq AI and Google’s Gemini AI to coach you. You will be asked to agree to this separately.':
+    'ನೀವು AI ಕೋಚ್ ಬಳಸುತ್ತಿದ್ದರೆ, ನಿಮಗೆ ತರಬೇತಿ ನೀಡಲು ನಿಮ್ಮ ದಾಖಲೆಗಳು, ಊಟದ ಫೋಟೋಗಳು ಮತ್ತು ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳನ್ನು Claude AI (Anthropic), Groq AI ಮತ್ತು Google ನ Gemini AI ಸಹ ಪರಿಶೀಲಿಸುತ್ತವೆ. ಇದಕ್ಕೆ ಪ್ರತ್ಯೇಕವಾಗಿ ನಿಮ್ಮ ಒಪ್ಪಿಗೆ ಕೇಳಲಾಗುತ್ತದೆ.',
+  'These AI services may run outside India.': 'ಈ AI ಸೇವೆಗಳು ಭಾರತದ ಹೊರಗೆ ನಡೆಯಬಹುದು.',
+  'Where it is kept': 'ಇದನ್ನು ಎಲ್ಲಿ ಇಡಲಾಗುತ್ತದೆ',
+  'Your data is stored on a private server in South Korea.':
+    'ನಿಮ್ಮ ಡೇಟಾವನ್ನು ದಕ್ಷಿಣ ಕೊರಿಯಾದಲ್ಲಿರುವ ಖಾಸಗಿ ಸರ್ವರ್‌ನಲ್ಲಿ ಸಂಗ್ರಹಿಸಲಾಗುತ್ತದೆ.',
+  'Meal photos are deleted from the app automatically after 7 days. Encrypted backups, which only the admin can open, keep copies for up to 35 days.':
+    'ಊಟದ ಫೋಟೋಗಳು 7 ದಿನಗಳ ನಂತರ ಆ್ಯಪ್‌ನಿಂದ ತಾನಾಗಿಯೇ ಅಳಿಸಲ್ಪಡುತ್ತವೆ. ಅಡ್ಮಿನ್ ಮಾತ್ರ ತೆರೆಯಬಹುದಾದ ಎನ್‌ಕ್ರಿಪ್ಟ್ ಮಾಡಿದ ಬ್ಯಾಕಪ್‌ಗಳಲ್ಲಿ ಪ್ರತಿಗಳು 35 ದಿನಗಳವರೆಗೆ ಇರಬಹುದು.',
+  'You can ask for all your data to be deleted at any time. Encrypted backups of it are removed within 90 days.':
+    'ನಿಮ್ಮ ಎಲ್ಲಾ ಡೇಟಾವನ್ನು ಅಳಿಸಲು ಯಾವಾಗ ಬೇಕಾದರೂ ಕೇಳಬಹುದು. ಅದರ ಎನ್‌ಕ್ರಿಪ್ಟ್ ಮಾಡಿದ ಬ್ಯಾಕಪ್‌ಗಳು 90 ದಿನಗಳೊಳಗೆ ತೆಗೆದುಹಾಕಲ್ಪಡುತ್ತವೆ.',
+  'Please check with a doctor before starting a new exercise or diet programme, especially if you have a medical condition or injury.':
+    'ಹೊಸ ವ್ಯಾಯಾಮ ಅಥವಾ ಆಹಾರ ಕ್ರಮ ಪ್ರಾರಂಭಿಸುವ ಮೊದಲು, ವಿಶೇಷವಾಗಿ ನಿಮಗೆ ಆರೋಗ್ಯ ಸಮಸ್ಯೆ ಅಥವಾ ಗಾಯವಿದ್ದರೆ, ದಯವಿಟ್ಟು ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.',
+  'Calories and nutrition numbers in the app are estimates, not medical advice.':
+    'ಆ್ಯಪ್‌ನಲ್ಲಿರುವ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪೌಷ್ಟಿಕಾಂಶದ ಸಂಖ್ಯೆಗಳು ಅಂದಾಜುಗಳು, ವೈದ್ಯಕೀಯ ಸಲಹೆಯಲ್ಲ.',
   'A new version of FitCoach is ready': 'FitCoach ಹೊಸ ಆವೃತ್ತಿ ಸಿದ್ಧವಾಗಿದೆ',
   'It takes a few seconds. Everything you have saved stays safe.':
     'ಕೆಲವೇ ಸೆಕೆಂಡುಗಳು ಸಾಕು. ನೀವು ಉಳಿಸಿದ ಎಲ್ಲವೂ ಸುರಕ್ಷಿತವಾಗಿರುತ್ತದೆ.',
@@ -383,7 +420,7 @@ export const kn: Record<string, string> = {
     "Google “Google hasn't verified this app” ಎಂದು ತೋರಿಸುತ್ತದೆ – ಒತ್ತಿ",
   'Happening now': 'ಈಗ ನಡೆಯುತ್ತಿದೆ',
   'Hard exercise 6–7 days/week': 'ವಾರಕ್ಕೆ 6–7 ದಿನ ಕಠಿಣ ವ್ಯಾಯಾಮ',
-  Health: 'Health',
+  Health: 'ಆರೋಗ್ಯ',
   'Health Connect': 'Health Connect',
   "Health Connect isn't installed on this phone. Install it, then come back here.":
     'ಈ ಫೋನ್‌ನಲ್ಲಿ Health Connect ಇನ್‌ಸ್ಟಾಲ್ ಆಗಿಲ್ಲ. ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ, ನಂತರ ಇಲ್ಲಿಗೆ ಮರಳಿ ಬನ್ನಿ.',

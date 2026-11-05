@@ -1,6 +1,6 @@
 # Go-live checklist
 
-The current Supabase project (`updctclaxbawgtrhtdor`, Mumbai) **is production** (decided
+The current Supabase project (`updctclaxbawgtrhtdor`, Seoul) **is production** (decided
 19 Oct 2026) – friends already use it. A separate test project can be added later if needed.
 
 ## Before inviting everyone

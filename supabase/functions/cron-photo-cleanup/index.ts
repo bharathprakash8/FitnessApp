@@ -1,4 +1,4 @@
-// cron-photo-cleanup: delete meal photos older than 7 days (weekly, called by pg_cron).
+// cron-photo-cleanup: delete meal photos older than 7 days (daily, called by pg_cron).
 // Auth: the x-cron-secret header must match the CRON_SECRET function secret.
 import { z } from 'npm:zod@3';
 

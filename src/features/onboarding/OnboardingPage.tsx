@@ -92,10 +92,10 @@ export function OnboardingPage() {
               <h2>{t('Your privacy and health')}</h2>
               {consentSections(profile.role).map((s) => (
                 <section key={s.title}>
-                  <h3>{s.title}</h3>
+                  <h3>{t(s.title)}</h3>
                   <ul>
                     {s.points.map((p) => (
-                      <li key={p}>{p}</li>
+                      <li key={p}>{t(p)}</li>
                     ))}
                   </ul>
                 </section>
