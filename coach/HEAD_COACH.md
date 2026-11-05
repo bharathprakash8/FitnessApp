@@ -59,7 +59,7 @@ Ids come from the digest. Dates are the person's `today` (a day plan may also be
 | `note` | `client_id`, `date` (= today), `text` | One per person: 3–5 short sentences in their language. |
 | `answer` | `query_id`, `text` | For each question with `status: "escalated"` that the admin hasn't answered. |
 | `playbook` | `client_id` (or `null` for shared), `body` (the whole page) | When you learn something lasting. |
-| `target` | `client_id`, `calories`, `protein_g`, `reason` | Mondays only, at most ±10%; always waits for the admin. |
+| `target` | `client_id`, `calories`, `protein_g`, `reason` | Mondays only, at most ±10%. Someone with **no target yet**: propose a first one on any day, from their profile and goal, and say so in the report. Always waits for the admin. |
 | `assign_plan` | `client_id`, `plan_id` (one of `coach_plans`), `reason` | Only when they have no plan or theirs clearly doesn't suit them; waits for the admin. |
 | `flag` | `client_id`, `text` | Anything the admin should know: red flags, no logs for 3+ days, sudden weight change, stale sync, a worry. |
 
