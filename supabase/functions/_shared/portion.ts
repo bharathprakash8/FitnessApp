@@ -53,14 +53,16 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 const isKept = (i: PlateItem) =>
   i.calories <= 60 || (i.calories > 0 && (i.protein_g * 4) / i.calories >= 0.2);
 
-function proteinFoods(diet: string | null, avoid: string | null) {
+function proteinFoods(diet: string | null, avoid: string | null, plate: PlateItem[]) {
   const foods = ['dal', 'sprouts'];
   if (diet === 'vegan') foods.push('tofu');
   else foods.push('curd', 'paneer');
   if (diet === 'egg' || diet === 'non_veg') foods.push('eggs');
   if (diet === 'non_veg') foods.push('chicken');
-  const no = (avoid ?? '').toLowerCase();
-  return foods.filter((f) => !no.includes(f));
+  // Not what they should avoid, and not what is already on the plate.
+  const no = `${avoid ?? ''} ${plate.map((i) => i.name).join(' ')}`.toLowerCase();
+  const hasCurd = /raita|yogh?urt|dahi|lassi|buttermilk/.test(no);
+  return foods.filter((f) => !no.includes(f) && !(f === 'curd' && hasCurd));
 }
 
 function suggestItem(item: PlateItem, factor: number) {
@@ -114,7 +116,11 @@ export function suggestPortions(items: PlateItem[], input: PortionInput) {
   const kcal = suggested.reduce((s, i) => s + i.calories, 0);
   const protein = suggested.reduce((s, i) => s + i.protein_g, 0);
   const day = Math.max(input.targetKcal, calorieFloor(input.sex));
-  const mealProtein = input.targetProtein * MEALS[input.mealType].share;
+  // A main meal well under its share of protein (15 g is plenty to count as enough, however high
+  // the target). Snacks are left alone: nobody needs dal with a banana.
+  const lowProtein =
+    input.mealType !== 'snack' &&
+    protein < Math.min(input.targetProtein * MEALS[input.mealType].share * 0.6, 15);
   return {
     budget_kcal: budget,
     plate_kcal: Math.round(plate),
@@ -123,8 +129,6 @@ export function suggestPortions(items: PlateItem[], input: PortionInput) {
     left_after_kcal: Math.max(0, day - input.eatenKcal - kcal),
     eat_all: suggested.every((i) => !i.reduced),
     items: suggested,
-    // Well under this meal's share of protein: suggest something to add.
-    add_protein_foods:
-      protein < mealProtein * 0.6 ? proteinFoods(input.diet, input.foodsToAvoid) : [],
+    add_protein_foods: lowProtein ? proteinFoods(input.diet, input.foodsToAvoid, items) : [],
   };
 }

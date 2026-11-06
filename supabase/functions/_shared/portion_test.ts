@@ -101,3 +101,25 @@ Deno.test('low protein suggests foods that fit diet and foods to avoid', () => {
   const vegan = suggestPortions(plain, { ...base, diet: 'vegan' });
   ok(!vegan.add_protein_foods.includes('curd'), 'vegan');
 });
+
+Deno.test('no protein nudge on a snack, and none when a main meal has enough', () => {
+  const banana = [item('Banana', 105, 1, 1, 'piece', 118)];
+  ok(
+    suggestPortions(banana, { ...base, mealType: 'snack' }).add_protein_foods.length === 0,
+    'snack',
+  );
+  const fine = [item('Rice', 200, 4, 1, 'cup', 150), item('Rajma', 280, 14, 1, 'katori', 200)];
+  const high = { ...base, targetProtein: 150 };
+  ok(suggestPortions(fine, high).add_protein_foods.length === 0, '18 g is enough');
+});
+
+Deno.test('the protein nudge skips what is already on the plate', () => {
+  const plate2 = [
+    item('Dal', 100, 5, 0.5, 'katori', 100),
+    item('Vegetable Raita', 80, 3, 0.5, 'cup', 120),
+  ];
+  const foods = suggestPortions(plate2, { ...base, targetProtein: 150 }).add_protein_foods;
+  ok(!foods.includes('dal'), 'dal is there');
+  ok(!foods.includes('curd'), 'raita is curd');
+  ok(foods.includes('paneer'), 'paneer offered');
+});

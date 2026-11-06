@@ -63,7 +63,7 @@ export const ADVICE_SCHEMA = {
   },
 };
 
-export const ADVICE_PROMPT = `For each item also give the amount on the plate: unit is what an Indian home cook counts it in (chapati, idli, dosa, piece, katori, cup, tablespoon, glass), count is how many of that unit (use 0 and an empty unit only when it can't be counted), and grams is your estimate of its total weight. Do not ask a follow-up question.`;
+export const ADVICE_PROMPT = `For each item also give the amount on the plate: unit is what an Indian home cook counts it in (chapati, idli, dosa, piece, katori, cup, tablespoon, glass), count is how many of that unit (use 0 and an empty unit only when it can't be counted), and grams is your estimate of its total weight. This amount decides how much the person is told to eat, so judge the real size against the plate and bowl: don't default to "medium", and count only the food you can see (the plate may be partly eaten). A dosa reaching across most of the plate is large: 300-400 kcal with its oil. Raita is 80-100 kcal per half cup. Pickle or thokku is 40-45 kcal per tablespoon. Do not ask a follow-up question.`;
 
 const num = (max: number) =>
   z.coerce
