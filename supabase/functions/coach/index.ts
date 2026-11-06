@@ -51,6 +51,14 @@ import { clientBackground } from '../_shared/background.ts';
 import { sendToUsers } from '../_shared/fcm.ts';
 import { generateJson, type Part } from '../_shared/gemini.ts';
 import { HEAD_SCHEMA, HEAD_SYSTEM } from '../_shared/headCoach.ts';
+import {
+  ADVICE_PROMPT,
+  ADVICE_SCHEMA,
+  AiResult,
+  portionAdvice,
+  SYSTEM as MEAL_SYSTEM,
+} from '../_shared/mealAi.ts';
+import type { PlateItem } from '../_shared/portion.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
 import { sameSecret } from '../_shared/util.ts';
 
@@ -1677,6 +1685,71 @@ serveJson(async (req) => {
       }
       case 'head_tick':
         return await headTick(db, true);
+      case 'portion_preview': {
+        // Try "How much should I eat?" for someone on the coach, with a meal photo of theirs from
+        // the last few days or typed text. Nothing is saved, sent or counted.
+        const p = await loadCoachedPerson(db, coach.id, String(body.client_id ?? ''));
+        if (!p) throw new HttpError(404, 'Not on the coach', 'not_found');
+        const input = z
+          .object({
+            meal_id: uuid.optional(),
+            text: z.string().trim().max(1000).optional(),
+            meal_type: z.enum(['breakfast', 'lunch', 'snack', 'dinner']),
+          })
+          .parse(body);
+        const parts: Part[] = [];
+        let photo_url: string | null = null;
+        if (input.meal_id) {
+          const { data: meal } = await db
+            .from('meal_logs')
+            .select('photo_path')
+            .eq('id', input.meal_id)
+            .eq('client_id', p.id)
+            .maybeSingle();
+          if (!meal?.photo_path) throw new HttpError(404, 'No photo for this meal', 'not_found');
+          const { data: file, error } = await db.storage
+            .from('meal-photos')
+            .download(meal.photo_path);
+          if (error || !file) throw new HttpError(404, 'Photo not found', 'not_found');
+          const signed = await db.storage.from('meal-photos').createSignedUrl(meal.photo_path, 300);
+          photo_url = signed.data?.signedUrl ?? null;
+          parts.push({
+            inline_data: { mime_type: 'image/jpeg', data: toBase64(await file.arrayBuffer()) },
+          });
+        }
+        let prompt = `Diet preference: ${p.diet_preference ?? 'not given'}. Meal type: ${input.meal_type}.`;
+        if (input.text) prompt += `\nThe client describes the meal as: "${input.text}"`;
+        parts.push({ text: `${prompt}\n${ADVICE_PROMPT}` });
+        const t0 = Date.now();
+        const plate = AiResult.parse(
+          await generateJson({
+            system: MEAL_SYSTEM,
+            parts,
+            schema: ADVICE_SCHEMA,
+            feature: 'meal-portion',
+            preferLite: true,
+            temperature: 0,
+            thinking: 'low',
+            timeoutMs: 10_000,
+            budgetMs: 24_000,
+          }),
+        );
+        return {
+          ms: Date.now() - t0,
+          photo_url,
+          plate: plate.items,
+          advice: plate.items.length
+            ? await portionAdvice(
+                db,
+                p.id,
+                localDate(p.timezone || IST),
+                { ...p, health_conditions: p.health_conditions ?? [] },
+                plate.items as PlateItem[],
+                input.meal_type,
+              )
+            : null,
+        };
+      }
       case 'ask_preview': {
         // Try the AI trainer's answer for someone on the coach: nothing is saved or sent.
         const p = await loadCoachedPerson(db, coach.id, String(body.client_id ?? ''));
