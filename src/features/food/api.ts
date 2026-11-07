@@ -123,6 +123,8 @@ export interface PortionAdvice {
   is_last_meal: boolean;
   targets_filled_in: boolean;
   targets_add_up: boolean;
+  /** Earlier meals not logged today, counted as normal portions. */
+  assumed_meals: MealType[];
   plate_kcal: number;
   /** Portions of the food in the photo. */
   plan: PortionPlan;

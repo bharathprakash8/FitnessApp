@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { useT } from '../../i18n/i18n';
 import type { PortionAdvice as Advice, PortionPlan } from './api';
+import { MEAL_LABELS } from './model';
 import './food.css';
 
 const LABELS = { kcal: 'Calories', protein: 'Protein', carbs: 'Carbs', fat: 'Fat' } as const;
@@ -101,18 +102,16 @@ export function PortionAdvice({
         </p>
       )}
 
-      <p className="food-muted">
-        {advice.meals_logged_today > 0
-          ? t(
-              'Based on {kcal} kcal logged so far today. Log your other meals to keep this right.',
-              {
-                kcal: advice.eaten_today_kcal,
-              },
-            )
-          : t(
-              'No meals logged today yet. If you have already eaten, log that first to keep this right.',
-            )}
-      </p>
+      {advice.assumed_meals.length > 0 && (
+        <p className="portion-tip">
+          {t(
+            'You haven’t logged {meals} today, so normal portions are counted for them. Log them to keep this right.',
+            {
+              meals: advice.assumed_meals.map((m) => t(MEAL_LABELS[m])).join(', '),
+            },
+          )}
+        </p>
+      )}
       {advice.targets_filled_in && (
         <p className="food-muted">
           {t('Your trainer hasn’t set all your targets, so a typical split is used for the rest.')}

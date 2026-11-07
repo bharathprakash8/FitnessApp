@@ -118,7 +118,7 @@ export async function portionAdvice(
       .maybeSingle(),
     db
       .from('meal_logs')
-      .select('total_calories, protein_g, carbs_g, fat_g')
+      .select('meal_type, total_calories, protein_g, carbs_g, fat_g')
       .eq('client_id', clientId)
       .eq('eaten_on', day),
   ]);
@@ -143,6 +143,7 @@ export async function portionAdvice(
       mealType,
       target,
       eaten,
+      loggedMeals: rows.map((r) => r.meal_type as MealType),
       sex: profile.sex,
       diet: profile.diet_preference,
       foodsToAvoid: profile.foods_to_avoid,

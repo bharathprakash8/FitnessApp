@@ -201,3 +201,39 @@ Deno.test('tea stays a whole cup', () => {
   });
   ok(/^1 cup/.test(r.plan.items[0]!.portion), r.plan.items[0]!.portion);
 });
+
+const bigPlate = [
+  item('Chapati', 360, 9, 60, 9, 3, 'chapati', 120),
+  item('Rice', 100, 2, 22, 0, 0.5, 'cup', 75),
+  item('Palak Paneer', 250, 11, 8, 18, 1, 'katori', 120),
+  item('Kala Chana', 200, 10, 28, 6, 1, 'katori', 120),
+];
+
+Deno.test('unlogged breakfast and lunch never become a giant dinner', () => {
+  const r = suggestPortions(bigPlate, { ...base, mealType: 'dinner', loggedMeals: [] });
+  ok(r.assumed_meals.join() === 'breakfast,lunch', r.assumed_meals.join());
+  ok(r.plan.kcal <= 1650 * 0.5, `dinner ${r.plan.kcal} kcal`);
+  ok(r.plan.kcal >= 300, 'still a real meal');
+});
+
+Deno.test('logged meals are not assumed again; a snack is optional', () => {
+  const r = suggestPortions(bigPlate, {
+    ...base,
+    mealType: 'dinner',
+    eaten: { kcal: 1000, protein: 60, carbs: 110, fat: 35 },
+    loggedMeals: ['breakfast', 'lunch'],
+  });
+  ok(r.assumed_meals.length === 0, 'none assumed');
+});
+
+Deno.test('one meal never passes its limit, even to reach the day', () => {
+  const r = suggestPortions(bigPlate, {
+    ...base,
+    mealType: 'dinner',
+    eaten: { kcal: 100, protein: 5, carbs: 10, fat: 3 },
+    loggedMeals: ['breakfast', 'lunch'],
+  });
+  ok(r.plan.kcal <= 1650 * 0.6, `dinner ${r.plan.kcal} kcal`);
+  ok(!r.plan.on_track, 'says the day falls short');
+  if (r.boost) ok(r.boost.kcal <= 1650 * 0.6, `with adds ${r.boost.kcal} kcal`);
+});

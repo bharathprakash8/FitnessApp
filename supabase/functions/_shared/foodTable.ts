@@ -25,6 +25,7 @@ const row = (
 
 // The first match wins, so specific names come before general ones.
 const FOODS: Row[] = [
+  row(/sprout/, CUP, 100, 100, 8, 15, 1),
   row(/masala dosa/, /dosa|piece/, 180, 400, 8, 56, 16),
   row(/rava dosa/, /dosa|piece/, 110, 240, 4, 34, 10),
   row(/dosa/, /dosa|piece/, 90, 220, 5, 36, 6),
@@ -49,7 +50,6 @@ const FOODS: Row[] = [
   row(/sabzi|sabji|palya|bhindi|poriyal/, CUP, 150, 150, 3, 15, 8),
   row(/raita/, CUP, 120, 90, 4, 7, 5),
   row(/curd|dahi|yogh?urt/, CUP, 100, 100, 6, 5, 6),
-  row(/sprouts/, CUP, 100, 100, 8, 15, 1),
   row(/boiled egg|omelette|egg/, /egg|piece/, 50, 75, 6, 1, 5),
   row(/banana/, /banana|piece/, 118, 105, 1, 27, 0.5),
   row(/tea|coffee/, /cup|glass/, 150, 70, 2, 10, 2),

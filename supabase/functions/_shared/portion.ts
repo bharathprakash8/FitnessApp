@@ -34,6 +34,8 @@ export interface PortionInput {
     fat_g: number | null;
   };
   eaten: Macros;
+  /** Which meals are logged today. Left out: what's logged is taken as the whole day so far. */
+  loggedMeals?: MealType[];
   sex: string | null;
   diet: string | null;
   foodsToAvoid: string | null;
@@ -382,6 +384,8 @@ interface Ctx {
   goal: Macros;
   last: boolean;
   minKcal: number;
+  /** The most this one meal may be, even if that means missing the day's targets. */
+  maxKcal: number;
 }
 
 function score(got: Macros, c: Ctx) {
@@ -405,6 +409,7 @@ function score(got: Macros, c: Ctx) {
     }
   }
   if (got.kcal < c.minKcal) s += ((c.minKcal - got.kcal) / c.minKcal) ** 2 * 50;
+  if (got.kcal > c.maxKcal) s += ((got.kcal - c.maxKcal) / c.day.kcal) ** 2 * 5000;
   return s;
 }
 
@@ -475,6 +480,20 @@ function solve(foods: Food[], c: Ctx) {
     const low = can.reduce((a, b) => (b.share < a.share ? b : a));
     q[low.i] = q[low.i]! + low.f.step;
   }
+  // So is the most one meal may be: take from whatever is furthest above how it was served, and
+  // from added foods first.
+  for (let guard = 0; guard < 100 && totals(foods, q).kcal > c.maxKcal; guard++) {
+    const can = foods
+      .map((f, i) => ({
+        f,
+        i,
+        share: f.count > 0 ? q[i]! / f.count : Infinity,
+      }))
+      .filter((x) => q[x.i]! - x.f.step >= x.f.min);
+    if (!can.length) break;
+    const high = can.reduce((a, b) => (b.share > a.share ? b : a));
+    q[high.i] = q[high.i]! - high.f.step;
+  }
   return { q, score: bestScore };
 }
 
@@ -533,12 +552,24 @@ function describe(foods: Food[], q: number[], c: Ctx) {
 export function suggestPortions(plate: PlateItem[], input: PortionInput) {
   const { goal: day, filled, adds_up } = dayTargets(input.target, input.sex);
   const last = input.mealType === 'dinner';
+  // Breakfast or lunch not logged: most likely eaten, not skipped. Count a normal portion, or a
+  // missed log would turn into "have 1,800 kcal for dinner".
+  const assumed = input.loggedMeals
+    ? (['breakfast', 'lunch'] as MealType[]).filter(
+        (m) => ORDER.indexOf(m) < ORDER.indexOf(input.mealType) && !input.loggedMeals!.includes(m),
+      )
+    : [];
+  const eaten = { ...input.eaten };
+  for (const m of assumed) {
+    for (const k of KEYS) eaten[k] += day[k] * MEALS[m].share;
+  }
   const c: Ctx = {
     day,
-    eaten: input.eaten,
-    goal: mealGoal(day, input.eaten, input.mealType),
+    eaten,
+    goal: mealGoal(day, eaten, input.mealType),
     last,
     minKcal: MEALS[input.mealType].min,
+    maxKcal: day.kcal * MEALS[input.mealType].cap,
   };
   const foods = plate.map(toFood);
   const base = solve(foods, c);
@@ -572,6 +603,7 @@ export function suggestPortions(plate: PlateItem[], input: PortionInput) {
     is_last_meal: last,
     targets_filled_in: filled,
     targets_add_up: adds_up,
+    assumed_meals: assumed,
     plan,
     boost,
     meal_goal_kcal: Math.round(c.goal.kcal),
@@ -580,7 +612,7 @@ export function suggestPortions(plate: PlateItem[], input: PortionInput) {
     plate_kcal: Math.round(plateKcal),
     suggested_kcal: plan.kcal,
     suggested_protein_g: plan.protein_g,
-    left_after_kcal: Math.max(0, Math.round(day.kcal - input.eaten.kcal - plan.kcal)),
+    left_after_kcal: Math.max(0, Math.round(day.kcal - eaten.kcal - plan.kcal)),
     eat_all: plan.items.every((i) => !i.reduced && !i.increased),
     items: plan.items,
     add_protein_foods: [] as string[],
