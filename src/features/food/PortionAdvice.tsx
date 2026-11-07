@@ -1,54 +1,106 @@
 import { IonButton } from '@ionic/react';
+import { useState } from 'react';
 
 import { useT } from '../../i18n/i18n';
-import type { PortionAdvice as Advice } from './api';
+import type { PortionAdvice as Advice, PortionPlan } from './api';
 import './food.css';
 
-/** "How much should I eat?": a suggested portion of the plate in the photo. Always an estimate. */
+const LABELS = { kcal: 'Calories', protein: 'Protein', carbs: 'Carbs', fat: 'Fat' } as const;
+const UNITS = { kcal: 'kcal', protein: 'g', carbs: 'g', fat: 'g' } as const;
+
+/** "How much should I eat?": portions of this food, planned across the day. Always an estimate. */
 export function PortionAdvice({
   advice,
-  onLogSuggested,
+  onLog,
   onLogPlate,
 }: {
   advice: Advice;
-  onLogSuggested: () => void;
+  onLog: (plan: PortionPlan) => void;
   onLogPlate: () => void;
 }) {
   const t = useT();
-  const foods = advice.add_protein_foods.join(', ');
+  const [adding, setAdding] = useState(false);
+  const plan: PortionPlan = adding && advice.boost ? advice.boost : advice.plan;
+  const adds = advice.boost?.items.filter((i) => i.added) ?? [];
+  const last = advice.is_last_meal;
+  const heading = plan.on_track
+    ? last
+      ? t('This finishes your day on target')
+      : t('Your portion for this meal')
+    : t('The closest portion with this food');
+
   return (
     <div className="portion">
       <span className="food-estimated">{t('Estimated')}</span>
-      <h2>{advice.eat_all ? t('You can eat all of this') : t('Suggested portion')}</h2>
+      <h2>{heading}</h2>
       <ul className="portion-items">
-        {advice.items.map((i, n) => (
-          <li key={`${i.name}-${n}`} className={i.reduced ? 'portion-reduced' : undefined}>
-            <strong>{i.name}</strong>
+        {plan.items.map((i) => (
+          <li
+            key={i.name}
+            className={
+              i.added ? 'portion-added' : i.reduced || i.increased ? 'portion-changed' : undefined
+            }
+          >
+            <strong>
+              {i.added ? `${t('Add')}: ` : ''}
+              {i.name}
+            </strong>
             <span>{i.portion}</span>
           </li>
         ))}
       </ul>
+
       <p className="portion-total">
-        {t('About {kcal} kcal, {protein} g protein', {
-          kcal: advice.suggested_kcal,
-          protein: advice.suggested_protein_g,
-        })}
+        {last ? t('Today’s total after this meal') : t('Today so far, after this meal')}
       </p>
-      {!advice.eat_all && (
-        <p className="food-muted">
-          {t('Your full plate is about {kcal} kcal.', { kcal: advice.plate_kcal })}
-        </p>
+      <div className="portion-checks">
+        {plan.checks.map((c) => (
+          <div key={c.key} className={`portion-check portion-${c.status}`}>
+            <span>{t(LABELS[c.key])}</span>
+            <span>
+              {t('{after} of {target} {unit}', {
+                after: c.after,
+                target: c.target,
+                unit: UNITS[c.key],
+              })}
+            </span>
+            <span className="portion-note">
+              {c.status === 'high'
+                ? t('Above range')
+                : c.status === 'low'
+                  ? last
+                    ? t('Below range')
+                    : t('Low for this meal')
+                  : t('On track')}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {advice.boost && !adding && (
+        <div className="portion-tip">
+          <p>
+            {t('This food alone won’t get you there. It helps to add:')}{' '}
+            <strong>{adds.map((a) => `${a.name} (${a.portion})`).join(', ')}</strong>
+          </p>
+          <IonButton size="small" fill="outline" onClick={() => setAdding(true)}>
+            {t('I can add these')}
+          </IonButton>
+        </div>
       )}
-      <p className="food-muted">
-        {t('This leaves about {kcal} kcal for the rest of today.', {
-          kcal: advice.left_after_kcal,
-        })}
-      </p>
-      {foods && (
+      {advice.boost && adding && (
+        <IonButton size="small" fill="clear" onClick={() => setAdding(false)}>
+          {t('I can’t add these')}
+        </IonButton>
+      )}
+      {!plan.on_track && last && (
         <p className="portion-tip">
-          {t('This meal is light on protein. Add some {foods} if you can.', { foods })}
+          {t(
+            'Today can’t fully reach your targets with this food. Log what you eat, and tell your trainer if this keeps happening.',
+          )}
         </p>
       )}
+
       <p className="food-muted">
         {advice.meals_logged_today > 0
           ? t(
@@ -61,19 +113,31 @@ export function PortionAdvice({
               'No meals logged today yet. If you have already eaten, log that first to keep this right.',
             )}
       </p>
+      {advice.targets_filled_in && (
+        <p className="food-muted">
+          {t('Your trainer hasn’t set all your targets, so a typical split is used for the rest.')}
+        </p>
+      )}
+      {!advice.targets_add_up && (
+        <p className="food-muted">
+          {t(
+            'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your trainer to check them.',
+          )}
+        </p>
+      )}
       {advice.caution && (
         <p className="food-muted">
           {t('This is a general guide. Please follow what your doctor has told you about food.')}
         </p>
       )}
-      <IonButton expand="block" size="large" onClick={onLogSuggested}>
-        {advice.eat_all ? t('Log this meal') : t('Log this portion')}
+      <p className="food-muted">{t('Home recipes vary, so these numbers are close, not exact.')}</p>
+
+      <IonButton expand="block" size="large" onClick={() => onLog(plan)}>
+        {t('Log this portion')}
       </IonButton>
-      {!advice.eat_all && (
-        <IonButton expand="block" fill="outline" onClick={onLogPlate}>
-          {t('I ate the full plate')}
-        </IonButton>
-      )}
+      <IonButton expand="block" fill="outline" onClick={onLogPlate}>
+        {t('I ate what is in the photo')}
+      </IonButton>
       <p className="food-muted ion-text-center">{t('You can change the amounts before saving.')}</p>
     </div>
   );

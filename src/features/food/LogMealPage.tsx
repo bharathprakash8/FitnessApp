@@ -31,6 +31,7 @@ import {
   useSaveMeal,
   type Analysis,
   type PortionAdvice as Advice,
+  type PortionPlan,
   reestimateItem,
 } from './api';
 import { Countdown } from './Countdown';
@@ -55,7 +56,7 @@ type Detail = 'quick' | 'detailed';
 const SECONDS: Record<Detail, number> = { quick: 20, detailed: 30 };
 
 /** The saved form of a suggested item (without the "reduced" marker). */
-const plainItem = (item: Advice['items'][number]): MealItem => ({
+const plainItem = (item: PortionPlan['items'][number]): MealItem => ({
   name: item.name,
   portion: item.portion,
   calories: item.calories,
@@ -361,7 +362,7 @@ export function LogMealPage() {
                     <div className="food-choice">
                       <strong>{tx('How much should I eat?')}</strong>
                       <span>
-                        {tx('About 20 seconds – suggests a portion of this plate for you')}
+                        {tx('About 20 seconds – tells you how much of this to have today')}
                       </span>
                     </div>
                   </IonButton>
@@ -454,7 +455,7 @@ export function LogMealPage() {
           {stage === 'portion' && advice && (
             <PortionAdvice
               advice={advice}
-              onLogSuggested={() => logFrom(advice.items.map(plainItem))}
+              onLog={(plan) => logFrom(plan.items.map(plainItem))}
               onLogPlate={() => logFrom(analysis?.items ?? [])}
             />
           )}

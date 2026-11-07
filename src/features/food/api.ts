@@ -120,14 +120,29 @@ export interface PortionAdvice {
   eaten_today_kcal: number;
   meals_logged_today: number;
   caution: boolean;
-  budget_kcal: number;
+  is_last_meal: boolean;
+  targets_filled_in: boolean;
+  targets_add_up: boolean;
   plate_kcal: number;
-  suggested_kcal: number;
-  suggested_protein_g: number;
-  left_after_kcal: number;
-  eat_all: boolean;
-  items: (MealItem & { reduced: boolean })[];
-  add_protein_foods: string[];
+  /** Portions of the food in the photo. */
+  plan: PortionPlan;
+  /** The same with up to 2 foods added, when the food alone can't reach the targets. */
+  boost: PortionPlan | null;
+}
+
+export interface PortionPlan {
+  items: (MealItem & { reduced: boolean; increased: boolean; added: boolean })[];
+  kcal: number;
+  protein_g: number;
+  on_track: boolean;
+  checks: {
+    key: 'kcal' | 'protein' | 'carbs' | 'fat';
+    target: number;
+    meal: number;
+    after: number;
+    percent: number;
+    status: 'ok' | 'low' | 'high';
+  }[];
 }
 
 export interface Analysis {

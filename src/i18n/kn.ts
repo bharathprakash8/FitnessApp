@@ -1085,4 +1085,34 @@ export const kn: Record<string, string> = {
     'ನಿಮಗೆ ಇನ್ನೂ ಕ್ಯಾಲೊರಿ ಗುರಿ ಇಲ್ಲ, ಆದ್ದರಿಂದ ಇದು ಪೂರ್ತಿ ತಟ್ಟೆಯ ಅಂದಾಜು. ಪ್ರಮಾಣದ ಸಲಹೆಗಳಿಗಾಗಿ ಗುರಿ ನಿಗದಿಪಡಿಸಲು ನಿಮ್ಮ ತರಬೇತುದಾರರನ್ನು ಕೇಳಿ.',
   'Based on {kcal} kcal logged so far today. Log your other meals to keep this right.':
     'ಇಂದು ಇಲ್ಲಿಯವರೆಗೆ ದಾಖಲಿಸಿದ {kcal} kcal ಆಧಾರದಲ್ಲಿ. ಇದು ಸರಿಯಾಗಿರಲು ನಿಮ್ಮ ಇತರ ಊಟಗಳನ್ನೂ ದಾಖಲಿಸಿ.',
+  'This finishes your day on target': 'ಇದರಿಂದ ನಿಮ್ಮ ದಿನ ಗುರಿಯಲ್ಲಿ ಮುಗಿಯುತ್ತದೆ',
+  'Your portion for this meal': 'ಈ ಊಟಕ್ಕೆ ನಿಮ್ಮ ಪ್ರಮಾಣ',
+  'The closest portion with this food': 'ಈ ಆಹಾರದಲ್ಲಿ ಹತ್ತಿರದ ಪ್ರಮಾಣ',
+  Add: 'ಸೇರಿಸಿ',
+  'Today’s total after this meal': 'ಈ ಊಟದ ನಂತರ ಇಂದಿನ ಒಟ್ಟು',
+  'Today so far, after this meal': 'ಈ ಊಟದ ನಂತರ ಇಂದು ಇಲ್ಲಿಯವರೆಗೆ',
+  '{after} of {target} {unit}': '{target} {unit} ರಲ್ಲಿ {after}',
+  'Above range': 'ಮಿತಿಗಿಂತ ಹೆಚ್ಚು',
+  'Below range': 'ಮಿತಿಗಿಂತ ಕಡಿಮೆ',
+  'Low for this meal': 'ಈ ಊಟಕ್ಕೆ ಕಡಿಮೆ',
+  'On track': 'ಸರಿಯಾಗಿದೆ',
+  'This food alone won’t get you there. It helps to add:':
+    'ಈ ಆಹಾರ ಮಾತ್ರ ಸಾಕಾಗುವುದಿಲ್ಲ. ಇದನ್ನು ಸೇರಿಸಿದರೆ ಸಹಾಯವಾಗುತ್ತದೆ:',
+  'I can add these': 'ನಾನು ಇವುಗಳನ್ನು ಸೇರಿಸಬಲ್ಲೆ',
+  'I can’t add these': 'ನಾನು ಇವುಗಳನ್ನು ಸೇರಿಸಲಾರೆ',
+  'Today can’t fully reach your targets with this food. Log what you eat, and tell your trainer if this keeps happening.':
+    'ಈ ಆಹಾರದಿಂದ ಇಂದು ನಿಮ್ಮ ಗುರಿಗಳನ್ನು ಪೂರ್ತಿ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ನೀವು ತಿಂದದ್ದನ್ನು ದಾಖಲಿಸಿ, ಹೀಗೆ ಪದೇ ಪದೇ ಆದರೆ ನಿಮ್ಮ ತರಬೇತುದಾರರಿಗೆ ತಿಳಿಸಿ.',
+  'Your trainer hasn’t set all your targets, so a typical split is used for the rest.':
+    'ನಿಮ್ಮ ತರಬೇತುದಾರರು ಎಲ್ಲಾ ಗುರಿಗಳನ್ನು ನಿಗದಿಪಡಿಸಿಲ್ಲ, ಆದ್ದರಿಂದ ಉಳಿದವಕ್ಕೆ ಸಾಮಾನ್ಯ ಹಂಚಿಕೆ ಬಳಸಲಾಗಿದೆ.',
+  'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your trainer to check them.':
+    'ನಿಮ್ಮ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪ್ರೋಟೀನ್, ಕಾರ್ಬ್ಸ್, ಕೊಬ್ಬಿನ ಗುರಿಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ, ಆದ್ದರಿಂದ ಎಲ್ಲವನ್ನೂ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ಪರಿಶೀಲಿಸಲು ನಿಮ್ಮ ತರಬೇತುದಾರರನ್ನು ಕೇಳಿ.',
+  'Home recipes vary, so these numbers are close, not exact.':
+    'ಮನೆಯ ಅಡುಗೆ ಬದಲಾಗುತ್ತದೆ, ಆದ್ದರಿಂದ ಈ ಸಂಖ್ಯೆಗಳು ಅಂದಾಜು, ನಿಖರವಲ್ಲ.',
+  'I ate what is in the photo': 'ಫೋಟೋದಲ್ಲಿರುವುದನ್ನು ತಿಂದೆ',
+  'About 20 seconds – tells you how much of this to have today':
+    'ಸುಮಾರು 20 ಸೆಕೆಂಡ್ – ಇಂದು ಇದರಲ್ಲಿ ಎಷ್ಟು ತಿನ್ನಬೇಕು ಎಂದು ಹೇಳುತ್ತದೆ',
+  Calories: 'ಕ್ಯಾಲೊರಿಗಳು',
+  Protein: 'ಪ್ರೋಟೀನ್',
+  Carbs: 'ಕಾರ್ಬ್ಸ್',
+  Fat: 'ಕೊಬ್ಬು',
 };

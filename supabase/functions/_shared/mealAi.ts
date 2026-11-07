@@ -3,6 +3,7 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 
+import { withTableValues } from './foodTable.ts';
 import { suggestPortions, type MealType, type PlateItem } from './portion.ts';
 
 export const SYSTEM = `You are a nutrition estimation assistant for an Indian fitness coaching app. Identify each distinct food item in the meal photo or description. Estimate a realistic portion size for each and its calories, protein, carbohydrates and fat. Recognise Indian dishes accurately (for example idli, dosa, sambar, chapati, rajma chawal, paneer dishes, biryani, poha, upma) and account for typical home-style oil or ghee use. If the input is not food, return an empty items array. Never give medical or diet advice. Return only JSON matching the schema.
@@ -109,26 +110,39 @@ export async function portionAdvice(
   const [{ data: target }, { data: today }] = await Promise.all([
     db
       .from('targets')
-      .select('calories, protein_g')
+      .select('calories, protein_g, carbs_g, fat_g')
       .eq('client_id', clientId)
       .lte('effective_from', day)
       .order('effective_from', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    db.from('meal_logs').select('total_calories').eq('client_id', clientId).eq('eaten_on', day),
+    db
+      .from('meal_logs')
+      .select('total_calories, protein_g, carbs_g, fat_g')
+      .eq('client_id', clientId)
+      .eq('eaten_on', day),
   ]);
   if (!target) return { status: 'no_target' as const };
-  const eaten = (today ?? []).reduce((s, m) => s + Number(m.total_calories ?? 0), 0);
+  const rows = today ?? [];
+  const sum = (pick: (r: (typeof rows)[number]) => unknown) =>
+    rows.reduce((s, r) => s + Number(pick(r) ?? 0), 0);
+  const eaten = {
+    kcal: sum((r) => r.total_calories),
+    protein: sum((r) => r.protein_g),
+    carbs: sum((r) => r.carbs_g),
+    fat: sum((r) => r.fat_g),
+  };
+  const read = plate.map(withTableValues);
   return {
     status: 'ok' as const,
-    eaten_today_kcal: eaten,
-    meals_logged_today: (today ?? []).length,
+    eaten_today_kcal: Math.round(eaten.kcal),
+    meals_logged_today: rows.length,
     caution: (profile.health_conditions ?? []).length > 0,
-    ...suggestPortions(plate, {
+    foods_from_table: read.filter((i) => i.from_table).length,
+    ...suggestPortions(read, {
       mealType,
-      targetKcal: target.calories,
-      targetProtein: target.protein_g ?? 0,
-      eatenKcal: eaten,
+      target,
+      eaten,
       sex: profile.sex,
       diet: profile.diet_preference,
       foodsToAvoid: profile.foods_to_avoid,
