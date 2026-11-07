@@ -1088,7 +1088,6 @@ export const kn: Record<string, string> = {
   'This finishes your day on target': 'ಇದರಿಂದ ನಿಮ್ಮ ದಿನ ಗುರಿಯಲ್ಲಿ ಮುಗಿಯುತ್ತದೆ',
   'Your portion for this meal': 'ಈ ಊಟಕ್ಕೆ ನಿಮ್ಮ ಪ್ರಮಾಣ',
   'The closest portion with this food': 'ಈ ಆಹಾರದಲ್ಲಿ ಹತ್ತಿರದ ಪ್ರಮಾಣ',
-  Add: 'ಸೇರಿಸಿ',
   'Today’s total after this meal': 'ಈ ಊಟದ ನಂತರ ಇಂದಿನ ಒಟ್ಟು',
   'Today so far, after this meal': 'ಈ ಊಟದ ನಂತರ ಇಂದು ಇಲ್ಲಿಯವರೆಗೆ',
   '{after} of {target} {unit}': '{target} {unit} ರಲ್ಲಿ {after}',
@@ -1111,8 +1110,4 @@ export const kn: Record<string, string> = {
   'I ate what is in the photo': 'ಫೋಟೋದಲ್ಲಿರುವುದನ್ನು ತಿಂದೆ',
   'About 20 seconds – tells you how much of this to have today':
     'ಸುಮಾರು 20 ಸೆಕೆಂಡ್ – ಇಂದು ಇದರಲ್ಲಿ ಎಷ್ಟು ತಿನ್ನಬೇಕು ಎಂದು ಹೇಳುತ್ತದೆ',
-  Calories: 'ಕ್ಯಾಲೊರಿಗಳು',
-  Protein: 'ಪ್ರೋಟೀನ್',
-  Carbs: 'ಕಾರ್ಬ್ಸ್',
-  Fat: 'ಕೊಬ್ಬು',
 };
