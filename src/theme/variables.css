@@ -1,19 +1,43 @@
-/* FitCoach brand colours for Ionic. https://ionicframework.com/docs/theming/colors */
+/* FitCoach brand colours for Ionic: design B "warm home" (terracotta, saffron, cream), 8 Nov 2026.
+ * White text on the primary passes WCAG AA. https://ionicframework.com/docs/theming/colors */
 :root {
-  --ion-color-primary: #0e9f6e;
-  --ion-color-primary-rgb: 14, 159, 110;
+  --ion-color-primary: #b8492a;
+  --ion-color-primary-rgb: 184, 73, 42;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #0c8c61;
-  --ion-color-primary-tint: #26a97d;
+  --ion-color-primary-shade: #a2401f;
+  --ion-color-primary-tint: #bf5b3f;
 
-  --ion-color-secondary: #f59e0b;
-  --ion-color-secondary-rgb: 245, 158, 11;
-  --ion-color-secondary-contrast: #000000;
-  --ion-color-secondary-contrast-rgb: 0, 0, 0;
-  --ion-color-secondary-shade: #d88b0a;
-  --ion-color-secondary-tint: #f6a823;
+  --ion-color-secondary: #f2a33a;
+  --ion-color-secondary-rgb: 242, 163, 58;
+  --ion-color-secondary-contrast: #2b1a12;
+  --ion-color-secondary-contrast-rgb: 43, 26, 18;
+  --ion-color-secondary-shade: #d58f33;
+  --ion-color-secondary-tint: #f3ac4e;
 
   --ion-font-family:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Headings: the phone's own serif (no web font to download). */
+  --fc-serif: ui-serif, 'New York', Georgia, 'Noto Serif', 'Times New Roman', serif;
+}
+
+/* Warm neutrals instead of Ionic's cool greys (bar tracks, dividers, chips). */
+:root {
+  --ion-color-light: #f3e6d6;
+  --ion-color-light-rgb: 243, 230, 214;
+  --ion-color-light-contrast: #2b1a12;
+  --ion-color-light-contrast-rgb: 43, 26, 18;
+  --ion-color-light-shade: #e4d2be;
+  --ion-color-light-tint: #f4e9da;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-light: #33281f;
+    --ion-color-light-rgb: 51, 40, 31;
+    --ion-color-light-contrast: #f3e9df;
+    --ion-color-light-contrast-rgb: 243, 233, 223;
+    --ion-color-light-shade: #2d231b;
+    --ion-color-light-tint: #3d3128;
+  }
 }

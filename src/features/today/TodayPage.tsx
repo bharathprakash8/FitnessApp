@@ -17,7 +17,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import { barbell, camera, flag, restaurant } from 'ionicons/icons';
+import { barbell, camera, chevronForward, flag, restaurant } from 'ionicons/icons';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { AppTabBar } from '../../components/AppTabBar';
@@ -27,7 +27,7 @@ import { BurnCard } from '../activity/BurnCard';
 import { useAuth } from '../auth/useAuth';
 import { useMealsOn } from '../food/api';
 import { DayProgress } from '../food/DayProgress';
-import { mealTotals } from '../food/model';
+import { mealTotals, mealTypeForHour, type MealType } from '../food/model';
 import { useMyTrainer } from '../profile/api';
 import { currentTarget, upcomingTarget, useTargets } from '../targets/api';
 import { TargetsCard } from '../targets/TargetsCard';
@@ -48,6 +48,23 @@ function greeting(timeZone = DEFAULT_TIMEZONE): string {
   );
   return h < 12 ? tr('Good morning') : h < 17 ? tr('Good afternoon') : tr('Good evening');
 }
+
+/** The meal that's due now, in the person's own time zone. */
+function mealNow(timeZone = DEFAULT_TIMEZONE): MealType {
+  const h = Number(
+    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone }).format(
+      new Date(),
+    ),
+  );
+  return mealTypeForHour(h);
+}
+
+const MEAL_NOW: Record<MealType, string> = {
+  breakfast: 'Breakfast time',
+  lunch: 'Lunch time',
+  snack: 'Snack time',
+  dinner: 'Dinner time',
+};
 
 /**
  * Client home: food vs targets, calories burnt and net balance, today's workout.
@@ -104,10 +121,6 @@ function TodayContent() {
         <IonRefresherContent />
       </IonRefresher>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <h2 className="today-greeting">
-          {greeting(tz)}
-          {firstName ? `, ${firstName}` : ''}!
-        </h2>
         <p className="today-date">
           {new Intl.DateTimeFormat(dateLocale(), {
             weekday: 'long',
@@ -116,6 +129,10 @@ function TodayContent() {
             timeZone: tz,
           }).format(new Date())}
         </p>
+        <h2 className="today-greeting">
+          {greeting(tz)}
+          {firstName ? `, ${firstName}` : ''}
+        </h2>
         {isTrainer && (
           <div className="today-links">
             <IonButton fill="outline" size="small" routerLink="/food">
@@ -146,12 +163,32 @@ function TodayContent() {
               </IonCardHeader>
               <IonCardContent>
                 <DayProgress totals={mealTotals(meals.data ?? [])} target={target} />
-                <IonButton expand="block" style={{ marginTop: 12 }} routerLink="/food/new/photo">
-                  <IonIcon slot="start" icon={camera} />
-                  {t('Log a meal')}
-                </IonButton>
               </IonCardContent>
             </IonCard>
+            <IonButton
+              expand="block"
+              className="today-cta"
+              routerLink="/food/new/photo"
+              aria-label={t('How much should I eat?')}
+            >
+              <span className="today-cta-inner">
+                <IonIcon icon={camera} className="today-cta-icon" aria-hidden="true" />
+                <span className="today-cta-text">
+                  <span className="today-cta-small">{t(MEAL_NOW[mealNow(tz)])}</span>
+                  <span className="today-cta-big">{t('How much should I eat?')}</span>
+                </span>
+                <IonIcon icon={chevronForward} aria-hidden="true" />
+              </span>
+            </IonButton>
+            <IonButton
+              expand="block"
+              fill="clear"
+              size="small"
+              className="today-type"
+              routerLink="/food/new/text"
+            >
+              {t('Or type what you ate')}
+            </IonButton>
             {profile && (
               <BurnCard
                 client={profile}

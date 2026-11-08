@@ -1,18 +1,22 @@
 /*
- * FitCoach look & feel (19 Oct 2026). Styling only – no images, web fonts or animation
- * libraries, so it costs nothing in speed. Colours come from Ionic's CSS variables, with
- * matching dark-mode values at the bottom.
+ * FitCoach look & feel: design B "warm home" (8 Nov 2026) – cream pages, terracotta and saffron,
+ * serif headings, a cream header instead of a coloured bar. Styling only – no images, web fonts
+ * or animation libraries. Colours come from Ionic's CSS variables, with dark mode at the bottom.
  */
 
 :root {
-  --fc-page: #f2f6f4;
+  --fc-page: #fbf6ee;
   --fc-card: #ffffff;
-  --fc-border: rgba(15, 40, 30, 0.07);
-  --fc-shadow: 0 1px 2px rgba(15, 40, 30, 0.06), 0 6px 18px rgba(15, 40, 30, 0.06);
-  --fc-muted: #5f6f68;
-  --fc-primary-soft: rgba(14, 159, 110, 0.12);
-  --fc-header: linear-gradient(135deg, #10a674 0%, #0b8460 100%);
-  --fc-tabbar: rgba(255, 255, 255, 0.92);
+  --fc-ink: #2b1a12;
+  --fc-border: rgba(122, 46, 23, 0.1);
+  --fc-shadow: 0 1px 2px rgba(60, 30, 15, 0.05), 0 6px 18px rgba(60, 30, 15, 0.06);
+  --fc-muted: #7a6458;
+  --fc-primary-soft: rgba(184, 73, 42, 0.1);
+  --fc-plate: #f3e6d6;
+  --fc-header: var(--ion-color-primary);
+  --fc-tabbar: rgba(251, 246, 238, 0.94);
+
+  --ion-text-color: var(--fc-ink);
 
   --ion-background-color: var(--fc-page);
   --ion-item-background: var(--fc-card);
@@ -20,14 +24,32 @@
 }
 
 /* ---------------------------------------------------------------- header */
+/* Headers are cream with dark text (design B), even where a page asks for color="primary". */
 ion-toolbar[color='primary'] {
-  --background: var(--fc-header);
+  --ion-color-base: var(--fc-page) !important;
+  --ion-color-base-rgb: 251, 246, 238 !important;
+  --ion-color-contrast: var(--fc-ink) !important;
+  --ion-color-contrast-rgb: 43, 26, 18 !important;
+  --ion-color-shade: var(--fc-page) !important;
+  --ion-color-tint: var(--fc-page) !important;
   --border-width: 0;
 }
 
 ion-toolbar[color='primary'] ion-title {
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-family: var(--fc-serif);
+  font-weight: 600;
+  font-size: 1.2rem;
+  letter-spacing: 0;
+}
+
+/* A soft line under the header instead of the grey shadow. */
+ion-header::after {
+  background-image: none !important;
+}
+
+ion-header {
+  border-bottom: 1px solid var(--fc-border);
+  box-shadow: none !important;
 }
 
 ion-header ion-toolbar:not([color]) {
@@ -57,8 +79,9 @@ ion-card-subtitle {
 }
 
 ion-card-title {
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--fc-serif);
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 /* ---------------------------------------------------------------- buttons */
@@ -76,7 +99,7 @@ ion-button[size='large'] {
 
 ion-fab-button {
   --background: var(--fc-header);
-  --box-shadow: 0 6px 16px rgba(14, 159, 110, 0.35);
+  --box-shadow: 0 6px 16px rgba(184, 73, 42, 0.3);
 }
 
 /* ---------------------------------------------------------------- lists */
@@ -96,6 +119,19 @@ ion-item {
   --border-color: var(--fc-border);
 }
 
+/* ---------------------------------------------------------------- search bars */
+ion-searchbar,
+ion-searchbar.searchbar-md {
+  --box-shadow: none !important;
+  --background: var(--fc-card);
+  --border-radius: 12px;
+}
+
+ion-searchbar .searchbar-input-container {
+  border: 1px solid var(--fc-border);
+  border-radius: 12px;
+}
+
 /* ---------------------------------------------------------------- form fields */
 ion-input,
 ion-textarea,
@@ -105,7 +141,7 @@ ion-select {
 
 /* ---------------------------------------------------------------- segments as pills */
 ion-segment {
-  --background: rgba(15, 40, 30, 0.06);
+  --background: rgba(122, 46, 23, 0.07);
   border-radius: 12px;
   padding: 3px;
 }
@@ -124,7 +160,7 @@ ion-segment-button::part(indicator-background) {
   height: 100%;
   border-radius: 10px;
   background: var(--fc-card);
-  box-shadow: 0 1px 3px rgba(15, 40, 30, 0.15);
+  box-shadow: 0 1px 3px rgba(60, 30, 15, 0.15);
 }
 
 ion-segment-button::part(native) {
@@ -181,20 +217,32 @@ ion-tab-button.fc-tab-active ion-icon {
 /* ---------------------------------------------------------------- headings */
 h1,
 h2 {
-  letter-spacing: -0.02em;
+  font-family: var(--fc-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* ---------------------------------------------------------------- dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --fc-page: #0e1311;
-    --fc-card: #171e1b;
-    --fc-border: rgba(255, 255, 255, 0.07);
+    --fc-page: #1a1512;
+    --fc-card: #241d19;
+    --fc-ink: #f3e9df;
+    --fc-border: rgba(255, 240, 225, 0.08);
     --fc-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --fc-muted: #9aaba3;
-    --fc-primary-soft: rgba(38, 169, 125, 0.2);
-    --fc-header: linear-gradient(135deg, #0f8f64 0%, #0a6d4c 100%);
-    --fc-tabbar: rgba(16, 22, 19, 0.9);
+    --fc-muted: #b9a79b;
+    --fc-primary-soft: rgba(224, 122, 85, 0.18);
+    --fc-plate: #33281f;
+    --fc-tabbar: rgba(26, 21, 18, 0.92);
+  }
+
+  ion-tab-button,
+  ion-tab-button.fc-tab-active {
+    --color-selected: #e8835c;
+  }
+
+  ion-tab-button.fc-tab-active {
+    --color: #e8835c;
   }
 
   ion-segment {
@@ -206,7 +254,7 @@ h2 {
   }
 
   ion-segment-button::part(indicator-background) {
-    background: #26312c;
+    background: #3a2e26;
   }
 }
 

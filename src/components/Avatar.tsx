@@ -1,6 +1,6 @@
 /** A coloured circle with a person's initials (colour is stable per person). */
 const COLOURS = [
-  '#0e9f6e',
+  '#b8492a',
   '#2563eb',
   '#d97706',
   '#db2777',

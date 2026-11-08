@@ -16,18 +16,21 @@ export function DayProgress({ totals, target }: { totals: Totals; target: Target
   return (
     <div className="ring-wrap">
       <svg
-        width="112"
-        height="112"
+        width="124"
+        height="124"
         viewBox="0 0 112 112"
         role="img"
         aria-label={goal ? `${totals.calories} of ${goal} kcal` : `${totals.calories} kcal`}
       >
+        {/* a thali behind the ring (design B) */}
+        <circle cx="56" cy="56" r="55" fill="var(--fc-plate)" />
+        <circle cx="56" cy="56" r={r - 6} fill="var(--fc-card)" />
         <circle
           cx="56"
           cy="56"
           r={r}
           fill="none"
-          stroke="var(--ion-color-light)"
+          stroke="var(--fc-primary-soft)"
           strokeWidth="10"
         />
         {/* no progress arc at 0 – a round line cap would draw a dot */}

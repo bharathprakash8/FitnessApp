@@ -1112,4 +1112,9 @@ export const kn: Record<string, string> = {
     'ಸುಮಾರು 20 ಸೆಕೆಂಡ್ – ಇಂದು ಇದರಲ್ಲಿ ಎಷ್ಟು ತಿನ್ನಬೇಕು ಎಂದು ಹೇಳುತ್ತದೆ',
   'You haven’t logged {meals} today, so normal portions are counted for them. Log them to keep this right.':
     'ನೀವು ಇಂದು {meals} ದಾಖಲಿಸಿಲ್ಲ, ಆದ್ದರಿಂದ ಅವುಗಳಿಗೆ ಸಾಮಾನ್ಯ ಪ್ರಮಾಣವನ್ನು ಎಣಿಸಲಾಗಿದೆ. ಇದು ಸರಿಯಾಗಿರಲು ಅವುಗಳನ್ನು ದಾಖಲಿಸಿ.',
+  'Breakfast time': 'ಉಪಹಾರದ ಸಮಯ',
+  'Lunch time': 'ಮಧ್ಯಾಹ್ನದ ಊಟದ ಸಮಯ',
+  'Snack time': 'ತಿಂಡಿಯ ಸಮಯ',
+  'Dinner time': 'ರಾತ್ರಿ ಊಟದ ಸಮಯ',
+  'Or type what you ate': 'ಅಥವಾ ನೀವು ತಿಂದದ್ದನ್ನು ಟೈಪ್ ಮಾಡಿ',
 };

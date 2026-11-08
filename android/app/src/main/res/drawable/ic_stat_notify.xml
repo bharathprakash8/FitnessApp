@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Small white dumbbell for the Android status bar (notification icons must be one colour). -->
+<!-- Small white Ascent ring logo for the Android status bar (notification icons must be one colour). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="512"
-    android:viewportHeight="512">
-    <path android:fillColor="#FFFFFFFF" android:pathData="M110,196h40v120h-40z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M158,166h44v180h-44z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M310,166h44v180h-44z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M362,196h40v120h-40z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M202,236h108v40h-108z" />
+    android:viewportWidth="110"
+    android:viewportHeight="110">
+    <path
+        android:pathData="M73.42,22.76 A38,38 0 1,1 36.34,22.89"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="8"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M35,52 L55,22 L75,52"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M35,76 L55,46 L75,76"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="10"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 </vector>

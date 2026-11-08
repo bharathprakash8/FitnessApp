@@ -26,7 +26,7 @@
   padding: 12px;
 }
 .stats-tile.good {
-  border-color: rgba(14, 159, 110, 0.4);
+  border-color: rgba(184, 73, 42, 0.4);
 }
 .stats-tile-value {
   font-size: 1.25rem;

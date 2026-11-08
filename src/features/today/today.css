@@ -10,12 +10,61 @@
 }
 
 .today-date {
-  margin: 2px 0 12px;
-  color: var(--ion-color-medium-shade);
+  margin: 4px 0 0;
+  color: var(--fc-muted);
+  font-size: 0.85rem;
 }
 
 .today-greeting {
-  margin: 6px 0 0;
-  font-size: 1.6rem;
-  font-weight: 800;
+  margin: 2px 0 14px;
+  font-family: var(--fc-serif);
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* One big "How much should I eat?" button under the day ring (design B). */
+ion-button.today-cta {
+  --border-radius: 20px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  height: auto;
+  margin: 0 0 2px;
+}
+
+.today-cta-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+}
+
+.today-cta-icon {
+  font-size: 26px;
+}
+
+.today-cta-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.today-cta-small {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.today-cta-big {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+ion-button.today-type {
+  margin: 0 0 10px;
+  --color: var(--fc-muted);
 }

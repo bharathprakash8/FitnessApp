@@ -15,11 +15,15 @@
   margin: 0 auto 8px;
 }
 
+/* Matches the logo lockup: italic, tight, dark ink. */
 .login-title {
   text-align: center;
   margin: 0 0 24px;
+  font-family: var(--ion-font-family);
+  font-style: italic;
   font-weight: 700;
-  color: var(--ion-color-primary);
+  letter-spacing: -0.03em;
+  color: var(--fc-ink);
 }
 
 .login-hint {
