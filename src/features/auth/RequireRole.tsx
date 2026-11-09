@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { StatusScreen } from '../../components/StatusScreen';
+import { afterOnboardingPath } from '../onboarding/afterOnboarding';
 import { homePathFor, needsOnboarding, type Role } from './roles';
 import { useAuth } from './useAuth';
 import { useT } from '../../i18n/i18n';
@@ -55,10 +56,15 @@ export function RequireRole({
         return <Navigate to={homePathFor(profile)} replace />;
       }
       if (profile.role === 'trainer') {
-        return onboarding && profile.onboarded_at ? <Navigate to="/today" replace /> : children;
+        return onboarding && profile.onboarded_at ? (
+          <Navigate to={afterOnboardingPath() ?? '/today'} replace />
+        ) : (
+          children
+        );
       }
       if (needsOnboarding(profile) !== onboarding) {
-        return <Navigate to={homePathFor(profile)} replace />;
+        const to = (onboarding && afterOnboardingPath()) || homePathFor(profile);
+        return <Navigate to={to} replace />;
       }
       return children;
   }

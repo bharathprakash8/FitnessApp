@@ -466,3 +466,6 @@ verify_jwt = false
 
 [functions.coach]
 verify_jwt = false
+
+[functions.setup-login]
+verify_jwt = false

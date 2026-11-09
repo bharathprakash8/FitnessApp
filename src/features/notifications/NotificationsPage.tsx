@@ -69,7 +69,8 @@ export function NotificationsPage() {
   );
 }
 
-function DeviceCard() {
+/** Turn notifications on for this device (also used in onboarding). */
+export function DeviceCard() {
   const t = useT();
   const [toast] = useIonToast();
   const support = pushSupport();

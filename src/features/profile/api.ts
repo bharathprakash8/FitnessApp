@@ -165,11 +165,28 @@ export function useSaveTimeZone(profile: Profile | null) {
 export function useAcceptConsent(profile: Profile | null, version: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    /** withCoach: the AI coach consent was shown on the same screen (onboarding). */
+    mutationFn: async (withCoach: boolean | void) => {
+      if (!profile) throw new Error('Not signed in');
+      const now = new Date().toISOString();
+      const changes: TablesUpdate<'profiles'> = { consent_at: now, consent_version: version };
+      if (withCoach) changes.coach_consent_at = now;
+      const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: profileKey(profile?.id) }),
+  });
+}
+
+/** The last onboarding step is done (or skipped): the app opens normally from now on. */
+export function useFinishOnboarding(profile: Profile | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: async () => {
       if (!profile) throw new Error('Not signed in');
       const { error } = await supabase
         .from('profiles')
-        .update({ consent_at: new Date().toISOString(), consent_version: version })
+        .update({ onboarded_at: new Date().toISOString() })
         .eq('id', profile.id);
       if (error) throw error;
     },

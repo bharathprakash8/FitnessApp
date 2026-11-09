@@ -14,6 +14,7 @@ import { CreateUserPage } from './features/admin/CreateUserPage';
 import { UserDetailPage } from './features/admin/UserDetailPage';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { LoginPage } from './features/auth/LoginPage';
+import { SetupPage } from './features/auth/SetupPage';
 import { HomeRedirect, RequireRole } from './features/auth/RequireRole';
 import type { Role } from './features/auth/roles';
 import { EditMealPage } from './features/food/EditMealPage';
@@ -73,6 +74,7 @@ const KNOWN_PATHS = [
   '/me/progress',
   '/me/progress/new',
   '/onboarding',
+  '/setup',
   '/today',
   '/food',
   '/food/new/:mode',
@@ -122,6 +124,7 @@ export function App() {
         <IonReactRouter>
           <IonRouterOutlet>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/setup" element={<SetupPage />} />
 
             {/* Admin */}
             <Route path="/admin" element={guarded('admin', <AdminHomePage />)} />

@@ -20,6 +20,7 @@ import { useState, type FormEvent } from 'react';
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import type { Role } from '../auth/roles';
 import { loginInstructions, useAdminAction, useAdminUsers, type AdminUser } from './api';
+import { WhatsAppSetup } from './WhatsAppSetup';
 import { RoleSegment } from './RoleSegment';
 import { TrainerSelect } from './TrainerSelect';
 import './admin.css';
@@ -170,9 +171,10 @@ function ShareInstructions({ user, onAnother }: { user: AdminUser; onAnother: ()
           </IonCardContent>
         </IonCard>
       )}
+      <WhatsAppSetup user={{ ...user, is_active: true }} />
       <IonCard>
         <IonCardHeader>
-          <IonCardTitle>Share login instructions</IonCardTitle>
+          <IonCardTitle>Or share email login instructions</IonCardTitle>
         </IonCardHeader>
         <IonCardContent>
           <pre className="admin-share">{text}</pre>

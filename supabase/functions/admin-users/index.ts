@@ -1,16 +1,19 @@
 // admin-users: everything the Admin console does to users. Admin callers only.
 // POST { action: 'create' | 'update' | 'assign' | 'deactivate' | 'reactivate' | 'delete' |
-//        'purge' | 'impersonate' | 'welcome', ... }
+//        'purge' | 'impersonate' | 'welcome' | 'setup_link', ... }
 // create also sends the welcome email (app links + setup guides) unless send_welcome is false;
 // welcome sends it again. The email never blocks creating the user – its result is returned.
 // impersonate: a session for an active client/trainer so the admin can use the app as them
 // (never another admin). Recorded in impersonation_log (admin-only); the person isn't told.
-import { createClient } from 'npm:@supabase/supabase-js@2';
+// setup_link: a new one-time setup code (7 days, replaces the old one) for the admin to send on
+// WhatsApp; setup-login turns it into a session. Never for admins.
 import { z } from 'npm:zod@3';
 
 import { adminClient, requireAdmin } from '../_shared/auth.ts';
 import { EmailNotConfigured } from '../_shared/email.ts';
 import { HttpError, serveJson } from '../_shared/http.ts';
+import { sessionFor } from '../_shared/session.ts';
+import { hashSetupCode, newSetupCode, SETUP_CODE_DAYS } from '../_shared/setupCode.ts';
 import { sendWelcome } from '../_shared/welcome.ts';
 
 const BAN_FOREVER = '876000h'; // 100 years
@@ -52,6 +55,7 @@ const Body = z.discriminatedUnion('action', [
   // Admin support: log in as this person.
   z.object({ action: z.literal('impersonate'), user_id: id }),
   z.object({ action: z.literal('welcome'), user_id: id }),
+  z.object({ action: z.literal('setup_link'), user_id: id }),
 ]);
 
 type Admin = ReturnType<typeof adminClient>;
@@ -354,27 +358,36 @@ serveJson(async (req) => {
       if (!target.is_active) {
         throw new HttpError(409, 'This account is deactivated – reactivate it first', 'inactive');
       }
-      const { data: link, error: linkErr } = await db.auth.admin.generateLink({
-        type: 'magiclink',
-        email: target.email,
-      });
-      if (linkErr) throw linkErr;
-      const anon = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-        auth: { persistSession: false, autoRefreshToken: false },
-      });
-      const { data: s, error: vErr } = await anon.auth.verifyOtp({
-        token_hash: link.properties.hashed_token,
-        type: 'magiclink',
-      });
-      if (vErr || !s.session) throw vErr ?? new Error('No session');
+      const tokens = await sessionFor(db, target.email);
       const { error: logErr } = await db
         .from('impersonation_log')
         .insert({ admin_id: caller.id, user_id: target.id });
       if (logErr) throw logErr;
-      return {
-        access_token: s.session.access_token,
-        refresh_token: s.session.refresh_token,
-      };
+      return tokens;
+    }
+    case 'setup_link': {
+      const target = await getProfile(db, body.user_id);
+      if (target.role === 'admin') {
+        throw new HttpError(403, 'Admins log in with the email code', 'forbidden');
+      }
+      if (!target.is_active) {
+        throw new HttpError(409, 'This account is deactivated – reactivate it first', 'inactive');
+      }
+      const code = newSetupCode();
+      const expires_at = new Date(Date.now() + SETUP_CODE_DAYS * 86400_000).toISOString();
+      const { error } = await db.from('setup_links').upsert(
+        {
+          user_id: target.id,
+          token_hash: await hashSetupCode(code),
+          expires_at,
+          used_at: null,
+          created_by: caller.id,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
+      if (error) throw error;
+      return { id: target.id, code, expires_at };
     }
     case 'purge': {
       if (body.user_id === caller.id) {

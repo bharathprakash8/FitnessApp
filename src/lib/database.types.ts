@@ -1527,6 +1527,66 @@ export type Database = {
           },
         ]
       }
+      setup_attempts: {
+        Row: {
+          at: string
+          id: number
+          ok: boolean
+        }
+        Insert: {
+          at?: string
+          id?: never
+          ok: boolean
+        }
+        Update: {
+          at?: string
+          id?: never
+          ok?: boolean
+        }
+        Relationships: []
+      }
+      setup_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setup_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stats_insights: {
         Row: {
           client_id: string
@@ -1896,6 +1956,27 @@ export type Database = {
       set_latest_android: {
         Args: { p_code: number; p_name: string; p_notes: string }
         Returns: undefined
+      }
+      start_ai_target: {
+        Args: never
+        Returns: {
+          calories: number
+          carbs_g: number
+          client_id: string
+          created_at: string
+          effective_from: string
+          fat_g: number
+          id: string
+          protein_g: number
+          set_by: string | null
+          water_ml: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "targets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       touch_client_info: {
         Args: { app_version: string; device: string; platform: string }

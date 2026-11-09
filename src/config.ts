@@ -13,3 +13,6 @@ export const ANDROID_APP_URL =
 /** Play Store page for Health Connect (Android 13 and older need it installed). */
 export const HEALTH_CONNECT_PLAY_URL =
   'https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata';
+
+/** The web app's address, for links shared from the admin console (also from the APK). */
+export const WEB_APP_URL = 'https://fitcoach-ten-nu.vercel.app';

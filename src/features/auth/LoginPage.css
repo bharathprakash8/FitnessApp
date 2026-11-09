@@ -52,6 +52,37 @@ ion-input.login-code input.native-input {
   margin: 16px 0 0;
 }
 
+/* Setup code (WhatsApp link): big, spaced, easy to read out. */
+.setup-label {
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.setup-code {
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--fc-ink);
+}
+
+.setup-steps {
+  margin: 0 0 12px;
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.setup-steps li {
+  margin-bottom: 6px;
+}
+
+.login-small {
+  margin: 16px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .login-footer {
   display: block;
   text-align: center;

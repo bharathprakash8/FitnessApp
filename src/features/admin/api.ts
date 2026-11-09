@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { ANDROID_APP_URL } from '../../config';
+import { ANDROID_APP_URL, WEB_APP_URL } from '../../config';
 import { supabase } from '../../lib/supabase';
 import type { Role } from '../auth/roles';
 
@@ -63,10 +63,19 @@ export type AdminAction =
       trainer_id?: string;
     }
   | { action: 'assign'; client_id: string; trainer_id: string }
-  | { action: 'deactivate' | 'reactivate' | 'delete' | 'purge' | 'welcome'; user_id: string };
+  | { action: 'deactivate' | 'reactivate' | 'delete' | 'purge' | 'welcome'; user_id: string }
+  | { action: 'setup_link'; user_id: string };
+
+export interface SetupLink {
+  id: string;
+  code: string;
+  expires_at: string;
+}
 
 /** Calls the admin-users Edge Function and turns its { error } into a readable Error. */
-async function callAdminUsers(body: AdminAction): Promise<AdminUser | { id: string }> {
+export async function callAdminUsers(
+  body: AdminAction,
+): Promise<AdminUser | SetupLink | { id: string }> {
   const { data, error } = await supabase.functions.invoke('admin-users', { body });
   if (error) {
     if (error instanceof FunctionsHttpError) {
@@ -77,7 +86,7 @@ async function callAdminUsers(body: AdminAction): Promise<AdminUser | { id: stri
     }
     throw new Error('Could not reach the server. Check your connection and try again.');
   }
-  return (data as { data: AdminUser | { id: string } }).data;
+  return (data as { data: AdminUser | SetupLink | { id: string } }).data;
 }
 
 export function useAdminAction() {
@@ -106,7 +115,7 @@ export function displayName(u: Pick<AdminUser, 'full_name' | 'email'>): string {
 
 /** Text the admin copies and sends to a new user. */
 export function loginInstructions(user: Pick<AdminUser, 'full_name' | 'email'>): string {
-  const link = window.location.origin;
+  const link = WEB_APP_URL;
   const first = (user.full_name || '').split(' ')[0] || 'there';
   return [
     `Hi ${first}! You've been added to FitCoach.`,
@@ -120,4 +129,28 @@ export function loginInstructions(user: Pick<AdminUser, 'full_name' | 'email'>):
     `Setup guides: ${link}/guides/iphone.html (iPhone) · ${link}/guides/android.html (Android)`,
     `How to use FitCoach: ${link}/guides/how-to-use.html`,
   ].join('\n');
+}
+
+/** WhatsApp message with a one-time setup link (owner, 8 Nov 2026). */
+export function setupMessage(user: Pick<AdminUser, 'full_name' | 'email'>, code: string): string {
+  const first = (user.full_name || '').split(' ')[0] || 'there';
+  return [
+    `Hi ${first}! You've been added to FitCoach 💪`,
+    '',
+    `Your setup code: *${code}* (works once, for 7 days)`,
+    '',
+    `📱 iPhone: open ${WEB_APP_URL}/setup#${code} in Safari, tap Share → "Add to Home Screen", open FitCoach from the new icon, tap "I have a setup code" and type the code.`,
+    '',
+    `🤖 Android: install the app from ${ANDROID_APP_URL} (allow "install from this source" if asked), open it, tap "I have a setup code" and type the code.`,
+    '',
+    `Later, on a new phone, log in with your email (${user.email}).`,
+    `How to use FitCoach: ${WEB_APP_URL}/guides/how-to-use.html`,
+  ].join('\n');
+}
+
+/** wa.me link that opens WhatsApp with the message (to their number when we have it). */
+export function whatsAppUrl(phone: string | null, text: string): string {
+  let digits = (phone ?? '').replace(/\D/g, '');
+  if (digits.length === 10) digits = `91${digits}`; // Indian mobile without the country code
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }

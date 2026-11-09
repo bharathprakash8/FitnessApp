@@ -53,3 +53,41 @@
   white-space: normal;
   overflow: visible;
 }
+
+.onboarding h2 {
+  font-family: var(--fc-serif);
+}
+
+.onboarding-center {
+  text-align: center;
+}
+
+.onboarding-next {
+  margin-top: 16px;
+}
+
+/* Starting target (AI coach clients): one big number, macros under it. */
+.onboarding-target {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  margin: 12px 0 16px;
+  padding: 18px 16px;
+  border-radius: 20px;
+  background: var(--fc-plate, #f3e6d6);
+  text-align: center;
+}
+
+.onboarding-target-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ion-color-primary);
+}
+
+.onboarding-target-kcal {
+  font-family: var(--fc-serif);
+  font-size: 1.8rem;
+  color: var(--fc-ink);
+}

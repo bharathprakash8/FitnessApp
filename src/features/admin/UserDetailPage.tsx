@@ -37,6 +37,7 @@ import {
 } from './api';
 import { QueryState } from './QueryState';
 import { UserSupport } from './UserSupport';
+import { WhatsAppSetup } from './WhatsAppSetup';
 import { RoleSegment } from './RoleSegment';
 import { TrainerSelect } from './TrainerSelect';
 import { downloadBlob, exportUserData } from './exportUser';
@@ -291,6 +292,8 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
         </IonList>
       )}
 
+      <WhatsAppSetup user={user} />
+
       <div className="admin-actions">
         {user.is_active && (
           <IonButton
@@ -298,7 +301,10 @@ function UserEditor({ user, all }: { user: AdminUser; all: AdminUser[] }) {
             expand="block"
             disabled={action.isPending}
             onClick={() =>
-              void run({ action: 'welcome', user_id: user.id }, `Welcome email sent to ${user.email}`)
+              void run(
+                { action: 'welcome', user_id: user.id },
+                `Welcome email sent to ${user.email}`,
+              )
             }
           >
             Send welcome email

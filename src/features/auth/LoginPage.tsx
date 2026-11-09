@@ -13,6 +13,7 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { friendlyAuthError } from './authErrors';
 import { homePathFor } from './roles';
+import { formatSetupCode, loginWithSetupCode, setupCodeComplete } from './setupLogin';
 import { useAuth } from './useAuth';
 import './LoginPage.css';
 import { useT } from '../../i18n/i18n';
@@ -23,9 +24,10 @@ const RESEND_SECONDS = 60;
 export function LoginPage() {
   const tx = useT();
   const { status, profile } = useAuth();
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [step, setStep] = useState<'email' | 'code' | 'setup'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [setupCode, setSetupCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
@@ -77,6 +79,21 @@ export function LoginPage() {
     // On success AuthProvider picks up the session and this page redirects.
   }
 
+  async function submitSetupCode(e?: FormEvent) {
+    e?.preventDefault();
+    if (!setupCodeComplete(setupCode) || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await loginWithSetupCode(setupCode);
+      // AuthProvider picks up the session and this page redirects.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not log in.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function onCodeInput(value: string) {
     const digits = value.replace(/\D/g, '').slice(0, CODE_LENGTH);
     setCode(digits);
@@ -90,7 +107,44 @@ export function LoginPage() {
           <img src="/icon.svg" alt="" className="login-logo" />
           <h1 className="login-title">{tx('FitCoach')}</h1>
 
-          {step === 'email' ? (
+          {step === 'setup' ? (
+            <form onSubmit={(e) => void submitSetupCode(e)} noValidate>
+              <p className="login-hint">
+                {tx('Type the setup code from the WhatsApp message the admin sent you.')}
+              </p>
+              <IonInput
+                className="login-input login-code"
+                fill="outline"
+                label={tx('Setup code')}
+                labelPlacement="floating"
+                type="text"
+                autocapitalize="characters"
+                autocomplete="off"
+                value={setupCode}
+                onIonInput={(e) => setSetupCode(formatSetupCode(String(e.detail.value ?? '')))}
+                disabled={busy}
+              />
+              <IonButton
+                type="submit"
+                expand="block"
+                size="large"
+                disabled={busy || !setupCodeComplete(setupCode)}
+              >
+                {busy ? <IonSpinner name="dots" /> : tx('Log in')}
+              </IonButton>
+              <IonButton
+                fill="clear"
+                expand="block"
+                disabled={busy}
+                onClick={() => {
+                  setStep('email');
+                  setError(null);
+                }}
+              >
+                {tx('Log in with my email instead')}
+              </IonButton>
+            </form>
+          ) : step === 'email' ? (
             <form onSubmit={sendCode} noValidate>
               <p className="login-hint">
                 {tx("Enter your email and we'll send you a 6-digit login code.")}
@@ -109,6 +163,17 @@ export function LoginPage() {
               />
               <IonButton type="submit" expand="block" size="large" disabled={busy || !email}>
                 {busy ? <IonSpinner name="dots" /> : tx('Send code')}
+              </IonButton>
+              <IonButton
+                fill="clear"
+                expand="block"
+                disabled={busy}
+                onClick={() => {
+                  setStep('setup');
+                  setError(null);
+                }}
+              >
+                {tx('I have a setup code')}
               </IonButton>
             </form>
           ) : (

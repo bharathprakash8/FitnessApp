@@ -71,3 +71,24 @@ function invalidate(queryClient: QueryClient, clientId: string) {
     queryClient.invalidateQueries({ queryKey: ['trainer'] }),
   ]);
 }
+
+/**
+ * Onboarding: an AI-coach client's "Estimated" starting target, made by the server the first
+ * time (start_ai_target). Null for clients with a human trainer, or when a person has to
+ * decide (for example in pregnancy). Never changes an existing target.
+ */
+export function useStartingTarget(clientId: string | undefined, enabled: boolean) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['starting-target', clientId],
+    enabled: Boolean(clientId) && enabled,
+    staleTime: Infinity,
+    queryFn: async (): Promise<Target | null> => {
+      const { data, error } = await supabase.rpc('start_ai_target');
+      if (error) throw error;
+      void queryClient.invalidateQueries({ queryKey: targetsKey(clientId) });
+      const row = data as Target | null;
+      return row?.id ? row : null;
+    },
+  });
+}

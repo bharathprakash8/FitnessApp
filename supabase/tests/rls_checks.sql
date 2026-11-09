@@ -1364,6 +1364,44 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Setup codes (8 Nov 2026): no API access; starting target only for AI-coach clients
+-- ---------------------------------------------------------------------------
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000c1","role":"authenticated"}', true);
+do $$
+declare
+  before_n int;
+begin
+  begin
+    perform 1 from public.setup_links;
+    raise exception 'FAIL: client can query setup_links';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform 1 from public.setup_attempts;
+    raise exception 'FAIL: client can query setup_attempts';
+  exception when insufficient_privilege then null;
+  end;
+  -- c1 has a human trainer: no automatic target.
+  select count(*) into before_n from public.targets;
+  if (select (public.start_ai_target()).id) is not null then
+    raise exception 'FAIL: start_ai_target gave a target to a client with a human trainer';
+  end if;
+  if (select count(*) from public.targets) <> before_n then
+    raise exception 'FAIL: start_ai_target inserted a target for a human-trainer client';
+  end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-a000-0000000000f1","role":"authenticated"}', true);
+do $$
+begin
+  if (select (public.start_ai_target()).id) is not null then
+    raise exception 'FAIL: start_ai_target gave a trainer a target';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Anonymous (not signed in)
 -- ---------------------------------------------------------------------------
 reset role;
@@ -1372,6 +1410,16 @@ select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
 do $$
 begin
+  begin
+    perform 1 from public.setup_links;
+    raise exception 'FAIL: anonymous user can query setup_links';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.start_ai_target();
+    raise exception 'FAIL: anonymous user can call start_ai_target';
+  exception when insufficient_privilege then null;
+  end;
   begin
     perform 1 from public.profiles limit 1;
   exception when insufficient_privilege then

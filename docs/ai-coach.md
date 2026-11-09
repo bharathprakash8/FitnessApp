@@ -46,7 +46,7 @@ global mode (Off / Dry run / Live) still applies to everyone: in dry run every c
   person needs (55+ → senior_safe, knee → knee_friendly, back → back_friendly,
   BP/diabetes/heart/pregnancy → low_impact). Tags are in `exercises.safety_tags`.
 - Calories: never below 1,200 (women) / 1,500 kcal; a target changes by at most 10% at a time;
-  protein 0.8–2.5 g per kg. New targets and plans **always** wait for the admin.
+  protein 0.8–2.5 g per kg. New targets and plans **always** wait for the admin. One exception (owner, 8 Nov 2026): when an AI-only client finishes "About you" in onboarding and has no target yet, `start_ai_target()` sets an "Estimated" starting target (Mifflin-St Jeor, light activity, floor 1,200 kcal women / 1,500 others, protein 1.2–1.5 g/kg capped at 25% of calories; not in pregnancy). Changes after that go through the admin as before.
 - Meal fixes: changes over 300 kcal (or over 150 kcal and 60% of the meal), and meals the person
   edited themselves, become a **suggestion** with Accept / Keep mine.
 - Every change is stored in `coach_actions` with the old value → **Undo** in Admin → AI Coach.

@@ -24,8 +24,8 @@ export const kn: Record<string, string> = {
     'ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸಲು ಆಹಾರದ ಫೋಟೋಗಳು ಮತ್ತು ವಿವರಣೆಗಳನ್ನು Google ನ Gemini AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ, ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಆಹಾರದ ಫೋಟೋ ಮಾತ್ರ ತೆಗೆಯಿರಿ.',
   'To write your insights, weekly summaries and meal ideas, your first name, goal, diet preference, foods to avoid and your food, workout, weight and activity numbers are sent to Groq AI, with Google’s Gemini AI as a backup.':
     'ನಿಮ್ಮ ಒಳನೋಟಗಳು, ವಾರದ ಸಾರಾಂಶಗಳು ಮತ್ತು ಊಟದ ಸಲಹೆಗಳನ್ನು ಬರೆಯಲು ನಿಮ್ಮ ಮೊದಲ ಹೆಸರು, ಗುರಿ, ಆಹಾರ ಆದ್ಯತೆ, ಬೇಡದ ಆಹಾರಗಳು ಮತ್ತು ನಿಮ್ಮ ಆಹಾರ, ವ್ಯಾಯಾಮ, ತೂಕ ಮತ್ತು ಚಟುವಟಿಕೆಯ ಸಂಖ್ಯೆಗಳನ್ನು Groq AI ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ; Google ನ Gemini AI ಬ್ಯಾಕಪ್ ಆಗಿರುತ್ತದೆ.',
-  'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Google’s Gemini AI to coach you, and may be used by Google to improve its services. You will be asked to agree to this separately.':
-    'ನೀವು AI ಕೋಚ್ ಬಳಸುತ್ತಿದ್ದರೆ, ನಿಮಗೆ ತರಬೇತಿ ನೀಡಲು ನಿಮ್ಮ ದಾಖಲೆಗಳು, ಊಟದ ಫೋಟೋಗಳು ಮತ್ತು ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳನ್ನು Google ನ Gemini AI ಸಹ ಪರಿಶೀಲಿಸುತ್ತದೆ ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ಇದಕ್ಕೆ ಪ್ರತ್ಯೇಕವಾಗಿ ನಿಮ್ಮ ಒಪ್ಪಿಗೆ ಕೇಳಲಾಗುತ್ತದೆ.',
+  'If you are on the AI coach, your logs, meal photos and health conditions are also reviewed by Google’s Gemini AI to coach you, and may be used by Google to improve its services. Your agreement to this is asked in the AI coach terms.':
+    'ನೀವು AI ಕೋಚ್ ಬಳಸುತ್ತಿದ್ದರೆ, ನಿಮಗೆ ತರಬೇತಿ ನೀಡಲು ನಿಮ್ಮ ದಾಖಲೆಗಳು, ಊಟದ ಫೋಟೋಗಳು ಮತ್ತು ಆರೋಗ್ಯ ಸ್ಥಿತಿಗಳನ್ನು Google ನ Gemini AI ಸಹ ಪರಿಶೀಲಿಸುತ್ತದೆ ಮತ್ತು Google ತನ್ನ ಸೇವೆಗಳನ್ನು ಸುಧಾರಿಸಲು ಅವುಗಳನ್ನು ಬಳಸಬಹುದು. ಇದಕ್ಕೆ AI ಕೋಚ್ ನಿಯಮಗಳಲ್ಲಿ ನಿಮ್ಮ ಒಪ್ಪಿಗೆ ಕೇಳಲಾಗುತ್ತದೆ.',
   'These AI services may run outside India.': 'ಈ AI ಸೇವೆಗಳು ಭಾರತದ ಹೊರಗೆ ನಡೆಯಬಹುದು.',
   'Where it is kept': 'ಇದನ್ನು ಎಲ್ಲಿ ಇಡಲಾಗುತ್ತದೆ',
   'Your data is stored on a private server in South Korea.':
@@ -1117,4 +1117,72 @@ export const kn: Record<string, string> = {
   'Snack time': 'ತಿಂಡಿಯ ಸಮಯ',
   'Dinner time': 'ರಾತ್ರಿ ಊಟದ ಸಮಯ',
   'Or type what you ate': 'ಅಥವಾ ನೀವು ತಿಂದದ್ದನ್ನು ಟೈಪ್ ಮಾಡಿ',
+  // Onboarding and setup codes (8 Nov 2026)
+  Next: 'ಮುಂದೆ',
+  'Skip for now': 'ಈಗ ಬಿಟ್ಟುಬಿಡಿ',
+  'Your AI coach will set your food targets and workouts here, and you’ll log your meals, workouts and activity.':
+    'ನಿಮ್ಮ AI ಕೋಚ್ ಇಲ್ಲಿ ನಿಮ್ಮ ಆಹಾರ ಗುರಿಗಳು ಮತ್ತು ವ್ಯಾಯಾಮಗಳನ್ನು ನಿಗದಿಪಡಿಸುತ್ತದೆ, ನೀವು ನಿಮ್ಮ ಊಟ, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ದಾಖಲಿಸುತ್ತೀರಿ.',
+  '{name} will plan your workouts and food targets here, and you’ll log your meals, workouts and activity.':
+    '{name} ಇಲ್ಲಿ ನಿಮ್ಮ ವ್ಯಾಯಾಮ ಮತ್ತು ಆಹಾರ ಗುರಿಗಳನ್ನು ಯೋಜಿಸುತ್ತಾರೆ, ನೀವು ನಿಮ್ಮ ಊಟ, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ದಾಖಲಿಸುತ್ತೀರಿ.',
+  'Your trainer will plan your workouts and food targets here, and you’ll log your meals, workouts and activity.':
+    'ನಿಮ್ಮ ತರಬೇತುದಾರರು ಇಲ್ಲಿ ನಿಮ್ಮ ವ್ಯಾಯಾಮ ಮತ್ತು ಆಹಾರ ಗುರಿಗಳನ್ನು ಯೋಜಿಸುತ್ತಾರೆ, ನೀವು ನಿಮ್ಮ ಊಟ, ವ್ಯಾಯಾಮ ಮತ್ತು ಚಟುವಟಿಕೆಯನ್ನು ದಾಖಲಿಸುತ್ತೀರಿ.',
+  'It takes about 3 minutes to get started.': 'ಪ್ರಾರಂಭಿಸಲು ಸುಮಾರು 3 ನಿಮಿಷ ಸಾಕು.',
+  "If you don't agree, you can't use the app yet. Talk to the admin if you have questions.":
+    'ನೀವು ಒಪ್ಪದಿದ್ದರೆ, ಸದ್ಯಕ್ಕೆ ಆ್ಯಪ್ ಬಳಸಲು ಸಾಧ್ಯವಿಲ್ಲ. ಪ್ರಶ್ನೆಗಳಿದ್ದರೆ ಅಡ್ಮಿನ್ ಜೊತೆ ಮಾತನಾಡಿ.',
+  'This helps your AI coach set the right targets for you.':
+    'ಇದು ನಿಮ್ಮ AI ಕೋಚ್‌ಗೆ ನಿಮಗೆ ಸರಿಯಾದ ಗುರಿಗಳನ್ನು ನಿಗದಿಪಡಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
+  'This helps your trainer plan the right targets for you.':
+    'ಇದು ನಿಮ್ಮ ತರಬೇತುದಾರರಿಗೆ ನಿಮಗೆ ಸರಿಯಾದ ಗುರಿಗಳನ್ನು ಯೋಜಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
+  'Your daily target': 'ನಿಮ್ಮ ದೈನಂದಿನ ಗುರಿ',
+  'Your starting target, worked out from your details:':
+    'ನಿಮ್ಮ ವಿವರಗಳಿಂದ ಲೆಕ್ಕ ಹಾಕಿದ ನಿಮ್ಮ ಆರಂಭಿಕ ಗುರಿ:',
+  '{n} kcal a day': 'ದಿನಕ್ಕೆ {n} kcal',
+  'Protein {p} g · Carbs {c} g · Fat {f} g': 'ಪ್ರೋಟೀನ್ {p} g · ಕಾರ್ಬ್ಸ್ {c} g · ಕೊಬ್ಬು {f} g',
+  'Your AI coach will adjust it as it learns from your meals and weight. “How much should I eat?” uses it to suggest portions.':
+    'ನಿಮ್ಮ ಊಟ ಮತ್ತು ತೂಕದಿಂದ ಕಲಿಯುತ್ತಾ ನಿಮ್ಮ AI ಕೋಚ್ ಇದನ್ನು ಸರಿಹೊಂದಿಸುತ್ತದೆ. “ನಾನು ಎಷ್ಟು ತಿನ್ನಬೇಕು?” ಇದನ್ನು ಬಳಸಿ ಪ್ರಮಾಣ ಸೂಚಿಸುತ್ತದೆ.',
+  "We couldn't set your starting target just now. Your coach will set it soon.":
+    'ಈಗ ನಿಮ್ಮ ಆರಂಭಿಕ ಗುರಿಯನ್ನು ನಿಗದಿಪಡಿಸಲು ಆಗಲಿಲ್ಲ. ನಿಮ್ಮ ಕೋಚ್ ಶೀಘ್ರದಲ್ಲೇ ನಿಗದಿಪಡಿಸುತ್ತದೆ.',
+  'Your coach and the admin will set your daily target soon. You can start logging meals already.':
+    'ನಿಮ್ಮ ಕೋಚ್ ಮತ್ತು ಅಡ್ಮಿನ್ ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮ ದೈನಂದಿನ ಗುರಿಯನ್ನು ನಿಗದಿಪಡಿಸುತ್ತಾರೆ. ನೀವು ಈಗಲೇ ಊಟ ದಾಖಲಿಸಲು ಶುರು ಮಾಡಬಹುದು.',
+  '{name} will set your daily calories and protein soon. You can start logging meals already.':
+    '{name} ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮ ದೈನಂದಿನ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪ್ರೋಟೀನ್ ನಿಗದಿಪಡಿಸುತ್ತಾರೆ. ನೀವು ಈಗಲೇ ಊಟ ದಾಖಲಿಸಲು ಶುರು ಮಾಡಬಹುದು.',
+  'Your trainer will set your daily calories and protein soon. You can start logging meals already.':
+    'ನಿಮ್ಮ ತರಬೇತುದಾರರು ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮ ದೈನಂದಿನ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪ್ರೋಟೀನ್ ನಿಗದಿಪಡಿಸುತ್ತಾರೆ. ನೀವು ಈಗಲೇ ಊಟ ದಾಖಲಿಸಲು ಶುರು ಮಾಡಬಹುದು.',
+  'FitCoach can remind you to log breakfast, lunch and dinner – only when you haven’t logged that meal yet. You can change the times in Me → Notifications.':
+    'ಬೆಳಗಿನ ತಿಂಡಿ, ಮಧ್ಯಾಹ್ನ ಮತ್ತು ರಾತ್ರಿ ಊಟ ದಾಖಲಿಸಲು FitCoach ನಿಮಗೆ ನೆನಪಿಸಬಹುದು – ಆ ಊಟವನ್ನು ನೀವು ಇನ್ನೂ ದಾಖಲಿಸದಿದ್ದಾಗ ಮಾತ್ರ. ಸಮಯವನ್ನು ನಾನು → ನೋಟಿಫಿಕೇಶನ್‌ಗಳಲ್ಲಿ ಬದಲಾಯಿಸಬಹುದು.',
+  'Calories burnt from your phone': 'ನಿಮ್ಮ ಫೋನ್‌ನಿಂದ ಸುಟ್ಟ ಕ್ಯಾಲೊರಿ',
+  'Connect your phone or watch so FitCoach counts the calories you burn and your steps. You can do this later in Me → Health sync.':
+    'ನೀವು ಸುಡುವ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಹೆಜ್ಜೆಗಳನ್ನು FitCoach ಎಣಿಸಲು ನಿಮ್ಮ ಫೋನ್ ಅಥವಾ ವಾಚ್ ಸಂಪರ್ಕಿಸಿ. ಇದನ್ನು ನಂತರ ನಾನು → ಹೆಲ್ತ್ ಸಿಂಕ್‌ನಲ್ಲಿ ಮಾಡಬಹುದು.',
+  'Log your first meal': 'ನಿಮ್ಮ ಮೊದಲ ಊಟ ದಾಖಲಿಸಿ',
+  'Take a photo of your next meal. FitCoach estimates the calories, and “How much should I eat?” tells you how much of it fits your day.':
+    'ನಿಮ್ಮ ಮುಂದಿನ ಊಟದ ಫೋಟೋ ತೆಗೆಯಿರಿ. FitCoach ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸುತ್ತದೆ, ಮತ್ತು “ನಾನು ಎಷ್ಟು ತಿನ್ನಬೇಕು?” ಅದರಲ್ಲಿ ಎಷ್ಟು ನಿಮ್ಮ ದಿನಕ್ಕೆ ಸರಿಹೊಂದುತ್ತದೆ ಎಂದು ಹೇಳುತ್ತದೆ.',
+  'Take a photo of my next meal': 'ನನ್ನ ಮುಂದಿನ ಊಟದ ಫೋಟೋ ತೆಗೆಯಿರಿ',
+  'Type what I ate': 'ನಾನು ತಿಂದದ್ದನ್ನು ಟೈಪ್ ಮಾಡುತ್ತೇನೆ',
+  'Later – go to Today': 'ನಂತರ – ಇಂದಿನ ಪುಟಕ್ಕೆ ಹೋಗಿ',
+  "This link doesn't have a complete setup code. Ask the admin to send it again.":
+    'ಈ ಲಿಂಕ್‌ನಲ್ಲಿ ಪೂರ್ಣ ಸೆಟಪ್ ಕೋಡ್ ಇಲ್ಲ. ಅದನ್ನು ಮತ್ತೆ ಕಳುಹಿಸಲು ಅಡ್ಮಿನ್‌ಗೆ ಕೇಳಿ.',
+  'Go to login': 'ಲಾಗಿನ್‌ಗೆ ಹೋಗಿ',
+  'Your setup code': 'ನಿಮ್ಮ ಸೆಟಪ್ ಕೋಡ್',
+  'You are logged in as {name}. Using this code logs you in as the person it was made for.':
+    'ನೀವು {name} ಆಗಿ ಲಾಗಿನ್ ಆಗಿದ್ದೀರಿ. ಈ ಕೋಡ್ ಬಳಸಿದರೆ, ಅದನ್ನು ಯಾರಿಗಾಗಿ ಮಾಡಲಾಗಿದೆಯೋ ಅವರಾಗಿ ಲಾಗಿನ್ ಆಗುತ್ತೀರಿ.',
+  'On iPhone, first add FitCoach to your Home Screen:':
+    'iPhone ನಲ್ಲಿ, ಮೊದಲು FitCoach ಅನ್ನು ನಿಮ್ಮ ಹೋಮ್ ಸ್ಕ್ರೀನ್‌ಗೆ ಸೇರಿಸಿ:',
+  'Open FitCoach from the new icon, tap “I have a setup code” and type the code above.':
+    'ಹೊಸ ಐಕಾನ್‌ನಿಂದ FitCoach ತೆರೆಯಿರಿ, “ನನ್ನ ಬಳಿ ಸೆಟಪ್ ಕೋಡ್ ಇದೆ” ಒತ್ತಿ ಮತ್ತು ಮೇಲಿನ ಕೋಡ್ ಟೈಪ್ ಮಾಡಿ.',
+  'Log in here in Safari instead': 'ಬದಲಿಗೆ ಇಲ್ಲೇ Safari ನಲ್ಲಿ ಲಾಗಿನ್ ಮಾಡಿ',
+  'Best on Android: install the FitCoach app, open it, tap “I have a setup code” and type the code above.':
+    'Android ನಲ್ಲಿ ಉತ್ತಮ: FitCoach ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ, ತೆರೆಯಿರಿ, “ನನ್ನ ಬಳಿ ಸೆಟಪ್ ಕೋಡ್ ಇದೆ” ಒತ್ತಿ ಮತ್ತು ಮೇಲಿನ ಕೋಡ್ ಟೈಪ್ ಮಾಡಿ.',
+  'Install the Android app': 'Android ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ',
+  'Use FitCoach in this browser instead': 'ಬದಲಿಗೆ ಈ ಬ್ರೌಸರ್‌ನಲ್ಲಿ FitCoach ಬಳಸಿ',
+  'The code works once, for 7 days. On a new phone, log in with your email instead.':
+    'ಕೋಡ್ ಒಮ್ಮೆ ಮಾತ್ರ, 7 ದಿನಗಳವರೆಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ. ಹೊಸ ಫೋನ್‌ನಲ್ಲಿ ನಿಮ್ಮ ಇಮೇಲ್ ಮೂಲಕ ಲಾಗಿನ್ ಮಾಡಿ.',
+  'Type the setup code from the WhatsApp message the admin sent you.':
+    'ಅಡ್ಮಿನ್ ಕಳುಹಿಸಿದ WhatsApp ಸಂದೇಶದಲ್ಲಿನ ಸೆಟಪ್ ಕೋಡ್ ಟೈಪ್ ಮಾಡಿ.',
+  'If this opened inside WhatsApp, tap the compass or ··· button and choose Open in Safari.':
+    'ಇದು WhatsApp ಒಳಗೆ ತೆರೆದಿದ್ದರೆ, ದಿಕ್ಸೂಚಿ ಅಥವಾ ··· ಬಟನ್ ಒತ್ತಿ Open in Safari ಆಯ್ಕೆಮಾಡಿ.',
+  'Setup code': 'ಸೆಟಪ್ ಕೋಡ್',
+  'Log in with my email instead': 'ಬದಲಿಗೆ ನನ್ನ ಇಮೇಲ್ ಮೂಲಕ ಲಾಗಿನ್ ಮಾಡಿ',
+  'I have a setup code': 'ನನ್ನ ಬಳಿ ಸೆಟಪ್ ಕೋಡ್ ಇದೆ',
+  'Activity sync works in the FitCoach Android app and on iPhone. You can set it up any time in Me → Health sync.':
+    'ಚಟುವಟಿಕೆ ಸಿಂಕ್ FitCoach Android ಆ್ಯಪ್ ಮತ್ತು iPhone ನಲ್ಲಿ ಕೆಲಸ ಮಾಡುತ್ತದೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ನಾನು → ಹೆಲ್ತ್ ಸಿಂಕ್‌ನಲ್ಲಿ ಹೊಂದಿಸಬಹುದು.',
 };

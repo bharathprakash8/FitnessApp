@@ -21,7 +21,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { HEALTH_CONNECT_PLAY_URL, IPHONE_SHORTCUT_URL } from '../../config';
-import { isAndroidApp } from '../../lib/platform';
+import { isAndroidApp, isIOSWeb } from '../../lib/platform';
 import { supabase } from '../../lib/supabase';
 import { profileKey } from '../auth/api';
 import { useAuth } from '../auth/useAuth';
@@ -89,6 +89,24 @@ export function HealthSyncPage() {
         </div>
       </IonContent>
     </IonPage>
+  );
+}
+
+/**
+ * The connect part of Health sync, for onboarding: Android app → Health Connect, iPhone →
+ * Shortcut, a computer → "set this up on your phone later".
+ */
+export function HealthSyncSetup() {
+  const t = useT();
+  if (isImpersonating()) return null;
+  if (isAndroidApp) return <AndroidSection />;
+  if (isIOSWeb) return <IPhoneSection />;
+  return (
+    <p>
+      {t(
+        'Activity sync works in the FitCoach Android app and on iPhone. You can set it up any time in Me → Health sync.',
+      )}
+    </p>
   );
 }
 

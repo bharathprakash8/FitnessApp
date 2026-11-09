@@ -104,33 +104,7 @@ function CoachConsentCard({
         </IonCardTitle>
       </IonCardHeader>
       <IonCardContent>
-        <ul className="coach-terms">
-          <li>
-            {assistantOf
-              ? t(
-                  'The assistant is an AI. {name} checks and approves its suggestions and can undo every change.',
-                  { name: assistantOf },
-                )
-              : t(
-                  'Your coach is an AI, supervised by the admin, who can see and undo every change.',
-                )}
-          </li>
-          <li>
-            {t(
-              'Each morning Google Gemini AI reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.',
-            )}
-          </li>
-          <li>
-            {t(
-              'Quick answers and notes during the day also come from Google Gemini AI. Your profile, health conditions and logs are shared with Google for this and may be used to improve its services.',
-            )}
-          </li>
-          <li>
-            {t(
-              'The coach is not a doctor and never gives medical advice. For health problems talk to your doctor; in an emergency call 108.',
-            )}
-          </li>
-        </ul>
+        <CoachTerms assistantOf={assistantOf} />
         <IonButton
           expand="block"
           disabled={accept.isPending}
@@ -149,5 +123,37 @@ function CoachConsentCard({
         </IonButton>
       </IonCardContent>
     </IonCard>
+  );
+}
+
+/** What the AI coach does with the person's data (Today card and onboarding). */
+export function CoachTerms({ assistantOf }: { assistantOf: string | null }) {
+  const t = useT();
+  return (
+    <ul className="coach-terms">
+      <li>
+        {assistantOf
+          ? t(
+              'The assistant is an AI. {name} checks and approves its suggestions and can undo every change.',
+              { name: assistantOf },
+            )
+          : t('Your coach is an AI, supervised by the admin, who can see and undo every change.')}
+      </li>
+      <li>
+        {t(
+          'Each morning Google Gemini AI reviews your meals and meal photos, workouts and activity, may correct calorie estimates, picks today’s workout and writes you a note.',
+        )}
+      </li>
+      <li>
+        {t(
+          'Quick answers and notes during the day also come from Google Gemini AI. Your profile, health conditions and logs are shared with Google for this and may be used to improve its services.',
+        )}
+      </li>
+      <li>
+        {t(
+          'The coach is not a doctor and never gives medical advice. For health problems talk to your doctor; in an emergency call 108.',
+        )}
+      </li>
+    </ul>
   );
 }
