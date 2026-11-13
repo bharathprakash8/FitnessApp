@@ -14,7 +14,7 @@ import {
   useIonToast,
 } from '@ionic/react';
 import { cameraOutline, createOutline } from 'ionicons/icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { RefreshButton, SyncStatusBar } from '../../components/RefreshButton';
 import { useT } from '../../i18n/i18n';
@@ -75,6 +75,13 @@ export function OnboardingPage() {
   const aiOnly = coached && !assistantOf;
   const starting = useStartingTarget(profile?.id, step === 'target' && aiOnly);
 
+  // Every step starts at its top. Without this the page keeps the place the last step was
+  // scrolled to (after the long privacy text, "About you" opened half-way down).
+  const content = useRef<HTMLIonContentElement>(null);
+  useEffect(() => {
+    void content.current?.scrollToTop(0);
+  }, [step]);
+
   if (!profile) return null;
   const firstName = (profile.full_name || '').split(' ')[0];
   const trainerName = trainer.data?.full_name?.split(' ')[0] || null;
@@ -119,7 +126,7 @@ export function OnboardingPage() {
         <IonProgressBar value={(steps.indexOf(step) + 1) / steps.length} />
         <SyncStatusBar />
       </IonHeader>
-      <IonContent className="ion-padding">
+      <IonContent ref={content} className="ion-padding">
         <div className="onboarding">
           {step === 'welcome' && (
             <>

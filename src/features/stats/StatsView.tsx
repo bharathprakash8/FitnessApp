@@ -22,7 +22,7 @@ import { useWorkoutLogs } from '../workouts/api';
 import { requestInsights, useSavedInsights, useStatsData, type Insights } from './api';
 import { computeStats, insightInput, type Stats } from './model';
 import './stats.css';
-import { tr, useT } from '../../i18n/i18n';
+import { plural, tr, useT } from '../../i18n/i18n';
 
 const PERIODS = [7, 30, 90] as const;
 const MEAL_NAMES: Record<string, string> = {
@@ -105,7 +105,11 @@ export function StatsView({ person }: { person: Profile }) {
         ))}
       </IonSegment>
       <p className="stats-muted">
-        {t('Up to yesterday · {n} day(s) with food logged', { n: stats.daysLogged })}
+        {plural(
+          stats.daysLogged,
+          'Up to yesterday · {n} day with food logged',
+          'Up to yesterday · {n} days with food logged',
+        )}
       </p>
 
       <SummaryTiles s={stats} />
@@ -139,7 +143,7 @@ function SummaryTiles({ s }: { s: Stats }) {
         label={t('days on target (±10%)')}
         tone={s.daysOnTarget !== null && s.daysOnTarget >= s.days / 2 ? 'good' : undefined}
       />
-      <Tile value={t('{n} day(s)', { n: s.streak })} label={t('logging streak')} />
+      <Tile value={plural(s.streak, '{n} day', '{n} days')} label={t('logging streak')} />
       <Tile
         value={s.avgNet === null ? '–' : `${s.avgNet > 0 ? '+' : ''}${n(s.avgNet)}`}
         label={s.burnEstimated ? t('avg net kcal (estimated)') : t('avg net kcal')}
@@ -250,10 +254,13 @@ function PatternsCard({ s }: { s: Stats }) {
           ))}
         </div>
         <p className="stats-note">
-          {t('{a} late dinner(s) (after 9:30 pm) · {b} day(s) without breakfast', {
-            a: s.lateDinners,
-            b: s.skippedBreakfasts,
-          })}
+          {plural(
+            s.lateDinners,
+            '{n} late dinner (after 9:30 pm)',
+            '{n} late dinners (after 9:30 pm)',
+          )}
+          {' · '}
+          {plural(s.skippedBreakfasts, '{n} day without breakfast', '{n} days without breakfast')}
         </p>
 
         <h3 className="stats-h">{t('Where the calories come from')}</h3>

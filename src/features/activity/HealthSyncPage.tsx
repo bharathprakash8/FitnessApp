@@ -25,6 +25,7 @@ import { isAndroidApp, isIOSWeb } from '../../lib/platform';
 import { supabase } from '../../lib/supabase';
 import { profileKey } from '../auth/api';
 import { useAuth } from '../auth/useAuth';
+import { useGuide, type Guide } from '../coach/api';
 import {
   connectHealthConnect,
   healthConnectState,
@@ -43,9 +44,20 @@ import { SHORTCUT_RUN_URL, shortcutConnectUrl } from './shortcut';
 import './activity.css';
 import { useT } from '../../i18n/i18n';
 
+// Ends the sentence "FitCoach reads calories burnt, steps and sleep …".
+const WHY_WE_READ: Record<Guide, string> = {
+  coach:
+    'from your phone so your coach can see your full picture. It never writes to your health data.',
+  trainer:
+    'from your phone so your trainer can see your full picture. It never writes to your health data.',
+  self: 'from your phone to work out your calories burnt. It never writes to your health data.',
+};
+
 /** Client: connect Health Connect (Android app) or set up the iPhone Shortcut. */
 export function HealthSyncPage() {
   const t = useT();
+  const { profile } = useAuth();
+  const guide = useGuide(profile);
   return (
     <IonPage>
       <IonHeader>
@@ -64,9 +76,7 @@ export function HealthSyncPage() {
         <div style={{ maxWidth: 560, margin: '0 auto' }}>
           <p>
             {t('FitCoach reads')} <strong>{t('calories burnt, steps and sleep')}</strong>{' '}
-            {t(
-              'from your phone so your trainer can see your full picture. It never writes to your health data.',
-            )}
+            {t(WHY_WE_READ[guide])}
           </p>
           {isImpersonating() ? (
             <p className="health-error">

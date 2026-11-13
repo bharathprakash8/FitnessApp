@@ -2,7 +2,7 @@ import { IonButton, IonIcon, IonSpinner, useIonAlert, useIonToast } from '@ionic
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { cloudOfflineOutline, refreshOutline } from 'ionicons/icons';
 import { useState } from 'react';
-import { tr, useT } from '../i18n/i18n';
+import { plural, tr, useT } from '../i18n/i18n';
 
 import { useAuth } from '../features/auth/useAuth';
 import { useOnline } from '../lib/network';
@@ -76,9 +76,10 @@ export function SyncStatusBar() {
         onClick={() =>
           void alert({
             header: tr("Couldn't save"),
-            message: tr(
-              '{n} item(s) saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter them again.',
-              { n: failed.length },
+            message: plural(
+              failed.length,
+              '{n} item saved offline was not accepted by the server (for example a workout that was deleted meanwhile). Please enter it again.',
+              '{n} items saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter them again.',
             ),
             buttons: [
               { text: tr('Keep for now'), role: 'cancel' },
@@ -91,7 +92,11 @@ export function SyncStatusBar() {
           })
         }
       >
-        {tr("{n} saved item(s) couldn't sync – tap for details", { n: failed.length })}
+        {plural(
+          failed.length,
+          "{n} saved item couldn't sync – tap for details",
+          "{n} saved items couldn't sync – tap for details",
+        )}
       </button>
     );
   }

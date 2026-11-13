@@ -2,6 +2,7 @@ import { IonButton } from '@ionic/react';
 import { useState } from 'react';
 
 import { useT } from '../../i18n/i18n';
+import type { Guide } from '../coach/api';
 import type { PortionAdvice as Advice, PortionPlan } from './api';
 import { MEAL_LABELS } from './model';
 import './food.css';
@@ -9,13 +10,38 @@ import './food.css';
 const LABELS = { kcal: 'Calories', protein: 'Protein', carbs: 'Carbs', fat: 'Fat' } as const;
 const UNITS = { kcal: 'kcal', protein: 'g', carbs: 'g', fat: 'g' } as const;
 
+// Whole sentences per kind of person: someone on the AI coach has no trainer to tell, and a
+// trainer tracking their own food has nobody above them.
+const CANT_REACH: Record<Guide, string> = {
+  coach:
+    'Today can’t fully reach your targets with this food. Log what you eat, and ask your coach if this keeps happening.',
+  trainer:
+    'Today can’t fully reach your targets with this food. Log what you eat, and tell your trainer if this keeps happening.',
+  self: 'Today can’t fully reach your targets with this food. Log what you eat – if this keeps happening, your targets may need a change.',
+};
+const TARGETS_FILLED_IN: Record<Guide, string> = {
+  coach: 'Your coach hasn’t set all your targets, so a typical split is used for the rest.',
+  trainer: 'Your trainer hasn’t set all your targets, so a typical split is used for the rest.',
+  self: 'Not all your targets are set, so a typical split is used for the rest.',
+};
+const TARGETS_DONT_ADD_UP: Record<Guide, string> = {
+  coach:
+    'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your coach to check them.',
+  trainer:
+    'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your trainer to check them.',
+  self: 'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please check them in My targets.',
+};
+
 /** "How much should I eat?": portions of this food, planned across the day. Always an estimate. */
 export function PortionAdvice({
   advice,
+  guide,
   onLog,
   onLogPlate,
 }: {
   advice: Advice;
+  /** Picks "your coach" / "your trainer" wording. */
+  guide: Guide;
   onLog: (plan: PortionPlan) => void;
   onLogPlate: () => void;
 }) {
@@ -94,13 +120,7 @@ export function PortionAdvice({
           {t('I can’t add these')}
         </IonButton>
       )}
-      {!plan.on_track && last && (
-        <p className="portion-tip">
-          {t(
-            'Today can’t fully reach your targets with this food. Log what you eat, and tell your trainer if this keeps happening.',
-          )}
-        </p>
-      )}
+      {!plan.on_track && last && <p className="portion-tip">{t(CANT_REACH[guide])}</p>}
 
       {advice.assumed_meals.length > 0 && (
         <p className="portion-tip">
@@ -112,18 +132,8 @@ export function PortionAdvice({
           )}
         </p>
       )}
-      {advice.targets_filled_in && (
-        <p className="food-muted">
-          {t('Your trainer hasn’t set all your targets, so a typical split is used for the rest.')}
-        </p>
-      )}
-      {!advice.targets_add_up && (
-        <p className="food-muted">
-          {t(
-            'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your trainer to check them.',
-          )}
-        </p>
-      )}
+      {advice.targets_filled_in && <p className="food-muted">{t(TARGETS_FILLED_IN[guide])}</p>}
+      {!advice.targets_add_up && <p className="food-muted">{t(TARGETS_DONT_ADD_UP[guide])}</p>}
       {advice.caution && (
         <p className="food-muted">
           {t('This is a general guide. Please follow what your doctor has told you about food.')}

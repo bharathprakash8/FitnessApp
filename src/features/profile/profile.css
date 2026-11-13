@@ -32,3 +32,16 @@
   flex-wrap: wrap;
   margin: 0 0 8px -4px;
 }
+
+/* Long choices ("Prefer not to say") wrap onto two lines instead of being cut off. */
+.profile-segment-wrap ion-segment-button {
+  min-width: 0;
+}
+
+.profile-segment-wrap ion-segment-button ion-label {
+  margin: 6px 0;
+  overflow: visible;
+  line-height: 1.15;
+  text-overflow: clip;
+  white-space: normal;
+}

@@ -11,7 +11,7 @@ import { todayIn } from '../../lib/dates';
 import type { Profile } from '../auth/roles';
 import { useCoachDay } from '../coach/api';
 import { useActivePlan, useWorkoutLogs } from './api';
-import { nextDay } from './model';
+import { todaysWorkout } from './model';
 import './workouts.css';
 import { useT } from '../../i18n/i18n';
 
@@ -26,20 +26,13 @@ export function TodayWorkoutCard({ profile }: { profile: Profile }) {
   const logs = useWorkoutLogs(profile.id);
   const coach = useCoachDay(profile.id, today, profile.role === 'client');
   if (active.isPending || logs.isPending || !active.data) return null;
-  const coachPlan = coach.data?.plan;
-  if (coachPlan?.kind === 'rest') return null;
-
-  const rotation = nextDay(active.data.plan.plan_days, logs.data ?? [], today);
-  const chosen = active.data.plan.plan_days.find((d) => d.id === coachPlan?.plan_day_id);
-  const next = chosen
-    ? {
-        day: chosen,
-        inProgress: (logs.data ?? []).some(
-          (l) => l.plan_day_id === chosen.id && l.performed_on === today,
-        ),
-      }
-    : rotation;
-  if (!next || next.day.plan_exercises.length === 0) return null;
+  const { rest, next } = todaysWorkout(
+    active.data.plan.plan_days,
+    logs.data ?? [],
+    today,
+    coach.data?.plan,
+  );
+  if (rest || !next || next.day.plan_exercises.length === 0) return null;
 
   return (
     <IonCard className="workout-card">

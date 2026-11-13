@@ -109,7 +109,11 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         <IonText color="medium">
           <p className="profile-label">{t('Sex')}</p>
         </IonText>
-        <IonSegment value={sex} onIonChange={(e) => setSex(String(e.detail.value))}>
+        <IonSegment
+          className="profile-segment-wrap"
+          value={sex}
+          onIonChange={(e) => setSex(String(e.detail.value))}
+        >
           {(Object.keys(SEX_LABELS) as Sex[]).map((s) => (
             <IonSegmentButton key={s} value={s}>
               <IonLabel>{tr(SEX_LABELS[s])}</IonLabel>
@@ -181,15 +185,20 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         ))}
       </IonSelect>
 
-      <IonTextarea
-        fill="outline"
-        label={t('Injuries or pain we should know about (optional)')}
-        labelPlacement="floating"
-        autoGrow
-        maxlength={1000}
-        value={injuries}
-        onIonInput={(e) => setInjuries(String(e.detail.value ?? ''))}
-      />
+      <div>
+        <IonText color="medium">
+          <p className="profile-label">{t('Injuries or pain we should know about (optional)')}</p>
+        </IonText>
+        <IonTextarea
+          fill="outline"
+          aria-label={t('Injuries or pain we should know about (optional)')}
+          placeholder={t('For example: left knee hurts on stairs')}
+          autoGrow
+          maxlength={1000}
+          value={injuries}
+          onIonInput={(e) => setInjuries(String(e.detail.value ?? ''))}
+        />
+      </div>
 
       <div>
         <IonText color="medium">
@@ -230,15 +239,20 @@ export function ClientDetailsForm({ profile, weightKg, submitLabel, busy, onSubm
         )}
       </div>
 
-      <IonTextarea
-        fill="outline"
-        label={t('Foods to avoid – allergies or dislikes (optional)')}
-        labelPlacement="floating"
-        autoGrow
-        maxlength={300}
-        value={avoid}
-        onIonInput={(e) => setAvoid(String(e.detail.value ?? ''))}
-      />
+      <div>
+        <IonText color="medium">
+          <p className="profile-label">{t('Foods to avoid – allergies or dislikes (optional)')}</p>
+        </IonText>
+        <IonTextarea
+          fill="outline"
+          aria-label={t('Foods to avoid – allergies or dislikes (optional)')}
+          placeholder={t('For example: peanuts, brinjal')}
+          autoGrow
+          maxlength={300}
+          value={avoid}
+          onIonInput={(e) => setAvoid(String(e.detail.value ?? ''))}
+        />
+      </div>
 
       {error && (
         <IonText color="danger" role="alert">

@@ -79,6 +79,32 @@ export function nextDay(
   return { day: days[(idx + 1) % days.length]!, inProgress: false };
 }
 
+/**
+ * The workout for today: the day the AI coach picked from the plan when it picked one,
+ * otherwise the next day in the plan's rotation. `rest` when the coach made today a rest
+ * day (`next` is then what comes after the rest). Today and the Workouts tab both use
+ * this, so they always name the same workout.
+ */
+export function todaysWorkout(
+  days: PlanDayFull[],
+  logs: Pick<WorkoutLog, 'plan_day_id' | 'performed_on' | 'created_at'>[],
+  today: string,
+  coachPlan?: { kind: string; plan_day_id: string | null } | null,
+): { rest: boolean; byCoach: boolean; next: { day: PlanDayFull; inProgress: boolean } | null } {
+  const rotation = nextDay(days, logs, today);
+  if (coachPlan?.kind === 'rest') return { rest: true, byCoach: true, next: rotation };
+  const chosen = days.find((d) => d.id === coachPlan?.plan_day_id);
+  if (!chosen) return { rest: false, byCoach: false, next: rotation };
+  return {
+    rest: false,
+    byCoach: true,
+    next: {
+      day: chosen,
+      inProgress: logs.some((l) => l.plan_day_id === chosen.id && l.performed_on === today),
+    },
+  };
+}
+
 export interface PersonalBest {
   exerciseId: string;
   name: string;

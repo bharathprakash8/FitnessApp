@@ -74,13 +74,16 @@ export const kn: Record<string, string> = {
   'Looking closely at your meal…': 'ನಿಮ್ಮ ಊಟವನ್ನು ಸೂಕ್ಷ್ಮವಾಗಿ ನೋಡಲಾಗುತ್ತಿದೆ…',
   'Estimating calories…': 'ಕ್ಯಾಲೊರಿ ಅಂದಾಜಿಸಲಾಗುತ್ತಿದೆ…',
   '{n} days': '{n} ದಿನಗಳು',
-  'Up to yesterday · {n} day(s) with food logged': 'ನಿನ್ನೆಯವರೆಗೆ · ಆಹಾರ ದಾಖಲಿಸಿದ ದಿನಗಳು: {n}',
+  'Up to yesterday · {n} day with food logged': 'ನಿನ್ನೆಯವರೆಗೆ · ಆಹಾರ ದಾಖಲಿಸಿದ ದಿನಗಳು: {n}',
+  'Up to yesterday · {n} days with food logged': 'ನಿನ್ನೆಯವರೆಗೆ · ಆಹಾರ ದಾಖಲಿಸಿದ ದಿನಗಳು: {n}',
   '{a} of {b}': '{b} ರಲ್ಲಿ {a}',
-  '{n} day(s)': '{n} ದಿನ',
+  '{n} day': '{n} ದಿನ',
   'avg net kcal (estimated)': 'ಸರಾಸರಿ ನಿವ್ವಳ kcal (ಅಂದಾಜು)',
   'avg net kcal': 'ಸರಾಸರಿ ನಿವ್ವಳ kcal',
-  '{a} late dinner(s) (after 9:30 pm) · {b} day(s) without breakfast':
-    'ತಡ ರಾತ್ರಿ ಊಟ (ರಾತ್ರಿ 9:30 ನಂತರ): {a} · ಉಪಹಾರವಿಲ್ಲದ ದಿನಗಳು: {b}',
+  '{n} late dinner (after 9:30 pm)': 'ತಡ ರಾತ್ರಿ ಊಟ (ರಾತ್ರಿ 9:30 ನಂತರ): {n}',
+  '{n} late dinners (after 9:30 pm)': 'ತಡ ರಾತ್ರಿ ಊಟ (ರಾತ್ರಿ 9:30 ನಂತರ): {n}',
+  '{n} day without breakfast': 'ಉಪಹಾರವಿಲ್ಲದ ದಿನಗಳು: {n}',
+  '{n} days without breakfast': 'ಉಪಹಾರವಿಲ್ಲದ ದಿನಗಳು: {n}',
   'Protein target reached on {a} of {b} logged days':
     'ಪ್ರೋಟೀನ್ ಗುರಿ ತಲುಪಿದ್ದು: ದಾಖಲಿಸಿದ {b} ದಿನಗಳಲ್ಲಿ {a}',
   'Last {n} days': 'ಕೊನೆಯ {n} ದಿನಗಳು',
@@ -90,6 +93,7 @@ export const kn: Record<string, string> = {
   '{n} left': '{n} ಉಳಿದಿದೆ',
   '{n} over': '{n} ಹೆಚ್ಚು',
   'of {goal}': '{goal} ರಲ್ಲಿ',
+  '{n} glass': '{n} ಲೋಟ',
   '{n} glasses': '{n} ಲೋಟಗಳು',
   'logged workouts': 'ದಾಖಲಿಸಿದ ವ್ಯಾಯಾಮಗಳು',
   'Estimated from workouts': 'ವ್ಯಾಯಾಮಗಳಿಂದ ಅಂದಾಜು',
@@ -969,11 +973,17 @@ export const kn: Record<string, string> = {
   'your client': 'ನಿಮ್ಮ ಕ್ಲೈಂಟ್',
   '{age} (born {date})': '{age} (ಜನನ {date})',
   "{name} hasn't set your targets yet.": '{name} ಇನ್ನೂ ನಿಮ್ಮ ಗುರಿಗಳನ್ನು ಹೊಂದಿಸಿಲ್ಲ.',
-  '{n} item(s) saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter them again.':
+  '{n} item saved offline was not accepted by the server (for example a workout that was deleted meanwhile). Please enter it again.':
+    'ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಉಳಿಸಿದ {n} ಐಟಂ ಅನ್ನು ಸರ್ವರ್ ಸ್ವೀಕರಿಸಲಿಲ್ಲ (ಉದಾ. ಈ ನಡುವೆ ಅಳಿಸಲಾದ ವ್ಯಾಯಾಮ). ದಯವಿಟ್ಟು ಮತ್ತೆ ನಮೂದಿಸಿ.',
+  '{n} items saved offline were not accepted by the server (for example a workout that was deleted meanwhile). Please enter them again.':
     'ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಉಳಿಸಿದ {n} ಐಟಂಗಳನ್ನು ಸರ್ವರ್ ಸ್ವೀಕರಿಸಲಿಲ್ಲ (ಉದಾ. ಈ ನಡುವೆ ಅಳಿಸಲಾದ ವ್ಯಾಯಾಮ). ದಯವಿಟ್ಟು ಮತ್ತೆ ನಮೂದಿಸಿ.',
   '{n} new entries will sync later.': '{n} ಹೊಸ ನಮೂದುಗಳು ನಂತರ ಸಿಂಕ್ ಆಗುತ್ತವೆ.',
-  "{n} saved item(s) couldn't sync – tap for details":
+  "{n} saved item couldn't sync – tap for details":
+    'ಉಳಿಸಿದ {n} ಐಟಂ ಸಿಂಕ್ ಆಗಲಿಲ್ಲ – ವಿವರಗಳಿಗೆ ಒತ್ತಿ',
+  "{n} saved items couldn't sync – tap for details":
     'ಉಳಿಸಿದ {n} ಐಟಂಗಳು ಸಿಂಕ್ ಆಗಲಿಲ್ಲ – ವಿವರಗಳಿಗೆ ಒತ್ತಿ',
+  '{n} photo chosen – change': '{n} ಫೋಟೋ ಆಯ್ಕೆಯಾಗಿದೆ – ಬದಲಿಸಿ',
+  '{n} photos chosen – change': '{n} ಫೋಟೋಗಳು ಆಯ್ಕೆಯಾಗಿವೆ – ಬದಲಿಸಿ',
   '· Resting': '· ವಿಶ್ರಾಂತಿ ವೇಳೆ',
   '· by trainer': '· ಟ್ರೈನರ್ ದಾಖಲಿಸಿದ್ದು',
   '· goal reached on': '· ಗುರಿ ತಲುಪಿದ ದಿನಗಳು:',
@@ -1185,4 +1195,30 @@ export const kn: Record<string, string> = {
   'I have a setup code': 'ನನ್ನ ಬಳಿ ಸೆಟಪ್ ಕೋಡ್ ಇದೆ',
   'Activity sync works in the FitCoach Android app and on iPhone. You can set it up any time in Me → Health sync.':
     'ಚಟುವಟಿಕೆ ಸಿಂಕ್ FitCoach Android ಆ್ಯಪ್ ಮತ್ತು iPhone ನಲ್ಲಿ ಕೆಲಸ ಮಾಡುತ್ತದೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ನಾನು → ಹೆಲ್ತ್ ಸಿಂಕ್‌ನಲ್ಲಿ ಹೊಂದಿಸಬಹುದು.',
+  // Coach / trainer wording and form hints (12 Nov 2026)
+  'Today can’t fully reach your targets with this food. Log what you eat, and ask your coach if this keeps happening.':
+    'ಈ ಆಹಾರದಿಂದ ಇಂದು ನಿಮ್ಮ ಗುರಿಗಳನ್ನು ಪೂರ್ತಿ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ನೀವು ತಿಂದದ್ದನ್ನು ದಾಖಲಿಸಿ, ಹೀಗೆ ಪದೇ ಪದೇ ಆದರೆ ನಿಮ್ಮ ಕೋಚ್‌ನನ್ನು ಕೇಳಿ.',
+  'Today can’t fully reach your targets with this food. Log what you eat – if this keeps happening, your targets may need a change.':
+    'ಈ ಆಹಾರದಿಂದ ಇಂದು ನಿಮ್ಮ ಗುರಿಗಳನ್ನು ಪೂರ್ತಿ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ನೀವು ತಿಂದದ್ದನ್ನು ದಾಖಲಿಸಿ – ಹೀಗೆ ಪದೇ ಪದೇ ಆದರೆ ನಿಮ್ಮ ಗುರಿಗಳನ್ನು ಬದಲಿಸಬೇಕಾಗಬಹುದು.',
+  'Your coach hasn’t set all your targets, so a typical split is used for the rest.':
+    'ನಿಮ್ಮ ಕೋಚ್ ಎಲ್ಲಾ ಗುರಿಗಳನ್ನು ನಿಗದಿಪಡಿಸಿಲ್ಲ, ಆದ್ದರಿಂದ ಉಳಿದವಕ್ಕೆ ಸಾಮಾನ್ಯ ಹಂಚಿಕೆ ಬಳಸಲಾಗಿದೆ.',
+  'Not all your targets are set, so a typical split is used for the rest.':
+    'ನಿಮ್ಮ ಎಲ್ಲಾ ಗುರಿಗಳನ್ನು ನಿಗದಿಪಡಿಸಿಲ್ಲ, ಆದ್ದರಿಂದ ಉಳಿದವಕ್ಕೆ ಸಾಮಾನ್ಯ ಹಂಚಿಕೆ ಬಳಸಲಾಗಿದೆ.',
+  'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please ask your coach to check them.':
+    'ನಿಮ್ಮ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪ್ರೋಟೀನ್, ಕಾರ್ಬ್ಸ್, ಕೊಬ್ಬಿನ ಗುರಿಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ, ಆದ್ದರಿಂದ ಎಲ್ಲವನ್ನೂ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ಪರಿಶೀಲಿಸಲು ನಿಮ್ಮ ಕೋಚ್‌ನನ್ನು ಕೇಳಿ.',
+  'Your calorie and protein, carbs and fat targets don’t add up, so they can’t all be reached. Please check them in My targets.':
+    'ನಿಮ್ಮ ಕ್ಯಾಲೊರಿ ಮತ್ತು ಪ್ರೋಟೀನ್, ಕಾರ್ಬ್ಸ್, ಕೊಬ್ಬಿನ ಗುರಿಗಳು ಹೊಂದಾಣಿಕೆಯಾಗುತ್ತಿಲ್ಲ, ಆದ್ದರಿಂದ ಎಲ್ಲವನ್ನೂ ತಲುಪಲಾಗುವುದಿಲ್ಲ. ದಯವಿಟ್ಟು ನನ್ನ ಗುರಿಗಳಲ್ಲಿ ಪರಿಶೀಲಿಸಿ.',
+  'You don’t have a calorie target yet, so here is the estimate for the whole plate. Once your coach sets one, you’ll get portion suggestions.':
+    'ನಿಮಗೆ ಇನ್ನೂ ಕ್ಯಾಲೊರಿ ಗುರಿ ಇಲ್ಲ, ಆದ್ದರಿಂದ ಇದು ಪೂರ್ತಿ ತಟ್ಟೆಯ ಅಂದಾಜು. ನಿಮ್ಮ ಕೋಚ್ ಗುರಿ ನಿಗದಿಪಡಿಸಿದ ನಂತರ ಪ್ರಮಾಣದ ಸಲಹೆಗಳು ಸಿಗುತ್ತವೆ.',
+  'You don’t have a calorie target yet, so here is the estimate for the whole plate. Set one in My targets to get portion suggestions.':
+    'ನಿಮಗೆ ಇನ್ನೂ ಕ್ಯಾಲೊರಿ ಗುರಿ ಇಲ್ಲ, ಆದ್ದರಿಂದ ಇದು ಪೂರ್ತಿ ತಟ್ಟೆಯ ಅಂದಾಜು. ಪ್ರಮಾಣದ ಸಲಹೆಗಳಿಗಾಗಿ ನನ್ನ ಗುರಿಗಳಲ್ಲಿ ಗುರಿ ನಿಗದಿಪಡಿಸಿ.',
+  "Your coach hasn't given you a workout plan yet.": 'ನಿಮ್ಮ ಕೋಚ್ ಇನ್ನೂ ವ್ಯಾಯಾಮ ಯೋಜನೆ ನೀಡಿಲ್ಲ.',
+  'from your phone so your coach can see your full picture. It never writes to your health data.':
+    'ನಿಮ್ಮ ಫೋನ್‌ನಿಂದ, ನಿಮ್ಮ ಕೋಚ್ ಸಂಪೂರ್ಣ ಚಿತ್ರಣ ನೋಡಲು. ಇದು ನಿಮ್ಮ ಆರೋಗ್ಯ ಮಾಹಿತಿಗೆ ಎಂದೂ ಬರೆಯುವುದಿಲ್ಲ.',
+  'from your phone to work out your calories burnt. It never writes to your health data.':
+    'ನಿಮ್ಮ ಫೋನ್‌ನಿಂದ, ನೀವು ಸುಟ್ಟ ಕ್ಯಾಲೊರಿ ಲೆಕ್ಕ ಹಾಕಲು. ಇದು ನಿಮ್ಮ ಆರೋಗ್ಯ ಮಾಹಿತಿಗೆ ಎಂದೂ ಬರೆಯುವುದಿಲ್ಲ.',
+  'Rest day today 🌿 – your coach planned a rest. Your next workout is below.':
+    'ಇಂದು ವಿಶ್ರಾಂತಿ ದಿನ 🌿 – ನಿಮ್ಮ ಕೋಚ್ ವಿಶ್ರಾಂತಿ ಯೋಜಿಸಿದ್ದಾರೆ. ನಿಮ್ಮ ಮುಂದಿನ ವ್ಯಾಯಾಮ ಕೆಳಗಿದೆ.',
+  'For example: left knee hurts on stairs': 'ಉದಾಹರಣೆ: ಮೆಟ್ಟಿಲು ಹತ್ತುವಾಗ ಎಡ ಮೊಣಕಾಲು ನೋವು',
+  'For example: peanuts, brinjal': 'ಉದಾಹರಣೆ: ಕಡಲೆಕಾಯಿ, ಬದನೆಕಾಯಿ',
 };

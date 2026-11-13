@@ -15,10 +15,10 @@ import type { Profile } from '../auth/roles';
 import { currentTarget, useTargets } from '../targets/api';
 import { DEFAULT_WATER_ML, GLASS_ML, useSetWater, useWater } from './api';
 import './progress.css';
-import { useT } from '../../i18n/i18n';
+import { plural, useT } from '../../i18n/i18n';
 
-const litres = (ml: number) =>
-  `${(ml / 1000).toFixed(ml % 1000 === 0 ? 0 : 2).replace(/0$/, '')} L`;
+/** 0 → "0 L", 250 → "0.25 L", 1500 → "1.5 L", 10000 → "10 L". */
+const litres = (ml: number) => `${Number((ml / 1000).toFixed(2))} L`;
 
 /** Today: water drunk vs goal, one glass (250 ml) at a time. Works offline. */
 export function WaterCard({ profile }: { profile: Profile }) {
@@ -67,7 +67,7 @@ export function WaterCard({ profile }: { profile: Profile }) {
             <div className="water-amount">{litres(ml)}</div>
             <div className="progress-note">
               {t('of {goal}', { goal: litres(goal) })} ·{' '}
-              {t('{n} glasses', { n: Math.round(ml / GLASS_ML) })}
+              {plural(Math.round(ml / GLASS_ML), '{n} glass', '{n} glasses')}
             </div>
           </div>
           <IonButton

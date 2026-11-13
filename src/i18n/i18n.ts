@@ -49,6 +49,21 @@ export function tr(en: string | null | undefined, vars?: Record<string, string |
   return fill(current === 'kn' ? (kn[en] ?? en) : en, vars);
 }
 
+/**
+ * A count with the right singular or plural wording, translated:
+ *   plural(n, '{n} day', '{n} days')  →  "1 day", "4 days"
+ * Both texts are keys in kn.ts. In a component, call useT() as usual so it re-renders when
+ * the language changes.
+ */
+export function plural(
+  n: number,
+  one: string,
+  many: string,
+  vars?: Record<string, string | number>,
+): string {
+  return tr(n === 1 ? one : many, { n, ...vars });
+}
+
 /** Translate in a component; re-renders when the language changes. */
 export function useT() {
   useSyncExternalStore(

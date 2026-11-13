@@ -43,6 +43,18 @@ export function useCoachLink(profile: Profile | null | undefined) {
   };
 }
 
+/**
+ * Who guides this person, for wording: the AI coach alone ("your coach"), a human trainer
+ * ("your trainer"), or nobody – a trainer tracking their own fitness.
+ */
+export type Guide = 'coach' | 'trainer' | 'self';
+
+export function useGuide(profile: Profile | null | undefined): Guide {
+  const { coached, assistantOf } = useCoachLink(profile);
+  if (profile?.role !== 'client') return 'self';
+  return coached && !assistantOf ? 'coach' : 'trainer';
+}
+
 /** Today's plan and notes from the coach. */
 export function useCoachDay(clientId: string | undefined, day: string, enabled = true) {
   return useQuery({

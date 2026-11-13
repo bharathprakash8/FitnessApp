@@ -43,7 +43,8 @@ import {
   useSelfWorkouts,
   useWorkoutLogs,
 } from './api';
-import { nextDay } from './model';
+import { useCoachDay, useGuide } from '../coach/api';
+import { todaysWorkout } from './model';
 import './workouts.css';
 import { useT } from '../../i18n/i18n';
 
@@ -56,8 +57,16 @@ export function WorkoutsPage() {
   const mine = useSelfWorkouts(profile?.id);
   const today = todayIn(profile?.timezone);
 
+  // Same pick as the Today screen: the coach's day for today if there is one, else the next
+  // day in the plan.
+  const coach = useCoachDay(profile?.id, today, profile?.role === 'client');
+  const guide = useGuide(profile);
+
   const plan = active.data?.plan;
-  const next = plan ? nextDay(plan.plan_days, logs.data ?? [], today) : null;
+  const pick = plan
+    ? todaysWorkout(plan.plan_days, logs.data ?? [], today, coach.data?.plan)
+    : null;
+  const next = pick?.next ?? null;
 
   return (
     <IonPage>
@@ -74,9 +83,12 @@ export function WorkoutsPage() {
         <IonRefresher
           slot="fixed"
           onIonRefresh={(e) =>
-            void Promise.all([active.refetch(), logs.refetch(), mine.refetch()]).finally(() =>
-              e.detail.complete(),
-            )
+            void Promise.all([
+              active.refetch(),
+              logs.refetch(),
+              mine.refetch(),
+              coach.refetch(),
+            ]).finally(() => e.detail.complete())
           }
         >
           <IonRefresherContent />
@@ -92,7 +104,9 @@ export function WorkoutsPage() {
             ) : (
               <IonText color="medium">
                 <p className="ion-text-center">
-                  {t("Your trainer hasn't given you a workout plan yet.")}
+                  {guide === 'coach'
+                    ? t("Your coach hasn't given you a workout plan yet.")
+                    : t("Your trainer hasn't given you a workout plan yet.")}
                 </p>
               </IonText>
             )
@@ -101,11 +115,20 @@ export function WorkoutsPage() {
               <h2 style={{ marginTop: 0 }}>{plan.name}</h2>
               {profile?.role === 'trainer' && <MyPlanPicker current={plan.id} />}
               {plan.description && <p className="workout-muted">{plan.description}</p>}
+              {pick?.rest && (
+                <p className="workout-rest">
+                  {t('Rest day today 🌿 – your coach planned a rest. Your next workout is below.')}
+                </p>
+              )}
               {next && (
                 <IonCard className="workout-card">
                   <IonCardHeader>
                     <IonCardSubtitle>
-                      {next.inProgress ? t('In progress today') : t('Next workout')}
+                      {next.inProgress
+                        ? t('In progress today')
+                        : pick?.byCoach && !pick.rest
+                          ? t("Today's workout")
+                          : t('Next workout')}
                     </IonCardSubtitle>
                     <IonCardTitle>{next.day.title}</IonCardTitle>
                   </IonCardHeader>

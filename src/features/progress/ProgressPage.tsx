@@ -23,7 +23,7 @@ import { useAuth } from '../auth/useAuth';
 import { useAddMeasurement } from './api';
 import { ProgressView } from './ProgressView';
 import './progress.css';
-import { useT } from '../../i18n/i18n';
+import { plural, useT } from '../../i18n/i18n';
 
 /** Me → Progress (clients, and trainers for themselves). */
 export function ProgressPage() {
@@ -162,7 +162,7 @@ export function AddMeasurementPage() {
             <IonButton fill="outline" expand="block" onClick={() => fileInput.current?.click()}>
               <IonIcon slot="start" icon={camera} />
               {photos.length
-                ? `${photos.length} photo(s) chosen – change`
+                ? plural(photos.length, '{n} photo chosen – change', '{n} photos chosen – change')
                 : t('Add progress photos (up to 3)')}
             </IonButton>
             <IonText color="medium">

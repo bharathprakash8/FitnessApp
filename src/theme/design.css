@@ -9,6 +9,7 @@
   --fc-card: #ffffff;
   --fc-ink: #2b1a12;
   --fc-border: rgba(122, 46, 23, 0.1);
+  --fc-field-border: rgba(122, 46, 23, 0.32);
   --fc-shadow: 0 1px 2px rgba(60, 30, 15, 0.05), 0 6px 18px rgba(60, 30, 15, 0.06);
   --fc-muted: #7a6458;
   --fc-primary-soft: rgba(184, 73, 42, 0.1);
@@ -139,6 +140,36 @@ ion-select {
   --border-radius: 12px;
 }
 
+/* iPhone styling ("ios" mode): Ionic draws the outline of fill="outline" fields only in
+   Android styling, so on iPhones every field was plain text with no box – "Email" on the
+   login page looked like a label, with nothing to show where to type. Give them a box. */
+ion-input.ios.input-fill-outline,
+ion-textarea.ios.textarea-fill-outline,
+ion-select.ios.select-fill-outline {
+  --padding-start: 14px;
+  --padding-end: 14px;
+  border: 1px solid var(--fc-field-border);
+  border-radius: 12px;
+  background: var(--fc-card);
+}
+
+ion-input.ios.input-fill-outline,
+ion-select.ios.select-fill-outline {
+  min-height: 52px;
+}
+
+ion-textarea.ios.textarea-fill-outline {
+  min-height: 64px;
+}
+
+ion-input.ios.input-fill-outline.has-focus,
+ion-textarea.ios.textarea-fill-outline.has-focus,
+ion-select.ios.select-fill-outline.has-focus,
+ion-select.ios.select-fill-outline.select-expanded {
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 1px var(--ion-color-primary);
+}
+
 /* ---------------------------------------------------------------- segments as pills */
 ion-segment {
   --background: rgba(122, 46, 23, 0.07);
@@ -229,6 +260,7 @@ h2 {
     --fc-card: #241d19;
     --fc-ink: #f3e9df;
     --fc-border: rgba(255, 240, 225, 0.08);
+    --fc-field-border: rgba(255, 240, 225, 0.28);
     --fc-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     --fc-muted: #b9a79b;
     --fc-primary-soft: rgba(224, 122, 85, 0.18);

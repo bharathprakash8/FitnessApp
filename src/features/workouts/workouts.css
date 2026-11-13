@@ -118,3 +118,13 @@
 .workout-machine-kcal {
   margin-top: 10px;
 }
+
+/* Coach made today a rest day: a quiet note above the next workout. */
+.workout-rest {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--fc-plate, #f3e6d6);
+  color: var(--fc-ink, inherit);
+  line-height: 1.4;
+}

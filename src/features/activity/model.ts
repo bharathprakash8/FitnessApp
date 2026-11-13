@@ -92,6 +92,16 @@ export function dayFraction(day: string, today: string, timeZone: string): numbe
   return Math.min(1, ((h ?? 0) * 60 + (m ?? 0)) / 1440);
 }
 
+/**
+ * The phone's resting energy counts as "the whole day so far" when it reaches this share of
+ * the person's own resting burn (BMR) for that time. Below it – no watch, watch switched off,
+ * or the last sync was hours ago – the BMR figure is used instead.
+ * Measured on real iPhone data, 12 Nov 2026: with the watch worn 7 to 16 hours the phone
+ * reported about the same resting total (1,870–2,170 kcal), so it is a whole-day number and
+ * must not be topped up for unworn hours; partly covered days came in near 60%.
+ */
+const RESTING_COMPLETE = 0.8;
+
 export interface Burn {
   active: number;
   activeSource: string; // label
@@ -121,8 +131,8 @@ export interface Burn {
  *    data is treated as "watch worn all day" (nothing added) – the safe choice.
  *  * Manual entry is taken as the full day's active burn.
  *  * No device data: active = logged workouts.
- *  * Resting: the watch's resting energy plus BMR for the hours it wasn't worn (iPhone only;
- *    Health Connect's total already includes the full resting burn), else BMR so far.
+ *  * Resting: the phone's resting energy when it covers the day so far, else BMR so far
+ *    (labelled estimated). The two are never added together.
  */
 export function resolveBurn(input: {
   row: ActivityDay | null;
@@ -169,25 +179,16 @@ export function resolveBurn(input: {
       ? 'Estimated from workouts'
       : 'No activity data';
 
+  // Resting burn. The phone's resting energy covers the whole day whether or not the watch was
+  // on the wrist, so it is used as it is – never topped up for the hours the watch was off
+  // (that counted those hours twice, see RESTING_COMPLETE). Only when the phone's number is
+  // clearly part of a day is the person's own resting burn so far (BMR) used in its place.
   const basal = bmr(profile, weightKg, age);
-  let resting: number;
-  let restingEstimated: boolean;
-  if (row?.resting_calories != null) {
-    resting = row.resting_calories;
-    restingEstimated = false;
-    if (row.source === 'apple_shortcut' && worn instanceof Set && basal) {
-      // Watch resting energy covers only the hours it was worn; add BMR for the others.
-      const elapsed = Math.round(fraction * 24);
-      const unworn = Array.from({ length: elapsed }, (_, h) => h).filter((h) => !worn.has(h));
-      if (unworn.length) {
-        resting += Math.round((basal * unworn.length) / 24);
-        restingEstimated = true;
-      }
-    }
-  } else {
-    resting = basal ? Math.round(basal * fraction) : 0;
-    restingEstimated = true;
-  }
+  const expected = basal ? Math.round(basal * fraction) : 0;
+  const fromDevice = row?.resting_calories ?? null;
+  const deviceComplete = fromDevice !== null && fromDevice >= expected * RESTING_COMPLETE;
+  const resting = deviceComplete ? fromDevice : expected;
+  const restingEstimated = !deviceComplete;
 
   return {
     active,

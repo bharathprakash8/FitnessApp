@@ -47,9 +47,19 @@ import {
   type MealSource,
   type MealType,
 } from './model';
+import { useGuide, type Guide } from '../coach/api';
 import { PortionAdvice } from './PortionAdvice';
 import './food.css';
 import { useT } from '../../i18n/i18n';
+
+// Shown with the whole-plate estimate when there is no target to plan portions from.
+const NO_TARGET: Record<Guide, string> = {
+  coach:
+    'You don’t have a calorie target yet, so here is the estimate for the whole plate. Once your coach sets one, you’ll get portion suggestions.',
+  trainer:
+    'You don’t have a calorie target yet, so here is the estimate for the whole plate. Ask your trainer to set one to get portion suggestions.',
+  self: 'You don’t have a calorie target yet, so here is the estimate for the whole plate. Set one in My targets to get portion suggestions.',
+};
 
 type Stage = 'input' | 'choose' | 'working' | 'portion' | 'review';
 type Detail = 'quick' | 'detailed';
@@ -73,6 +83,7 @@ export function LogMealPage() {
   const source: MealSource = mode === 'text' ? 'text' : mode === 'manual' ? 'manual' : 'photo';
   const { search } = useLocation();
   const { profile } = useAuth();
+  const guide = useGuide(profile);
   const tz = profile?.timezone ?? DEFAULT_TIMEZONE;
   const now = nowIn(tz);
   const day = new URLSearchParams(search).get('day') || now.date;
@@ -455,6 +466,7 @@ export function LogMealPage() {
           {stage === 'portion' && advice && (
             <PortionAdvice
               advice={advice}
+              guide={guide}
               onLog={(plan) => logFrom(plan.items.map(plainItem))}
               onLogPlate={() => logFrom(analysis?.items ?? [])}
             />
@@ -462,13 +474,7 @@ export function LogMealPage() {
 
           {stage === 'review' && (
             <>
-              {noTarget && (
-                <p className="portion-tip">
-                  {tx(
-                    'You don’t have a calorie target yet, so here is the estimate for the whole plate. Ask your trainer to set one to get portion suggestions.',
-                  )}
-                </p>
-              )}
+              {noTarget && <p className="portion-tip">{tx(NO_TARGET[guide])}</p>}
               {analysis && analysis.items.length === 0 && (
                 <IonText color="warning">
                   <p>{tx('No food was recognised. Add the items yourself below.')}</p>
